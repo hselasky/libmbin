@@ -36,7 +36,6 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
     uint32_t def_slice, uint32_t work_slice /* destination */ )
 {
 	uint32_t last_x;		/* last defined "x" */
-	uint32_t xn;			/* next value of "x" */
 	uint32_t x;
 	uint32_t y;
 	uint32_t z;
@@ -53,14 +52,12 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 
 	/* do an optimised transform */
 	x = set_bits;
-	last_x = 0;
+	last_x = x;
 	while (1) {
 		if (premap)
 			z = mbin_recode32(x, premap);
 		else
 			z = x;
-
-		xn = mbin_inc32(x, set_bits);
 
 		if (ptr[z] & def_slice) {
 
@@ -121,7 +118,7 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 		}
 		if (x == mask)
 			break;
-		x = xn;
+		x = mbin_inc32(x, set_bits);
 	}
 	return;
 }
