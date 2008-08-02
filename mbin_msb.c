@@ -32,10 +32,17 @@ mbin_msb32(uint32_t val)
 {
 	uint32_t m;
 
-	if (val & 0xFFFF0000)
-		m = (1 << 31);
-	else
-		m = (1 << 15);
+	if (val & 0xFFFF0000) {
+		if (val & 0xFF000000)
+			m = (1 << 31);
+		else
+			m = (1 << 23);
+	} else {
+		if (val & 0xFF00)
+			m = (1 << 15);
+		else
+			m = (1 << 7);
+	}
 
 	do {
 		if (val & m)

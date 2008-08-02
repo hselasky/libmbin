@@ -43,8 +43,7 @@ uint32_t mbin_dec32(uint32_t val, uint32_t mask);
 uint16_t mbin_dec16(uint16_t val, uint16_t mask);
 uint8_t	mbin_dec8(uint8_t val, uint8_t mask);
 
-uint8_t	mbin_optimise_32x32(uint32_t *ptr, uint32_t mask, uint32_t remove_bits, uint32_t def_slice, uint32_t work_slice, uint32_t temp_slice);
-
+void	mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap, uint32_t mask, uint32_t set_bits, uint32_t def_slice, uint32_t work_slice);
 void	mbin_transform_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t set_bits, uint32_t f_slice, uint32_t t_slice);
 
 uint8_t	mbin_sumbits32(uint32_t val);
@@ -57,5 +56,10 @@ uint8_t	mbin_msb8(uint8_t val);
 
 uint32_t mbin_grey_inv32(uint32_t t);
 uint32_t mbin_grey_fwd32(uint32_t t);
+
+uint32_t mbin_recode32(uint32_t val, const uint8_t *premap);
+uint16_t mbin_recode16(uint16_t val, const uint8_t *premap);
+uint8_t	mbin_recode8(uint8_t val, const uint8_t *premap);
+void	mbin_recode_default(uint8_t *premap, uint8_t start, uint8_t max);
 
 #endif					/* _MATH_BIN_H_ */

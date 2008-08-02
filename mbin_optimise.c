@@ -28,101 +28,100 @@
 #include "math_bin.h"
 
 /*
- * Return values:
- * 0: Success
- * Else: Failure
+ * NOTE: "mask" and "set_bits" will be remapped by "premap"!
  */
-
-uint8_t
-mbin_optimise_32x32(uint32_t *ptr, uint32_t mask,
-    uint32_t remove_bits, uint32_t def_slice,
-    uint32_t work_slice, uint32_t temp_slice)
+void
+mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
+    uint32_t mask, uint32_t set_bits,
+    uint32_t def_slice, uint32_t work_slice /* destination */ )
 {
+	uint32_t last_x;		/* last defined "x" */
+	uint32_t xn;			/* next value of "x" */
 	uint32_t x;
 	uint32_t y;
+	uint32_t z;
 
-	/* basic cleanup */
+	/* cleanup "work" slice */
 	x = 0;
+	y = ~work_slice;
 	while (1) {
-		if ((ptr[x] & work_slice) &&
-		    (!(ptr[x] & def_slice))) {
-			mbin_expand_32x32(ptr, x, mask, work_slice);
-		}
+		ptr[x] &= y;
 		if (x == mask)
 			break;
 		x++;
 	}
 
-	if (remove_bits == 0)
-		return (0);		/* nothing more to do */
-
-	y = 0;
+	/* do an optimised transform */
+	x = set_bits;
+	last_x = 0;
 	while (1) {
+		if (premap)
+			z = mbin_recode32(x, premap);
+		else
+			z = x;
 
-		if ((y & remove_bits) &&
-		    (ptr[y] & work_slice)) {
+		xn = mbin_inc32(x, set_bits);
+
+		if (ptr[z] & def_slice) {
+
+			mbin_expand_32x32(ptr, z, mask, work_slice);
+
 			/*
-			 * We found an expression with the bits we
-			 * want to remove !
+			 * Check if we have a one here and move it
+			 * further back, to reduce the logic required!
 			 */
+			y = mbin_msb32(x ^ last_x);
+			y = ((-y) | set_bits) & x;
+
+			if ((ptr[z] & work_slice) && (y != x)) {
+
+				if (premap)
+					z = mbin_recode32(y, premap);
+				else
+					z = y;
+
+				if (!(ptr[z] & work_slice)) {
+					/*
+					 * Toggle expression to one so
+					 * that we get a zero at the
+					 * other place!
+					 */
+					mbin_expand_32x32(ptr, z,
+					    mask, work_slice);
+				}
+				while (1) {
+					y = mbin_inc32(y, set_bits);
+					if (y == x)
+						break;	/* we are done */
+
+					if (premap)
+						z = mbin_recode32(y, premap);
+					else
+						z = y;
+
+					if (ptr[z] & work_slice) {
+						/*
+					         * Toggle expression
+					         * to zero.
+					         */
+						mbin_expand_32x32(ptr, z,
+						    mask, work_slice);
+					}
+				}
+			}
+			last_x = x;
 		} else {
-			if (y == mask)
-				break;
-			y++;
-			continue;
-		}
-
-		/* cleanup the temporary slice */
-		x = y;
-		while (1) {
-			ptr[x] &= ~temp_slice;
-			if (x == mask)
-				break;
-			x = mbin_inc32(x, y);
-		}
-
-		/* compute the substitution mask */
-		x = y;
-		while (1) {
 			/*
-			 * Check if "x" is defined
-			 *
-			 * Then check if the "temp_slice" is defined,
-			 * but the entry it represents is not defined,
-			 * so that it can be removed.
+			 * Default action: toggle value to zero on unused.
 			 */
-			if ((ptr[x] & def_slice) ||
-			    ((ptr[x] & temp_slice) &&
-			    (!(ptr[x & ~y] & def_slice)))) {
-				mbin_expand_32x32(ptr, x, mask, temp_slice);
+			if (ptr[z] & work_slice) {
+				mbin_expand_32x32(ptr, z,
+				    mask, work_slice);
 			}
-			/*
-			 * Check if there is an expression with the
-			 * remove bits:
-			 */
-			if ((ptr[x] & temp_slice) &&
-			    (x & ~y & remove_bits)) {
-				/* not possible */
-				return (1);
-			}
-			if (x == mask)
-				break;
-			x = mbin_inc32(x, y);
 		}
-
-		/* do the substitution */
-		ptr[y] ^= work_slice;
-
-		/* insert replacement */
-		x = y;
-		while (1) {
-			if (ptr[x] & temp_slice) {
-				ptr[x & ~y] ^= work_slice;
-			}
-			if (x == mask)
-				break;
-			x = mbin_inc32(x, y);
-		}
+		if (x == mask)
+			break;
+		x = xn;
 	}
-	return (0);
+	return;
 }
