@@ -40,6 +40,12 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 	uint32_t y;
 	uint32_t z;
 
+	/* re-order mask bits */
+	if (premap)
+		mask = mbin_recode32(mask, premap);
+	else
+		mask = mask;
+
 	/* cleanup "work" slice */
 	x = 0;
 	y = ~work_slice;
@@ -50,7 +56,8 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 		x++;
 	}
 
-	/* do an optimised transform */
+	/* do an optimised transform which can take some time */
+	set_bits |= (~mask);
 	x = set_bits;
 	last_x = x;
 	while (1) {
@@ -59,7 +66,7 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 		else
 			z = x;
 
-		if (ptr[z] & def_slice) {
+		if (ptr[z & mask] & def_slice) {
 
 			mbin_expand_32x32(ptr, z, mask, work_slice);
 
@@ -70,14 +77,14 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 			y = mbin_msb32(x ^ last_x);
 			y = ((-y) | set_bits) & x;
 
-			if ((ptr[z] & work_slice) && (y != x)) {
+			if ((ptr[z & mask] & work_slice) && (y != x)) {
 
 				if (premap)
 					z = mbin_recode32(y, premap);
 				else
 					z = y;
 
-				if (!(ptr[z] & work_slice)) {
+				if (!(ptr[z & mask] & work_slice)) {
 					/*
 					 * Toggle expression to one so
 					 * that we get a zero at the
@@ -96,7 +103,7 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 					else
 						z = y;
 
-					if (ptr[z] & work_slice) {
+					if (ptr[z & mask] & work_slice) {
 						/*
 					         * Toggle expression
 					         * to zero.
@@ -111,12 +118,12 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 			/*
 			 * Default action: toggle value to zero on unused.
 			 */
-			if (ptr[z] & work_slice) {
+			if (ptr[z & mask] & work_slice) {
 				mbin_expand_32x32(ptr, z,
 				    mask, work_slice);
 			}
 		}
-		if (x == mask)
+		if (x == (uint32_t)(0 - 1))
 			break;
 		x = mbin_inc32(x, set_bits);
 	}

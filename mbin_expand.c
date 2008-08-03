@@ -36,11 +36,14 @@ void
 mbin_expand_32x32(uint32_t *ptr, uint32_t set_bits,
     uint32_t mask, uint32_t slice)
 {
-	uint32_t x = set_bits & mask;
+	uint32_t x;
+
+	set_bits |= (~mask);
+	x = set_bits;
 
 	while (1) {
-		ptr[x] ^= slice;
-		if (x == mask) {
+		ptr[x & mask] ^= slice;
+		if (x == (uint32_t)(0 - 1)) {
 			break;
 		}
 		x++;
@@ -53,11 +56,14 @@ void
 mbin_expand_16x32(uint16_t *ptr, uint32_t set_bits,
     uint32_t mask, uint16_t slice)
 {
-	uint32_t x = set_bits & mask;
+	uint32_t x;
+
+	set_bits |= (~mask);
+	x = set_bits;
 
 	while (1) {
-		ptr[x] ^= slice;
-		if (x == mask) {
+		ptr[x & mask] ^= slice;
+		if (x == (uint32_t)(0 - 1)) {
 			break;
 		}
 		x++;
@@ -70,11 +76,14 @@ void
 mbin_expand_8x32(uint8_t *ptr, uint32_t set_bits,
     uint32_t mask, uint8_t slice)
 {
-	uint32_t x = set_bits & mask;
+	uint32_t x;
+
+	set_bits |= (~mask);
+	x = set_bits;
 
 	while (1) {
-		ptr[x] ^= slice;
-		if (x == mask) {
+		ptr[x & mask] ^= slice;
+		if (x == (uint32_t)(0 - 1)) {
 			break;
 		}
 		x++;
