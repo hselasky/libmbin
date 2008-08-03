@@ -47,17 +47,23 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 		mask = mask;
 
 	/* cleanup "work" slice */
-	x = 0;
+	set_bits |= (~mask);
+	x = set_bits;
 	y = ~work_slice;
 	while (1) {
-		ptr[x] &= y;
-		if (x == mask)
+		if (premap)
+			z = mbin_recode32(x, premap);
+		else
+			z = x;
+
+		ptr[z & mask] &= y;
+
+		if (x == (0 - 1))
 			break;
-		x++;
+		x = mbin_inc32(x, set_bits);
 	}
 
 	/* do an optimised transform which can take some time */
-	set_bits |= (~mask);
 	x = set_bits;
 	last_x = x;
 	while (1) {
