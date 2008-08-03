@@ -40,6 +40,12 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 	uint32_t y;
 	uint32_t z;
 
+	/*
+	 * Or "set_bits" with the complement of the "mask" before
+	 * reordering the mask!
+	 */
+	set_bits |= (~mask);
+
 	/* re-order mask bits */
 	if (premap)
 		mask = mbin_recode32(mask, premap);
@@ -47,7 +53,6 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 		mask = mask;
 
 	/* cleanup "work" slice */
-	set_bits |= (~mask);
 	x = set_bits;
 	y = ~work_slice;
 	while (1) {

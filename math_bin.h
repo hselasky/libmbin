@@ -45,6 +45,7 @@ uint8_t	mbin_dec8(uint8_t val, uint8_t mask);
 
 void	mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap, uint32_t mask, uint32_t set_bits, uint32_t def_slice, uint32_t work_slice);
 void	mbin_transform_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t set_bits, uint32_t f_slice, uint32_t t_slice);
+uint8_t	mbin_compute_value_32x32(uint32_t *ptr, const uint8_t *premap, uint32_t mask, uint32_t set_bits, uint32_t work_slice);
 
 uint8_t	mbin_sumbits32(uint32_t val);
 uint8_t	mbin_sumbits16(uint16_t val);
