@@ -32,49 +32,83 @@
 #include "math_bin.h"
 
 void
-mbin_print8(uint8_t x)
+mbin_print8(const char *fmt, uint8_t x)
 {
 	uint8_t mask = 0x80;
 
-	while (mask) {
-		printf("%s", (x & mask) ? "1" : ".");
-		mask /= 2;
+	if (fmt == NULL)
+		fmt = "1111 1111";
+
+	while (*fmt) {
+		if (*fmt == '1') {
+			putchar((x & mask) ? '1' : '.');
+			mask /= 2;
+		} else {
+			putchar(*fmt);
+		}
+		fmt++;
 	}
 	return;
 }
 
 void
-mbin_print16(uint16_t x)
+mbin_print16(const char *fmt, uint16_t x)
 {
 	uint16_t mask = 0x8000;
 
-	while (mask) {
-		printf("%s", (x & mask) ? "1" : ".");
-		mask /= 2;
+	if (fmt == NULL)
+		fmt = "1111 1111 | 1111 1111";
+
+	while (*fmt) {
+		if (*fmt == '1') {
+			putchar((x & mask) ? '1' : '.');
+			mask /= 2;
+		} else {
+			putchar(*fmt);
+		}
+		fmt++;
 	}
 	return;
 }
 
 void
-mbin_print32(uint32_t x)
+mbin_print32(const char *fmt, uint32_t x)
 {
 	uint32_t mask = 0x80000000;
 
-	while (mask) {
-		printf("%s", (x & mask) ? "1" : ".");
-		mask /= 2;
+	if (fmt == NULL)
+		fmt = "1111 1111 | 1111 1111 | 1111 1111 | 1111 1111";
+
+	while (*fmt) {
+		if (*fmt == '1') {
+			putchar((x & mask) ? '1' : '.');
+			mask /= 2;
+		} else {
+			putchar(*fmt);
+		}
+		fmt++;
 	}
 	return;
 }
 
 void
-mbin_print64(uint64_t x)
+mbin_print64(const char *fmt, uint64_t x)
 {
 	uint64_t mask = 0x8000000000000000ULL;
 
-	while (mask) {
-		printf("%s", (x & mask) ? "1" : ".");
-		mask /= 2;
+	if (fmt == NULL) {
+		fmt =
+		    "1111 1111 | 1111 1111 | 1111 1111 | 1111 1111 | "
+		    "1111 1111 | 1111 1111 | 1111 1111 | 1111 1111";
+	}
+	while (*fmt) {
+		if (*fmt == '1') {
+			putchar((x & mask) ? '1' : '.');
+			mask /= 2;
+		} else {
+			putchar(*fmt);
+		}
+		fmt++;
 	}
 	return;
 }
