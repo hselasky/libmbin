@@ -90,9 +90,12 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 		}
 
 		if (ptr[zs & mask] & def_slice) {
-
+			/* XOR in a one */
 			mbin_expand_32x32(ptr, zc,
 			    r_mask, work_slice);
+		}
+		if ((ptr[zs & mask] & def_slice) ||
+		    (ptr[zc & mask] & def_slice)) {
 
 			/*
 			 * Check if we have a one here and move it
@@ -140,9 +143,6 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 					}
 				}
 			}
-			last_x = x;
-		} else if (ptr[zc & mask] & def_slice) {
-			/* The function is defined to "zero" */
 			last_x = x;
 		} else {
 			/*
