@@ -55,8 +55,6 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 	if (premap) {
 		r_mask = mbin_recode32(r_mask, premap);
 		mask = mbin_recode32(mask, premap);
-		mbin_print32(0, r_mask);
-		printf("\n");
 	}
 	/* cleanup "work" slice */
 	x = set_bit;
@@ -106,7 +104,8 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 			if ((ptr[zc & mask] & work_slice) && (y != x)) {
 
 				if (premap) {
-					zc = mbin_recode32(y ^ set_bit, premap);
+					zc = mbin_recode32(y ^
+					    set_bit, premap);
 				} else {
 					zc = y ^ set_bit;
 				}
@@ -126,7 +125,8 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 						break;	/* we are done */
 
 					if (premap)
-						zc = mbin_recode32(y ^ set_bit, premap);
+						zc = mbin_recode32(y ^
+						    set_bit, premap);
 					else
 						zc = y ^ set_bit;
 
