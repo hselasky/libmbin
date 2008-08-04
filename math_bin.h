@@ -62,5 +62,6 @@ uint32_t mbin_recode32(uint32_t val, const uint8_t *premap);
 uint16_t mbin_recode16(uint16_t val, const uint8_t *premap);
 uint8_t	mbin_recode8(uint8_t val, const uint8_t *premap);
 void	mbin_recode_default(uint8_t *premap, uint8_t start, uint8_t max);
+void	mbin_recode_inverse(const uint8_t *src, uint8_t *dst, uint8_t max);
 
 #endif					/* _MATH_BIN_H_ */

@@ -28,115 +28,135 @@
 #include "math_bin.h"
 
 /*
- * NOTE: "mask" and "set_bits" will be remapped by "premap"!
+ * NOTE: "mask" and "set_bit" will be remapped by "premap"!
  */
 void
 mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
-    uint32_t mask, uint32_t set_bits,
+    uint32_t mask, uint32_t set_bit,
     uint32_t def_slice, uint32_t work_slice /* destination */ )
 {
 	uint32_t last_x;		/* last defined "x" */
+	uint32_t r_mask;
 	uint32_t x;
 	uint32_t y;
-	uint32_t z;
+	uint32_t zs;
+	uint32_t zc;
+
+	/* Remove "set_bit" from mask */
+	r_mask = mask & ~set_bit;
 
 	/*
-	 * Or "set_bits" with the complement of the "mask" before
+	 * Or "set_bit" with the complement of the "mask" before
 	 * reordering the mask!
 	 */
-	set_bits |= (~mask);
+	set_bit |= (~mask);
 
 	/* re-order mask bits */
-	if (premap)
+	if (premap) {
+		r_mask = mbin_recode32(r_mask, premap);
 		mask = mbin_recode32(mask, premap);
-	else
-		mask = mask;
-
+		mbin_print32(0, r_mask);
+		printf("\n");
+	}
 	/* cleanup "work" slice */
-	x = set_bits;
+	x = set_bit;
 	y = ~work_slice;
 	while (1) {
-		if (premap)
-			z = mbin_recode32(x, premap);
-		else
-			z = x;
-
-		ptr[z & mask] &= y;
+		if (premap) {
+			zs = mbin_recode32(x, premap);
+			zc = mbin_recode32(x ^ set_bit, premap);
+		} else {
+			zs = x;
+			zc = x ^ set_bit;
+		}
+		ptr[zs & mask] &= y;
+		ptr[zc & mask] &= y;
 
 		if (x == (0 - 1))
 			break;
-		x = mbin_inc32(x, set_bits);
+		x = mbin_inc32(x, set_bit);
 	}
 
 	/* do an optimised transform which can take some time */
-	x = set_bits;
+	x = set_bit;
 	last_x = x;
 	while (1) {
-		if (premap)
-			z = mbin_recode32(x, premap);
-		else
-			z = x;
+		if (premap) {
+			zs = mbin_recode32(x, premap);
+			zc = mbin_recode32(x ^ set_bit, premap);
+		} else {
+			/* this variable has "set_bit" */
+			zs = x;
+			/* this variable does not have "set_bit" */
+			zc = x ^ set_bit;
+		}
 
-		if (ptr[z & mask] & def_slice) {
+		if (ptr[zs & mask] & def_slice) {
 
-			mbin_expand_32x32(ptr, z, mask, work_slice);
+			mbin_expand_32x32(ptr, zc,
+			    r_mask, work_slice);
 
 			/*
 			 * Check if we have a one here and move it
 			 * further back, to reduce the logic required!
 			 */
 			y = mbin_msb32(x ^ last_x);
-			y = ((-y) | set_bits) & x;
+			y = ((-y) | set_bit) & x;
 
-			if ((ptr[z & mask] & work_slice) && (y != x)) {
+			if ((ptr[zc & mask] & work_slice) && (y != x)) {
 
-				if (premap)
-					z = mbin_recode32(y, premap);
-				else
-					z = y;
+				if (premap) {
+					zc = mbin_recode32(y ^ set_bit, premap);
+				} else {
+					zc = y ^ set_bit;
+				}
 
-				if (!(ptr[z & mask] & work_slice)) {
+				if (!(ptr[zc & mask] & work_slice)) {
 					/*
 					 * Toggle expression to one so
 					 * that we get a zero at the
 					 * other place!
 					 */
-					mbin_expand_32x32(ptr, z,
-					    mask, work_slice);
+					mbin_expand_32x32(ptr, zc,
+					    r_mask, work_slice);
 				}
 				while (1) {
-					y = mbin_inc32(y, set_bits);
+					y = mbin_inc32(y, set_bit);
 					if (y == x)
 						break;	/* we are done */
 
 					if (premap)
-						z = mbin_recode32(y, premap);
+						zc = mbin_recode32(y ^ set_bit, premap);
 					else
-						z = y;
+						zc = y ^ set_bit;
 
-					if (ptr[z & mask] & work_slice) {
+					if (ptr[zc & mask] & work_slice) {
 						/*
 					         * Toggle expression
 					         * to zero.
 					         */
-						mbin_expand_32x32(ptr, z,
-						    mask, work_slice);
+						mbin_expand_32x32(ptr, zc,
+						    r_mask, work_slice);
 					}
 				}
 			}
 			last_x = x;
+		} else if (ptr[zc & mask] & def_slice) {
+			/* The function is defined to "zero" */
+			last_x = x;
 		} else {
 			/*
-			 * Default action: toggle value to zero on unused.
+			 * Default action: Toggle value to zero on
+			 * unused to reduce the expression.
 			 */
-			if (ptr[z & mask] & work_slice) {
-				mbin_expand_32x32(ptr, z,
-				    mask, work_slice);
+			if (ptr[zc & mask] & work_slice) {
+				mbin_expand_32x32(ptr, zc,
+				    r_mask, work_slice);
 			}
 		}
 		if (x == (uint32_t)(0 - 1))
 			break;
-		x = mbin_inc32(x, set_bits);
+		x = mbin_inc32(x, set_bit);
 	}
 	return;
 }
