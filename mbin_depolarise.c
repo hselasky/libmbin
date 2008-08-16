@@ -28,7 +28,7 @@
 #include "math_bin.h"
 
 /*
- * Functions for converting polar numbers into a non-polar numbers:
+ * Functions for converting polar numbers into a non-polar number:
  *
  * -+-+-+-+ or +-+-+-+- -> +++++
  */

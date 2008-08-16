@@ -28,7 +28,7 @@
 #include "math_bin.h"
 
 /*
- * Functions for converting non-polar numbers into a polar numbers:
+ * Functions for converting non-polar numbers into a polar number:
  *
  * +++++ -> -+-+-+-+ (neg_pol=0x5555) or +-+-+-+- (neg_pol=0xAAAA)
  */
@@ -36,59 +36,17 @@
 uint32_t
 mbin_polarise32(uint32_t val, uint32_t neg_pol)
 {
-	uint32_t tmp = 0;
-	uint32_t m = 1;
-
-	while (m) {
-		if (val & m) {
-			tmp |= m;
-			if (neg_pol & m) {
-				val += m;
-			} else {
-				val -= m;
-			}
-		}
-		m *= 2;
-	}
-	return (tmp);
+	return (((val ^ neg_pol) + (2 * (val & neg_pol))) ^ neg_pol);
 }
 
 uint16_t
 mbin_polarise16(uint16_t val, uint16_t neg_pol)
 {
-	uint16_t tmp = 0;
-	uint16_t m = 1;
-
-	while (m) {
-		if (val & m) {
-			tmp |= m;
-			if (neg_pol & m) {
-				val += m;
-			} else {
-				val -= m;
-			}
-		}
-		m *= 2;
-	}
-	return (tmp);
+	return (((val ^ neg_pol) + (2 * (val & neg_pol))) ^ neg_pol);
 }
 
 uint8_t
 mbin_polarise8(uint8_t val, uint8_t neg_pol)
 {
-	uint8_t tmp = 0;
-	uint8_t m = 1;
-
-	while (m) {
-		if (val & m) {
-			tmp |= m;
-			if (neg_pol & m) {
-				val += m;
-			} else {
-				val -= m;
-			}
-		}
-		m *= 2;
-	}
-	return (tmp);
+	return (((val ^ neg_pol) + (2 * (val & neg_pol))) ^ neg_pol);
 }
