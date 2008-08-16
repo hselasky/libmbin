@@ -27,49 +27,59 @@
 
 #include "math_bin.h"
 
-/*
- * A greycode is a transform where consequtive numbers only differs by
- * a maximum of two bits. A greycode can be inversed by giving sign to
- * the bits. The first set bit is negative. The next set bit is
- * positive, and so on: "++++" -> "-+-+".
- */
-
 uint32_t
-mbin_greyA_inv32(uint32_t t)
+mbin_div_odd32(uint32_t r, uint32_t div)
 {
-	uint32_t m = 0x80000000;
+	uint32_t m;
 
+	div = -div + 1;
+
+	m = 1;
 	while (m) {
-		if (t & m) {
-			t ^= (m / 2);
-		}
-		m /= 2;
-	}
-	return (t);
-}
 
-uint32_t
-mbin_greyB_inv32(uint32_t t)
-{
-	uint32_t m = 1;
-
-	while (m) {
-		if (t & m) {
-			t ^= (2 * m);
+		if (r & m) {
+			r += div;
 		}
 		m *= 2;
+		div *= 2;
 	}
-	return (t);
+	return (r);
 }
 
-uint32_t
-mbin_greyA_fwd32(uint32_t t)
+uint16_t
+mbin_div_odd16(uint16_t r, uint16_t div)
 {
-	return (t ^ (t / 2));
+	uint16_t m;
+
+	div = -div + 1;
+
+	m = 1;
+	while (m) {
+
+		if (r & m) {
+			r += div;
+		}
+		m *= 2;
+		div *= 2;
+	}
+	return (r);
 }
 
-uint32_t
-mbin_greyB_fwd32(uint32_t t)
+uint8_t
+mbin_div_odd8(uint8_t r, uint8_t div)
 {
-	return (t ^ (t * 2));
+	uint8_t m;
+
+	div = -div + 1;
+
+	m = 1;
+	while (m) {
+
+		if (r & m) {
+			r += div;
+		}
+		m *= 2;
+		div *= 2;
+	}
+	return (r);
 }

@@ -28,48 +28,25 @@
 #include "math_bin.h"
 
 /*
- * A greycode is a transform where consequtive numbers only differs by
- * a maximum of two bits. A greycode can be inversed by giving sign to
- * the bits. The first set bit is negative. The next set bit is
- * positive, and so on: "++++" -> "-+-+".
+ * Functions for converting polar numbers into a non-polar numbers:
+ *
+ * -+-+-+-+ or +-+-+-+- -> +++++
  */
 
 uint32_t
-mbin_greyA_inv32(uint32_t t)
+mbin_depolarise32(uint32_t val, uint32_t neg_pol)
 {
-	uint32_t m = 0x80000000;
-
-	while (m) {
-		if (t & m) {
-			t ^= (m / 2);
-		}
-		m /= 2;
-	}
-	return (t);
+	return ((val & ~neg_pol) - (val & neg_pol));
 }
 
-uint32_t
-mbin_greyB_inv32(uint32_t t)
+uint16_t
+mbin_depolarise16(uint16_t val, uint16_t neg_pol)
 {
-	uint32_t m = 1;
-
-	while (m) {
-		if (t & m) {
-			t ^= (2 * m);
-		}
-		m *= 2;
-	}
-	return (t);
+	return ((val & ~neg_pol) - (val & neg_pol));
 }
 
-uint32_t
-mbin_greyA_fwd32(uint32_t t)
+uint8_t
+mbin_depolarise8(uint8_t val, uint8_t neg_pol)
 {
-	return (t ^ (t / 2));
-}
-
-uint32_t
-mbin_greyB_fwd32(uint32_t t)
-{
-	return (t ^ (t * 2));
+	return ((val & ~neg_pol) - (val & neg_pol));
 }

@@ -28,7 +28,7 @@
 #include "math_bin.h"
 
 uint32_t
-mbin_recode32(uint32_t val, const uint8_t *premap)
+mbin_recodeA_fwd32(uint32_t val, const uint8_t *premap)
 {
 	uint32_t temp = 0;
 
@@ -49,7 +49,7 @@ mbin_recode32(uint32_t val, const uint8_t *premap)
 }
 
 uint16_t
-mbin_recode16(uint16_t val, const uint8_t *premap)
+mbin_recodeA_fwd16(uint16_t val, const uint8_t *premap)
 {
 	uint16_t temp = 0;
 
@@ -70,7 +70,7 @@ mbin_recode16(uint16_t val, const uint8_t *premap)
 }
 
 uint8_t
-mbin_recode8(uint8_t val, const uint8_t *premap)
+mbin_recodeA_fwd8(uint8_t val, const uint8_t *premap)
 {
 	uint8_t temp = 0;
 
@@ -91,8 +91,7 @@ mbin_recode8(uint8_t val, const uint8_t *premap)
 }
 
 void
-mbin_recode_default(uint8_t *premap,
-    uint8_t start, uint8_t max)
+mbin_recodeA_def(uint8_t *premap, uint8_t start, uint8_t max)
 {
 	uint8_t x;
 	uint8_t y;
@@ -115,7 +114,7 @@ mbin_recode_default(uint8_t *premap,
 }
 
 void
-mbin_recode_inverse(const uint8_t *src, uint8_t *dst, uint8_t max)
+mbin_recodeA_inv(const uint8_t *src, uint8_t *dst, uint8_t max)
 {
 	uint8_t x;
 	uint8_t y;
@@ -133,3 +132,34 @@ mbin_recode_inverse(const uint8_t *src, uint8_t *dst, uint8_t max)
 	}
 	return;
 }
+
+uint32_t
+mbin_recodeB_fwd32(uint32_t x, const uint32_t *ptr)
+{
+	uint32_t m = 1;
+	uint32_t val = 0;
+
+	while (m) {
+	  val |= (x + ptr[0]) & m;
+	  m *= 2;
+	  ptr++;
+	}
+	return (val);
+}
+
+uint32_t
+mbin_recodeB_inv32(uint32_t val, const uint32_t *ptr)
+{
+	uint32_t m = 1;
+	uint32_t x = 0;
+
+	while (m) {
+	  if (((x + ptr[0]) ^ val) & m) {
+		x |= m;
+	  }
+	  m *= 2;
+	  ptr++;
+	}
+	return (x);
+}
+

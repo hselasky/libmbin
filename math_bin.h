@@ -55,13 +55,30 @@ uint32_t mbin_msb32(uint32_t val);
 uint16_t mbin_msb16(uint16_t val);
 uint8_t	mbin_msb8(uint8_t val);
 
-uint32_t mbin_grey_inv32(uint32_t t);
-uint32_t mbin_grey_fwd32(uint32_t t);
+uint32_t mbin_greyA_inv32(uint32_t t);
+uint32_t mbin_greyA_fwd32(uint32_t t);
+uint32_t mbin_greyB_inv32(uint32_t t);
+uint32_t mbin_greyB_fwd32(uint32_t t);
 
-uint32_t mbin_recode32(uint32_t val, const uint8_t *premap);
-uint16_t mbin_recode16(uint16_t val, const uint8_t *premap);
-uint8_t	mbin_recode8(uint8_t val, const uint8_t *premap);
-void	mbin_recode_default(uint8_t *premap, uint8_t start, uint8_t max);
-void	mbin_recode_inverse(const uint8_t *src, uint8_t *dst, uint8_t max);
+uint32_t mbin_recodeA_fwd32(uint32_t val, const uint8_t *premap);
+uint16_t mbin_recodeA_fwd16(uint16_t val, const uint8_t *premap);
+uint8_t	mbin_recodeA_fwd8(uint8_t val, const uint8_t *premap);
+void	mbin_recodeA_def(uint8_t *premap, uint8_t start, uint8_t max);
+void	mbin_recodeA_inv(const uint8_t *src, uint8_t *dst, uint8_t max);
+
+uint32_t mbin_recodeB_fwd32(uint32_t x, const uint32_t *ptr);
+uint32_t mbin_recodeB_inv32(uint32_t x, const uint32_t *ptr);
+
+uint32_t mbin_polarise32(uint32_t val, uint32_t neg_pol);
+uint16_t mbin_polarise16(uint16_t val, uint16_t neg_pol);
+uint8_t	mbin_polarise8(uint8_t val, uint8_t neg_pol);
+
+uint32_t mbin_depolarise32(uint32_t val, uint32_t neg_pol);
+uint16_t mbin_depolarise16(uint16_t val, uint16_t neg_pol);
+uint8_t	mbin_depolarise8(uint8_t val, uint8_t neg_pol);
+
+uint32_t mbin_div_odd32(uint32_t r, uint32_t div);
+uint16_t mbin_div_odd16(uint16_t r, uint16_t div);
+uint8_t	mbin_div_odd8(uint8_t r, uint8_t div);
 
 #endif					/* _MATH_BIN_H_ */
