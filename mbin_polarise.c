@@ -36,17 +36,17 @@
 uint32_t
 mbin_polarise32(uint32_t val, uint32_t neg_pol)
 {
-	return (((val ^ neg_pol) + (2 * (val & neg_pol))) ^ neg_pol);
+	return ((val + neg_pol) ^ neg_pol);
 }
 
 uint16_t
 mbin_polarise16(uint16_t val, uint16_t neg_pol)
 {
-	return (((val ^ neg_pol) + (2 * (val & neg_pol))) ^ neg_pol);
+	return ((val + neg_pol) ^ neg_pol);
 }
 
 uint8_t
 mbin_polarise8(uint8_t val, uint8_t neg_pol)
 {
-	return (((val ^ neg_pol) + (2 * (val & neg_pol))) ^ neg_pol);
+	return ((val + neg_pol) ^ neg_pol);
 }
