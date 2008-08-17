@@ -31,6 +31,9 @@
  * Functions for converting non-polar numbers into a polar number:
  *
  * +++++ -> -+-+-+-+ (neg_pol=0x5555) or +-+-+-+- (neg_pol=0xAAAA)
+ *
+ * When a bit in the "neg_pol" mask is one, the polarity becomes
+ * negative of that bit.
  */
 
 uint32_t

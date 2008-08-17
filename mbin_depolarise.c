@@ -36,17 +36,80 @@
 uint32_t
 mbin_depolarise32(uint32_t val, uint32_t neg_pol)
 {
+#if 1
+	return ((val ^ neg_pol) - neg_pol);
+#else
 	return ((val & ~neg_pol) - (val & neg_pol));
+#endif
+}
+
+/*
+ * Equality:
+ * a = mbin_depolar_div32(t);
+ * b = mbin_depolarise32(a,~a);
+ *
+ * b == t
+ *
+ * Also see: Greycode
+ */
+uint32_t
+mbin_depolar_div32(uint32_t val_pol)
+{
+	uint32_t m = 1;
+
+	while (m) {
+		if (val_pol & m) {
+			val_pol ^= (2 * m);
+		}
+		m *= 2;
+	}
+	return (val_pol);
 }
 
 uint16_t
 mbin_depolarise16(uint16_t val, uint16_t neg_pol)
 {
+#if 1
+	return ((val ^ neg_pol) - neg_pol);
+#else
 	return ((val & ~neg_pol) - (val & neg_pol));
+#endif
+}
+
+uint16_t
+mbin_depolar_div16(uint16_t val_pol)
+{
+	uint16_t m = 1;
+
+	while (m) {
+		if (val_pol & m) {
+			val_pol ^= (2 * m);
+		}
+		m *= 2;
+	}
+	return (val_pol);
 }
 
 uint8_t
 mbin_depolarise8(uint8_t val, uint8_t neg_pol)
 {
+#if 1
+	return ((val ^ neg_pol) - neg_pol);
+#else
 	return ((val & ~neg_pol) - (val & neg_pol));
+#endif
+}
+
+uint8_t
+mbin_depolar_div8(uint8_t val_pol)
+{
+	uint8_t m = 1;
+
+	while (m) {
+		if (val_pol & m) {
+			val_pol ^= (2 * m);
+		}
+		m *= 2;
+	}
+	return (val_pol);
 }
