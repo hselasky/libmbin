@@ -44,11 +44,16 @@ mbin_depolarise32(uint32_t val, uint32_t neg_pol)
 }
 
 /*
- * Equality:
- * a = mbin_depolar_div32(t);
- * b = mbin_depolarise32(a,~a);
+ * Properties:
  *
- * b == t
+ * 1)
+ * a = mbin_depolar_div32(t);
+ * t == mbin_polarise32(a,a);
+ * a == mbin_depolarise(t,a);
+ *
+ * 2)
+ * b == mbin_depolarise32(-b,-b);
+ * b == mbin_depolarise32(b,~b);
  *
  * Also see: Greycode
  */
