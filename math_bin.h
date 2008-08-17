@@ -77,9 +77,9 @@ uint32_t mbin_depolarise32(uint32_t val, uint32_t neg_pol);
 uint16_t mbin_depolarise16(uint16_t val, uint16_t neg_pol);
 uint8_t	mbin_depolarise8(uint8_t val, uint8_t neg_pol);
 
-uint32_t mbin_depolar_div32(uint32_t val_pol);
-uint16_t mbin_depolar_div16(uint16_t val_pol);
-uint8_t	mbin_depolar_div8(uint8_t val_pol);
+uint32_t mbin_depolar_div32(uint32_t rem, uint32_t div);
+uint16_t mbin_depolar_div16(uint16_t rem, uint16_t div);
+uint8_t	mbin_depolar_div8(uint8_t rem, uint8_t div);
 
 uint32_t mbin_div_odd32(uint32_t r, uint32_t div);
 uint16_t mbin_div_odd16(uint16_t r, uint16_t div);

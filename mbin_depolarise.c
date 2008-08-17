@@ -47,8 +47,10 @@ mbin_depolarise32(uint32_t val, uint32_t neg_pol)
  * Properties:
  *
  * 1)
- * a = mbin_depolar_div32(t);
+ * x = 2;
+ * a = mbin_depolar_div32(t, x);
  * t == mbin_polarise32(a,a);
+ * t == (a ^ (x*a))
  * a == mbin_depolarise(t,a);
  *
  * 2)
@@ -56,19 +58,25 @@ mbin_depolarise32(uint32_t val, uint32_t neg_pol)
  * b == mbin_depolarise32(b,~b);
  *
  * Also see: Greycode
+ *
+ * NOTE: Polar division only supports even divisors.
  */
 uint32_t
-mbin_depolar_div32(uint32_t val_pol)
+mbin_depolar_div32(uint32_t rem, uint32_t div)
 {
 	uint32_t m = 1;
+	uint32_t s = 0;
+	uint32_t temp = 0;
 
 	while (m) {
-		if (val_pol & m) {
-			val_pol ^= (2 * m);
+		if ((rem ^ s) & m) {
+			s += div;
+			temp |= m;
 		}
 		m *= 2;
+		div *= 2;
 	}
-	return (val_pol);
+	return (temp);
 }
 
 uint16_t
@@ -82,17 +90,21 @@ mbin_depolarise16(uint16_t val, uint16_t neg_pol)
 }
 
 uint16_t
-mbin_depolar_div16(uint16_t val_pol)
+mbin_depolar_div16(uint16_t rem, uint16_t div)
 {
 	uint16_t m = 1;
+	uint16_t s = 0;
+	uint16_t temp = 0;
 
 	while (m) {
-		if (val_pol & m) {
-			val_pol ^= (2 * m);
+		if ((rem ^ s) & m) {
+			s += div;
+			temp |= m;
 		}
 		m *= 2;
+		div *= 2;
 	}
-	return (val_pol);
+	return (temp);
 }
 
 uint8_t
@@ -106,15 +118,19 @@ mbin_depolarise8(uint8_t val, uint8_t neg_pol)
 }
 
 uint8_t
-mbin_depolar_div8(uint8_t val_pol)
+mbin_depolar_div8(uint8_t rem, uint8_t div)
 {
 	uint8_t m = 1;
+	uint8_t s = 0;
+	uint8_t temp = 0;
 
 	while (m) {
-		if (val_pol & m) {
-			val_pol ^= (2 * m);
+		if ((rem ^ s) & m) {
+			s += div;
+			temp |= m;
 		}
 		m *= 2;
+		div *= 2;
 	}
-	return (val_pol);
+	return (temp);
 }
