@@ -140,9 +140,9 @@ mbin_recodeB_fwd32(uint32_t x, const uint32_t *ptr)
 	uint32_t val = 0;
 
 	while (m) {
-	  val |= (x + ptr[0]) & m;
-	  m *= 2;
-	  ptr++;
+		val |= (x + ptr[0]) & m;
+		m *= 2;
+		ptr++;
 	}
 	return (val);
 }
@@ -154,12 +154,11 @@ mbin_recodeB_inv32(uint32_t val, const uint32_t *ptr)
 	uint32_t x = 0;
 
 	while (m) {
-	  if (((x + ptr[0]) ^ val) & m) {
-		x |= m;
-	  }
-	  m *= 2;
-	  ptr++;
+		if (((x + ptr[0]) ^ val) & m) {
+			x |= m;
+		}
+		m *= 2;
+		ptr++;
 	}
 	return (x);
 }
-

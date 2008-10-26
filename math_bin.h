@@ -85,4 +85,14 @@ uint32_t mbin_div_odd32(uint32_t r, uint32_t div);
 uint16_t mbin_div_odd16(uint16_t r, uint16_t div);
 uint8_t	mbin_div_odd8(uint8_t r, uint8_t div);
 
+uint32_t mbin_mul_baseN_32(uint32_t a, uint32_t b, uint32_t n);
+uint32_t mbin_add_baseN_32(uint32_t a, uint32_t b, uint32_t f, uint32_t n);
+uint32_t mbin_sub_baseN_32(uint32_t a, uint32_t b, uint32_t f, uint32_t n);
+uint32_t mbin_sumdigits_baseN_32(uint32_t a, uint32_t n);
+uint32_t mbin_convert_2toN_32(uint32_t a, uint32_t n);
+uint32_t mbin_convert_Nto2_32(uint32_t a, uint32_t n);
+
+uint32_t mbin_convert_2to1999_32(uint32_t r);
+uint32_t mbin_convert_1999to2_32(uint32_t r);
+
 #endif					/* _MATH_BIN_H_ */
