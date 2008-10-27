@@ -80,3 +80,38 @@ mbin_add_1999_32(uint32_t a, uint32_t b)
 	}
 	return (r);
 }
+
+uint32_t
+mbin_sub_1999_32(uint32_t a, uint32_t b)
+{
+	uint32_t r;
+	uint32_t m;
+
+	r = 0;
+	m = 1;
+	while (m) {
+		r = r + (2 * (r & (0 - m))) + (a & m) - (b & m);
+		m *= 2;
+	}
+	return (r);
+}
+
+uint32_t
+mbin_div_1999_odd_32(uint32_t rem, uint32_t div)
+{
+	uint32_t m;
+	uint32_t s;
+
+	s = 0;
+	m = 1;
+	while (m) {
+		if (rem & m) {
+			rem = mbin_sub_1999_32(rem, div);
+			s |= m;
+		}
+		/* "div" = "2*div" in 2-base */
+		div = mbin_add_1999_32(div, div);
+		m = 2 * m;
+	}
+	return (s);
+}
