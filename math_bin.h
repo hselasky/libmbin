@@ -94,5 +94,6 @@ uint32_t mbin_convert_Nto2_32(uint32_t a, uint32_t n);
 
 uint32_t mbin_convert_2to1999_32(uint32_t r);
 uint32_t mbin_convert_1999to2_32(uint32_t r);
+uint32_t mbin_add_1999_32(uint32_t a, uint32_t b);
 
 #endif					/* _MATH_BIN_H_ */
