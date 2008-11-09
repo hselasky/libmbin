@@ -119,12 +119,15 @@ mbin_print8_abc(uint8_t x)
 	const char *str = "abcdefgh";
 	uint8_t m = 1;
 
-	while (m) {
-		if (x & m)
-			putchar(*str);
-		m *= 2;
-		str++;
-	}
+	if (x == 0)
+		putchar('1');
+	else
+		while (m) {
+			if (x & m)
+				putchar(*str);
+			m *= 2;
+			str++;
+		}
 	return;
 }
 
@@ -134,11 +137,14 @@ mbin_print16_abc(uint16_t x)
 	const char *str = "abcdefghijklmnop";
 	uint16_t m = 1;
 
-	while (m) {
-		if (x & m)
-			putchar(*str);
-		m *= 2;
-		str++;
-	}
+	if (x == 0)
+		putchar('1');
+	else
+		while (m) {
+			if (x & m)
+				putchar(*str);
+			m *= 2;
+			str++;
+		}
 	return;
 }
