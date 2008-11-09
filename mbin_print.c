@@ -37,7 +37,7 @@ mbin_print8(const char *fmt, uint8_t x)
 	uint8_t mask = 0x80;
 
 	if (fmt == NULL)
-		fmt = "1111 1111";
+		fmt = "11111111";
 
 	while (*fmt) {
 		if (*fmt == '1') {
@@ -57,7 +57,7 @@ mbin_print16(const char *fmt, uint16_t x)
 	uint16_t mask = 0x8000;
 
 	if (fmt == NULL)
-		fmt = "1111 1111 | 1111 1111";
+		fmt = "1111111111111111";
 
 	while (*fmt) {
 		if (*fmt == '1') {
@@ -77,7 +77,7 @@ mbin_print32(const char *fmt, uint32_t x)
 	uint32_t mask = 0x80000000;
 
 	if (fmt == NULL)
-		fmt = "1111 1111 | 1111 1111 | 1111 1111 | 1111 1111";
+		fmt = "11111111111111111111111111111111";
 
 	while (*fmt) {
 		if (*fmt == '1') {
@@ -98,8 +98,8 @@ mbin_print64(const char *fmt, uint64_t x)
 
 	if (fmt == NULL) {
 		fmt =
-		    "1111 1111 | 1111 1111 | 1111 1111 | 1111 1111 | "
-		    "1111 1111 | 1111 1111 | 1111 1111 | 1111 1111";
+		    "11111111111111111111111111111111"
+		    "11111111111111111111111111111111";
 	}
 	while (*fmt) {
 		if (*fmt == '1') {
@@ -109,6 +109,36 @@ mbin_print64(const char *fmt, uint64_t x)
 			putchar(*fmt);
 		}
 		fmt++;
+	}
+	return;
+}
+
+void
+mbin_print8_abc(uint8_t x)
+{
+	const char *str = "abcdefgh";
+	uint8_t m = 1;
+
+	while (m) {
+		if (x & m)
+			putchar(*str);
+		m *= 2;
+		str++;
+	}
+	return;
+}
+
+void
+mbin_print16_abc(uint16_t x)
+{
+	const char *str = "abcdefghijklmnop";
+	uint16_t m = 1;
+
+	while (m) {
+		if (x & m)
+			putchar(*str);
+		m *= 2;
+		str++;
 	}
 	return;
 }

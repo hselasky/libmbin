@@ -30,6 +30,8 @@ void	mbin_print8(const char *fmt, uint8_t x);
 void	mbin_print16(const char *fmt, uint16_t x);
 void	mbin_print32(const char *fmt, uint32_t x);
 void	mbin_print64(const char *fmt, uint64_t x);
+void	mbin_print8_abc(uint8_t x);
+void	mbin_print16_abc(uint16_t x);
 
 void	mbin_expand_32x32(uint32_t *ptr, uint32_t val, uint32_t mask, uint32_t slice);
 void	mbin_expand_16x32(uint16_t *ptr, uint32_t val, uint32_t mask, uint16_t slice);
