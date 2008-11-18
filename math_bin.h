@@ -100,4 +100,8 @@ uint32_t mbin_add_1999_32(uint32_t a, uint32_t b);
 uint32_t mbin_sub_1999_32(uint32_t a, uint32_t b);
 uint32_t mbin_div_1999_odd_32(uint32_t rem, uint32_t div);
 
+uint32_t mbin_bitrev32(uint32_t a);
+uint16_t mbin_bitrev16(uint16_t a);
+uint8_t	mbin_bitrev8(uint8_t a);
+
 #endif					/* _MATH_BIN_H_ */

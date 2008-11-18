@@ -10,6 +10,7 @@ CFLAGS+=	-Wall -O2 -O3
 SRCS=
 SRCS+=	mbin_base1999.c
 SRCS+=	mbin_baseN.c
+SRCS+=	mbin_bitreverse.c
 SRCS+=	mbin_dec.c
 SRCS+=	mbin_depolarise.c
 SRCS+=	mbin_div.c
