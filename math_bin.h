@@ -53,6 +53,10 @@ uint8_t	mbin_sumbits32(uint32_t val);
 uint8_t	mbin_sumbits16(uint16_t val);
 uint8_t	mbin_sumbits8(uint8_t val);
 
+uint32_t mbin_lsb32(uint32_t val);
+uint16_t mbin_lsb16(uint16_t val);
+uint8_t	mbin_lsb8(uint8_t val);
+
 uint32_t mbin_msb32(uint32_t val);
 uint16_t mbin_msb16(uint16_t val);
 uint8_t	mbin_msb8(uint8_t val);
