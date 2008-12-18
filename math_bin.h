@@ -87,7 +87,12 @@ uint32_t mbin_depolar_div32(uint32_t rem, uint32_t div);
 uint16_t mbin_depolar_div16(uint16_t rem, uint16_t div);
 uint8_t	mbin_depolar_div8(uint8_t rem, uint8_t div);
 
+void	mbin_xor_common32(uint32_t *pa, uint32_t *pb);
+void	mbin_xor_common16(uint16_t *pa, uint16_t *pb);
+void	mbin_xor_common8(uint8_t *pa, uint8_t *pb);
+
 uint32_t mbin_div_odd32(uint32_t r, uint32_t div);
+uint32_t mbin_div_odd32_alt1(uint32_t r, uint32_t div);
 uint16_t mbin_div_odd16(uint16_t r, uint16_t div);
 uint8_t	mbin_div_odd8(uint8_t r, uint8_t div);
 

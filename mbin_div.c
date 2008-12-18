@@ -27,6 +27,39 @@
 
 #include "math_bin.h"
 
+void
+mbin_xor_common32(uint32_t *pa, uint32_t *pb)
+{
+	uint32_t and;
+
+	and = *pa & *pb;
+
+	*pa ^= and;
+	*pb ^= and;
+}
+
+void
+mbin_xor_common16(uint16_t *pa, uint16_t *pb)
+{
+	uint16_t and;
+
+	and = *pa & *pb;
+
+	*pa ^= and;
+	*pb ^= and;
+}
+
+void
+mbin_xor_common8(uint8_t *pa, uint8_t *pb)
+{
+	uint8_t and;
+
+	and = *pa & *pb;
+
+	*pa ^= and;
+	*pb ^= and;
+}
+
 uint32_t
 mbin_div_odd32(uint32_t r, uint32_t div)
 {
@@ -44,6 +77,56 @@ mbin_div_odd32(uint32_t r, uint32_t div)
 		div *= 2;
 	}
 	return (r);
+}
+
+/*
+ * First version of Near Carry Less, NCL, binary division. This
+ * function runs faster in hardware than in software.
+ */
+uint32_t
+mbin_div_odd32_alt1(uint32_t rem, uint32_t div)
+{
+	uint32_t neg;
+	uint32_t m;
+	uint32_t t;
+	uint32_t a;
+	uint32_t b;
+
+	m = 1;				/* mask */
+	neg = 0;			/* no negative bits */
+	t = 0;				/* temp variable */
+
+	while (m) {
+
+		if ((rem ^ neg) & m) {
+
+			t |= m;
+
+			/*
+			 * Subtract "div" from "(rem-neg)" using near
+			 * carry less, NCL, addition where "a" is
+			 * remainder and "b" is carry.
+			 */
+			a = neg ^ div;
+			b = (neg & div);
+
+			/* remove common bits */
+
+			mbin_xor_common32(&a, &rem);
+
+			/* compute final part of NCL addition */
+
+			neg = ((2 * a) & ~a) ^ (2 * b);
+			rem = rem ^ ((~(2 * a)) & a);
+
+			/* remove common bits */
+
+			mbin_xor_common32(&rem, &neg);
+		}
+		m *= 2;
+		div *= 2;
+	}
+	return (t);
 }
 
 uint16_t
