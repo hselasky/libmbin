@@ -129,6 +129,46 @@ mbin_div_odd32_alt1(uint32_t rem, uint32_t div)
 	return (t);
 }
 
+/*
+ * Optimised version of Near Carry Less, NCL, binary division. This
+ * function runs faster in hardware than in software.
+ */
+uint32_t
+mbin_div_odd32_alt2(uint32_t rem, uint32_t div)
+{
+	uint32_t neg;
+	uint32_t m;
+	uint32_t t;
+	uint32_t z;
+	uint32_t y;
+
+	m = 1;				/* mask */
+	neg = 0;			/* no negative bits */
+	t = 0;				/* temp variable */
+
+	while (m) {
+		if (rem & m) {
+			t |= m;
+
+			/* "a XOR b" = "(~a AND b)" XOR "(a AND ~b)" */
+
+			/*
+			 * The following equation computes "(rem - (rem &
+			 * neg)) -= div;":
+			 */
+
+			z = neg ^ (div & ~rem);
+			y = (div ^ rem);
+
+			neg = (2 * z) & (~y);
+			rem = (2 * z) ^ y;
+		}
+		m *= 2;
+		div *= 2;
+	}
+	return (t);
+}
+
 uint16_t
 mbin_div_odd16(uint16_t r, uint16_t div)
 {
