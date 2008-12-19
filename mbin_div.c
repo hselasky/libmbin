@@ -153,8 +153,8 @@ mbin_div_odd32_alt2(uint32_t rem, uint32_t div)
 			/* "a XOR b" = "(~a AND b)" XOR "(a AND ~b)" */
 
 			/*
-			 * The following equation computes "(rem - (rem &
-			 * neg)) -= div;":
+			 * The following equation computes
+			 * "((rem & ~neg) - (rem & neg)) -= div;"
 			 */
 
 			z = neg ^ (div & ~rem);
