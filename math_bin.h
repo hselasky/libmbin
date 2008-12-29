@@ -114,4 +114,14 @@ uint32_t mbin_bitrev32(uint32_t a);
 uint16_t mbin_bitrev16(uint16_t a);
 uint8_t	mbin_bitrev8(uint8_t a);
 
+struct mbin_baseM_state31 {
+	uint32_t k;			/* (d OR c) */
+	uint32_t d;
+};
+
+uint32_t mbin_base_2toM_32(uint32_t bm);
+uint32_t mbin_base_Mto2_32(uint32_t bm);
+void	mbin_baseM_get_state31(struct mbin_baseM_state31 *ps, uint32_t x);
+void	mbin_baseM_inc_state31(struct mbin_baseM_state31 *ps);
+
 #endif					/* _MATH_BIN_H_ */

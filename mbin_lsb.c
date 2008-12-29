@@ -30,17 +30,17 @@
 uint32_t
 mbin_lsb32(uint32_t val)
 {
-	return ((~(val-1)) & val);
+	return ((~(val - 1)) & val);
 }
 
 uint16_t
 mbin_lsb16(uint16_t val)
 {
-	return ((~(val-1)) & val);
+	return ((~(val - 1)) & val);
 }
 
 uint8_t
 mbin_lsb8(uint8_t val)
 {
-	return ((~(val-1)) & val);
+	return ((~(val - 1)) & val);
 }

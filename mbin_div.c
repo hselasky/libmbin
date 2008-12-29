@@ -157,7 +157,7 @@ mbin_div_odd32_alt2(uint32_t rem, uint32_t div)
 			 * "((rem & ~neg) - (rem & neg)) -= div;"
 			 */
 
-			z = neg ^ (div & ~rem);
+			z = neg | (div & ~rem);
 			y = (div ^ rem);
 
 			neg = (2 * z) & (~y);
