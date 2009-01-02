@@ -9,6 +9,7 @@ CFLAGS+=	-Wall -O2 -O3
 
 SRCS=
 SRCS+=	mbin_base1999.c
+SRCS+=	mbin_baseG.c
 SRCS+=	mbin_baseM.c
 SRCS+=	mbin_baseN.c
 SRCS+=	mbin_bitreverse.c
