@@ -38,7 +38,7 @@ mbin_baseG_get_bias32(uint32_t f)
 			t += (n << n);
 		}
 	}
-	return (mbin_div_odd32(t, f));
+	return (t);
 }
 
 /*
@@ -51,17 +51,20 @@ mbin_base_2toG_32(uint32_t f, uint32_t b2)
 	uint32_t t;
 	uint32_t n;
 
-	bias = mbin_baseG_get_bias32(f) + b2;
+	bias = mbin_baseG_get_bias32(f) + (b2 * f);
 	t = 0;
 
 	for (n = 0; n != 32; n++) {
-		t |= (f * (bias - n)) & (1 << n);
+		t |= (bias & (1 << n));
+		bias -= f;
 	}
 	return (t);
 }
 
 /*
  * This function converts from base-G to base-2 using factor "f".
+ *
+ * NOTE: factor "f" should be odd
  */
 uint32_t
 mbin_base_Gto2_32(uint32_t f, uint32_t bg)
@@ -73,17 +76,17 @@ mbin_base_Gto2_32(uint32_t f, uint32_t bg)
 	bias = mbin_baseG_get_bias32(f);
 
 	for (n = 0; n != 32; n++) {
-		if ((bg ^ (f * (bias + b2 - n))) & (1 << n)) {
+		if ((bg ^ bias) & (1 << n)) {
 			b2 ^= (1 << n);
+			bias += (f << n);
 		}
+		bias -= f;
 	}
 	return (b2);
 }
 
 /*
  * This function restores the state at the given index.
- *
- * NOTE: "f" must be an odd factor.
  */
 void
 mbin_baseG_get_state32(struct mbin_baseG_state32 *ps, uint32_t f, uint32_t index)
