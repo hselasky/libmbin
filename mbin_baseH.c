@@ -28,59 +28,71 @@
 #include "math_bin.h"
 
 static uint32_t
-mbin_baseG_get_bias32(uint32_t f)
+mbin_baseH_gen_div(void)
 {
-	uint32_t n;
-	uint32_t t = 0;
+#if 0
+	uint8_t n = 32;
+	uint32_t x = 1;
 
-	for (n = 0; n != 32; n++) {
-		if (f & (1 << n)) {
-			t += (n << n);
-		}
+	while (n--) {
+		x = (x * x) + 4;
 	}
-	return (t);
+	return (x);
+#else
+	return (0x3ef7226d);
+#endif
 }
 
-/*
- * This function converts from base-2 to base-G using factor "f".
- */
-uint32_t
-mbin_base_2toG_32(uint32_t f, uint32_t b2)
+static uint32_t
+mbin_baseH_gen_mul(void)
 {
-	uint32_t bias;
+#if 0
+	return (mbin_div_odd32(1, mbin_baseH_gen_div()));
+#else
+	return (0xf0423765);
+#endif
+}
+
+uint32_t
+mbin_base_2toH_32(uint32_t index)
+{
+	uint32_t f;
+	uint32_t g;
 	uint32_t t;
-	uint32_t n;
+	uint8_t n;
 
-	bias = mbin_baseG_get_bias32(f) + (b2 * f);
-	t = 0;
+	/* XXX constant origin needs to be investigated */
+	/* XXX probably this constant should be removed */
+	index -= 0x30c41244;
 
+	f = mbin_baseH_gen_mul();
+	g = 1;
 	for (n = 0; n != 32; n++) {
-		t |= (bias & (1 << n));
-		bias -= f;
+		g = g * g;
+		if (index & (1 << (31 - n)))
+			g *= f;
+	}
+
+	t = 1;
+	f = mbin_baseH_gen_div();
+	for (n = 2; n != 32; n++) {
+		t |= g & (1 << n);
+		g = g * f;
 	}
 	return (t);
 }
 
-/*
- * This function converts from base-G to base-2 using factor "f".
- *
- * NOTE: factor "f" should be odd
- */
 uint32_t
-mbin_base_Gto2_32(uint32_t f, uint32_t bg)
+mbin_base_Hto2_32(uint32_t bh)
 {
-	uint32_t bias;
-	uint32_t n;
 	uint32_t b2 = 0;
+	uint32_t m = 4;
 
-	bias = mbin_baseG_get_bias32(f);
-
-	for (n = 0; n != 32; n++) {
-		if ((bg ^ bias) & (1 << n)) {
-			b2 ^= (1 << n);
-			bias += (f << n);
+	while (m) {
+		if ((mbin_base_2toH_32(b2) ^ bh) & m) {
+			b2 ^= m / 4;
 		}
-		bias -= f;
+		m *= 2;
 	}
 	return (b2);
 }
@@ -89,20 +101,18 @@ mbin_base_Gto2_32(uint32_t f, uint32_t bg)
  * This function restores the state at the given index.
  */
 void
-mbin_baseG_get_state32(struct mbin_baseG_state32 *ps,
-    uint32_t f, uint32_t index)
+mbin_baseH_get_state32(struct mbin_baseH_state32 *ps,
+    uint32_t index)
 {
 	uint32_t ap;
 	uint32_t a;
 	uint32_t c;
 
-	ap = mbin_base_2toG_32(f, index - 1);
-	a = mbin_base_2toG_32(f, index);
-	c = f;
-
+	ap = mbin_base_2toH_32(index - 1);
+	a = mbin_base_2toH_32(index);
+	c = 2 * (((~a ^ ap) & (4 * ap)) ^ ((~a) & ap));
 	ps->a = a;
 	ps->c = c;
-	ps->b = 2 * ((ap & (~a)) | ((ap | (~a)) & c));
 	return;
 }
 
@@ -110,28 +120,35 @@ mbin_baseG_get_state32(struct mbin_baseG_state32 *ps,
  * This function increments the state by one.
  */
 void
-mbin_baseG_inc_state32(struct mbin_baseG_state32 *ps)
+mbin_baseH_inc_state32(struct mbin_baseH_state32 *ps)
 {
 	uint32_t a;
-	uint32_t b;
 	uint32_t c;
 
 	a = ps->a;
-	b = ps->b;
 	c = ps->c;
 
 	/* standard addition formula */
 
-	ps->a = a ^ b ^ c;
-	ps->b = 2 * ((a & b) | (a & c) | (b & c));
+	ps->a = a ^ (4 * a) ^ c;
+	ps->c = 2 * (((a ^ c) & (4 * a)) ^ (a & c));
 	return;
 }
 
 /*
- * This function deciphers the state like a multiplication.
+ * This function deciphers the state like an exponent,
  */
 uint32_t
-mbin_baseG_decipher_state32(struct mbin_baseG_state32 *ps)
+mbin_baseH_decipher_state32(struct mbin_baseH_state32 *ps)
 {
-	return (ps->a + ps->b);
+	struct mbin_baseH_state32 psc = *ps;
+	uint32_t t;
+	uint8_t n;
+
+	t = 0;
+	for (n = 0; n != 32; n++) {
+		t |= psc.a & (1 << n);
+		mbin_baseH_inc_state32(&psc);
+	}
+	return (t);
 }
