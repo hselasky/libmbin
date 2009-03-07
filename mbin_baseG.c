@@ -34,8 +34,8 @@
 /*
  * This function computes the carry associated with a baseG number.
  */
-static uint32_t
-mbin_base_get_carry_32(uint32_t f, uint32_t a)
+uint32_t
+mbin_baseG_carry_32(uint32_t f, uint32_t a)
 {
 	uint32_t tmp;
 	uint32_t b;
@@ -91,7 +91,7 @@ mbin_base_Gto2_32(uint32_t f, uint32_t bg)
 {
 	uint32_t c;
 
-	c = mbin_base_get_carry_32(f, bg);
+	c = mbin_baseG_carry_32(f, bg);
 
 	return (mbin_div_odd32(bg + c, f));
 }
@@ -157,7 +157,7 @@ mbin_baseG_inc_32(uint32_t f, uint32_t bg)
 {
 	uint32_t c;
 
-	c = mbin_base_get_carry_32(f, bg);
+	c = mbin_baseG_carry_32(f, bg);
 
 	return (bg ^ c ^ f);
 }
