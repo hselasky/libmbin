@@ -23,6 +23,10 @@
  * SUCH DAMAGE.
  */
 
+/*
+ * baseH is an exponent function
+ */
+
 #include <stdint.h>
 
 #include "math_bin.h"
@@ -61,9 +65,11 @@ mbin_base_2toH_32(uint32_t index)
 	uint32_t t;
 	uint8_t n;
 
+#if 0
 	/* XXX constant origin needs to be investigated */
 	/* XXX probably this constant should be removed */
 	index -= 0x30c41244;
+#endif
 
 	f = mbin_baseH_gen_mul();
 	g = 1;
@@ -131,7 +137,7 @@ mbin_baseH_inc_state32(struct mbin_baseH_state32 *ps)
 	/* standard addition formula */
 
 	ps->a = a ^ (4 * a) ^ c;
-	ps->c = 2 * (((a ^ c) & (4 * a)) ^ (a & c));
+	ps->c = 2 * (((a ^ c) & (4 * a)) | (a & c));
 	return;
 }
 

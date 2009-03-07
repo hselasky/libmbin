@@ -23,46 +23,40 @@
  * SUCH DAMAGE.
  */
 
+/*
+ * baseG is a multiplication function
+ */
+
 #include <stdint.h>
 
 #include "math_bin.h"
 
-static uint32_t
-mbin_baseG_get_bias32(uint32_t f)
-{
-	uint32_t n;
-	uint32_t t = 0;
-
-	for (n = 0; n != 32; n++) {
-		if (f & (1 << n)) {
-			t += (n << n);
-		}
-	}
-	return (t);
-}
-
 /*
  * This function converts from base-2 to base-G using factor "f".
+ * This function has similarities to "mbin_recodeB_fwd32()".
  */
 uint32_t
 mbin_base_2toG_32(uint32_t f, uint32_t b2)
 {
 	uint32_t bias;
 	uint32_t t;
-	uint32_t n;
+	uint32_t m;
 
-	bias = mbin_baseG_get_bias32(f) + (b2 * f);
+	bias = (b2 * f);
 	t = 0;
+	m = 1;
 
-	for (n = 0; n != 32; n++) {
-		t |= (bias & (1 << n));
-		bias -= f;
+	while (m) {
+		bias -= f & (m - 1);
+		t |= (bias & m);
+		m <<= 1;
 	}
 	return (t);
 }
 
 /*
  * This function converts from base-G to base-2 using factor "f".
+ * This function has similarities to "mbin_recodeB_inv32()".
  *
  * NOTE: factor "f" should be odd
  */
@@ -70,19 +64,20 @@ uint32_t
 mbin_base_Gto2_32(uint32_t f, uint32_t bg)
 {
 	uint32_t bias;
-	uint32_t n;
-	uint32_t b2 = 0;
+	uint32_t b2;
+	uint32_t m;
 
-	bias = mbin_baseG_get_bias32(f);
+	bias = 0;
+	b2 = 0;
+	m = 1;
 
-	for (n = 0; n != 32; n++) {
-		if ((bg ^ bias) & (1 << n)) {
-			b2 ^= (1 << n);
-			bias += (f << n);
-		}
-		bias -= f;
+	while (m) {
+		bias -= f & (m - 1);
+		b2 |= (((b2 + bias) ^ bg) & m);
+		m <<= 1;
 	}
-	return (b2);
+
+	return (mbin_div_odd32(b2, f));
 }
 
 /*
@@ -128,7 +123,8 @@ mbin_baseG_inc_state32(struct mbin_baseG_state32 *ps)
 }
 
 /*
- * This function deciphers the state like a multiplication.
+ * This function deciphers the state like a multiplication of
+ * "f" and "b2".
  */
 uint32_t
 mbin_baseG_decipher_state32(struct mbin_baseG_state32 *ps)
