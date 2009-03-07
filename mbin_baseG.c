@@ -153,7 +153,7 @@ mbin_baseG_decipher_state32(struct mbin_baseG_state32 *ps)
  * represents the factor "f" in base2.
  */
 uint32_t
-mbin_base_Ginc_32(uint32_t f, uint32_t bg)
+mbin_baseG_inc_32(uint32_t f, uint32_t bg)
 {
 	uint32_t c;
 

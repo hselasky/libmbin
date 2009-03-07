@@ -135,7 +135,7 @@ uint32_t mbin_base_Gto2_32(uint32_t f, uint32_t bg);
 void	mbin_baseG_get_state32(struct mbin_baseG_state32 *ps, uint32_t f, uint32_t index);
 void	mbin_baseG_inc_state32(struct mbin_baseG_state32 *ps);
 uint32_t mbin_baseG_decipher_state32(struct mbin_baseG_state32 *ps);
-uint32_t mbin_base_Ginc_32(uint32_t f, uint32_t a);
+uint32_t mbin_baseG_inc_32(uint32_t f, uint32_t a);
 
 struct mbin_baseH_state32 {
 	uint32_t a;
