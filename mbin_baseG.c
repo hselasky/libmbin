@@ -131,3 +131,37 @@ mbin_baseG_decipher_state32(struct mbin_baseG_state32 *ps)
 {
 	return (ps->a + ps->b);
 }
+
+/*
+ * This function will increment the baseG number "a" by what
+ * represents the factor "f" in base2.
+ */
+uint32_t
+mbin_base_Ginc_32(uint32_t f, uint32_t a)
+{
+	uint32_t tmp;
+	uint32_t b;
+	uint32_t m;
+
+	tmp = 0;
+	b = 0;
+	m = 1;
+
+	while (m) {
+		tmp -= f & (m - 1);
+
+		b |= (tmp & m);		/* carry overflow */
+
+		tmp = (tmp & (m - 1)) | (a & m);
+
+		m <<= 1;
+	}
+
+#if 0
+	b2 = (a + b + f);
+#endif
+
+	a = a ^ b ^ f;
+
+	return (a);
+}
