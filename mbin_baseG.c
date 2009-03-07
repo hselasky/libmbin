@@ -32,6 +32,32 @@
 #include "math_bin.h"
 
 /*
+ * This function computes the carry associated with a baseG number.
+ */
+static uint32_t
+mbin_base_get_carry_32(uint32_t f, uint32_t a)
+{
+	uint32_t tmp;
+	uint32_t b;
+	uint32_t m;
+
+	tmp = 0;
+	b = 0;
+	m = 1;
+
+	while (m) {
+		tmp -= f & (m - 1);
+
+		b |= (tmp & m);		/* carry overflow */
+
+		tmp = (tmp & (m - 1)) | (a & m);
+
+		m <<= 1;
+	}
+	return (b);
+}
+
+/*
  * This function converts from base-2 to base-G using factor "f".
  * This function has similarities to "mbin_recodeB_fwd32()".
  */
@@ -63,21 +89,11 @@ mbin_base_2toG_32(uint32_t f, uint32_t b2)
 uint32_t
 mbin_base_Gto2_32(uint32_t f, uint32_t bg)
 {
-	uint32_t bias;
-	uint32_t b2;
-	uint32_t m;
+	uint32_t c;
 
-	bias = 0;
-	b2 = 0;
-	m = 1;
+	c = mbin_base_get_carry_32(f, bg);
 
-	while (m) {
-		bias -= f & (m - 1);
-		b2 |= (((b2 + bias) ^ bg) & m);
-		m <<= 1;
-	}
-
-	return (mbin_div_odd32(b2, f));
+	return (mbin_div_odd32(bg + c, f));
 }
 
 /*
@@ -133,35 +149,15 @@ mbin_baseG_decipher_state32(struct mbin_baseG_state32 *ps)
 }
 
 /*
- * This function will increment the baseG number "a" by what
+ * This function will increment the baseG number "bg" by what
  * represents the factor "f" in base2.
  */
 uint32_t
-mbin_base_Ginc_32(uint32_t f, uint32_t a)
+mbin_base_Ginc_32(uint32_t f, uint32_t bg)
 {
-	uint32_t tmp;
-	uint32_t b;
-	uint32_t m;
+	uint32_t c;
 
-	tmp = 0;
-	b = 0;
-	m = 1;
+	c = mbin_base_get_carry_32(f, bg);
 
-	while (m) {
-		tmp -= f & (m - 1);
-
-		b |= (tmp & m);		/* carry overflow */
-
-		tmp = (tmp & (m - 1)) | (a & m);
-
-		m <<= 1;
-	}
-
-#if 0
-	b2 = (a + b + f);
-#endif
-
-	a = a ^ b ^ f;
-
-	return (a);
+	return (bg ^ c ^ f);
 }
