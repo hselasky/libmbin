@@ -114,6 +114,9 @@ uint32_t mbin_bitrev32(uint32_t a);
 uint16_t mbin_bitrev16(uint16_t a);
 uint8_t	mbin_bitrev8(uint8_t a);
 
+uint32_t mbin_base_2toL_32(uint32_t b2);
+uint32_t mbin_base_Lto2_32(uint32_t bl);
+
 struct mbin_baseM_state32 {
 	uint32_t k;			/* (d OR c) */
 	uint32_t d;
