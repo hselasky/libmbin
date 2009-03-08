@@ -48,5 +48,5 @@ mbin_base_2toL_32(uint32_t b2)
 uint32_t
 mbin_base_Lto2_32(uint32_t bl)
 {
-	return (bl - (bl * bl));
+	return ((bl - (bl * bl)) / 2);
 }
