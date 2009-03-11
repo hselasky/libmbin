@@ -104,11 +104,11 @@ uint32_t mbin_sumdigits_baseN_32(uint32_t a, uint32_t n);
 uint32_t mbin_convert_2toN_32(uint32_t a, uint32_t n);
 uint32_t mbin_convert_Nto2_32(uint32_t a, uint32_t n);
 
-uint32_t mbin_convert_2to1999_32(uint32_t r);
-uint32_t mbin_convert_1999to2_32(uint32_t r);
-uint32_t mbin_add_1999_32(uint32_t a, uint32_t b);
-uint32_t mbin_sub_1999_32(uint32_t a, uint32_t b);
-uint32_t mbin_div_1999_odd_32(uint32_t rem, uint32_t div);
+uint32_t mbin_base_2toT_32(uint32_t tm, uint32_t tp, uint32_t r);
+uint32_t mbin_base_Tto2_32(uint32_t tm, uint32_t tp, uint32_t r);
+uint32_t mbin_base_T_add_32(uint32_t tm, uint32_t tp, uint32_t a, uint32_t b);
+uint32_t mbin_base_T_sub_32(uint32_t tm, uint32_t tp, uint32_t a, uint32_t b);
+uint32_t mbin_base_T_div_odd_32(uint32_t tm, uint32_t tp, uint32_t rem, uint32_t div);
 
 uint32_t mbin_bitrev32(uint32_t a);
 uint16_t mbin_bitrev16(uint16_t a);

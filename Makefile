@@ -8,12 +8,12 @@ SHLIB_MINOR=	0
 CFLAGS+=	-Wall -O2 -O3
 
 SRCS=
-SRCS+=	mbin_base1999.c
 SRCS+=	mbin_baseG.c
 SRCS+=	mbin_baseH.c
 SRCS+=	mbin_baseL.c
 SRCS+=	mbin_baseM.c
 SRCS+=	mbin_baseN.c
+SRCS+=	mbin_baseT.c
 SRCS+=	mbin_bitreverse.c
 SRCS+=	mbin_dec.c
 SRCS+=	mbin_depolarise.c

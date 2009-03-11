@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008-2009 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -28,43 +28,88 @@
 #include "math_bin.h"
 
 /*
- * Number base conversion from binary to the 1 point 999 number
- * system.
+ * Number base conversion from binary to the T-base.
  *
- * "1999" or "1.999" symbolises a number system which is a limit from
- * the fraction "2*(((2**n) - 1) / ((2**n) + 1))" as "n" approaches
- * infinity.
+ * You get 1.999 base when "tm = 0" and "tp = -1".
  */
 
 uint32_t
-mbin_convert_2to1999_32(uint32_t r)
+mbin_base_2toT_32(uint32_t tm, uint32_t tp, uint32_t r)
 {
-	uint32_t m;
+	uint8_t x;
 
-	m = 0 - 1;
-	while (m) {
-		r = r + 2 * (r & m);
-		m *= 2;
+	x = 32;
+	while (x--) {
+		r = r - (2 * (r & tm)) + (2 * (r & tp));
+		tm *= 2;
+		tp *= 2;
 	}
 	return (r);
 }
 
 uint32_t
-mbin_convert_1999to2_32(uint32_t r)
+mbin_base_Tto2_32(uint32_t tm, uint32_t tp, uint32_t r)
 {
-	uint32_t x;
-	uint32_t y;
+	uint8_t x;
+	uint8_t y;
+	uint32_t um;
+	uint32_t up;
 
 	x = 32;
 	while (x--) {
+		um = (tm << x);
+		up = (tp << x);
 		for (y = x; y != 32; y++) {
-			if (r & (1 << y)) {
-				r -= 2 * (r & (1 << y));
+			if (r & um & (1 << y)) {
+				r += (2 << y);
+			}
+			if (r & up & (1 << y)) {
+				r -= (2 << y);
 			}
 		}
 	}
 	return (r);
 }
+
+uint32_t
+mbin_base_T_add_32(uint32_t tm, uint32_t tp, uint32_t a, uint32_t b)
+{
+	a = mbin_base_Tto2_32(tm, tp, a);
+	b = mbin_base_Tto2_32(tm, tp, b);
+	return (mbin_base_2toT_32(tm, tp, a + b));
+}
+
+uint32_t
+mbin_base_T_sub_32(uint32_t tm, uint32_t tp, uint32_t a, uint32_t b)
+{
+	a = mbin_base_Tto2_32(tm, tp, a);
+	b = mbin_base_Tto2_32(tm, tp, b);
+	return (mbin_base_2toT_32(tm, tp, a - b));
+}
+
+uint32_t
+mbin_base_T_div_odd_32(uint32_t tm, uint32_t tp, uint32_t rem, uint32_t div)
+{
+	uint32_t m;
+	uint32_t s;
+
+	s = 0;
+	m = 1;
+	while (m) {
+		if (rem & m) {
+			rem = mbin_base_T_sub_32(tm, tp, rem, div);
+			s |= m;
+		}
+		/* "div" = "2*div" in 2-base */
+		div = mbin_base_T_add_32(tm, tp, div, div);
+		m = 2 * m;
+	}
+	return (s);
+}
+
+#if 0
+
+/* Special case code */
 
 uint32_t
 mbin_add_1999_32(uint32_t a, uint32_t b)
@@ -96,22 +141,4 @@ mbin_sub_1999_32(uint32_t a, uint32_t b)
 	return (r);
 }
 
-uint32_t
-mbin_div_1999_odd_32(uint32_t rem, uint32_t div)
-{
-	uint32_t m;
-	uint32_t s;
-
-	s = 0;
-	m = 1;
-	while (m) {
-		if (rem & m) {
-			rem = mbin_sub_1999_32(rem, div);
-			s |= m;
-		}
-		/* "div" = "2*div" in 2-base */
-		div = mbin_add_1999_32(div, div);
-		m = 2 * m;
-	}
-	return (s);
-}
+#endif
