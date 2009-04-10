@@ -220,7 +220,7 @@ void
 mbin_fp_print(mbin_fp_t temp)
 {
 	if (temp.remainder == 0)
-		printf("0");
+		printf("0x%016llx:%s0x%02x:0x%02x", 0ULL, "---", 0, 0);
 	else
 		printf("0x%016llx:%s0x%02x:0x%02x",
 		    temp.remainder,
@@ -300,4 +300,43 @@ found_non_zero:
 			return (3);
 	}
 	return (0);			/* success */
+}
+
+void
+mbin_fp_print_mat(mbin_fp_t *table, uint32_t size, uint8_t print_invert)
+{
+	mbin_fp_t temp;
+	uint32_t x;
+	uint32_t y;
+	uint32_t off;
+	int16_t min_exponent;
+	int16_t min_temp;
+	uint8_t no_solution = 0;
+
+	off = print_invert ? size : 0;
+
+	for (y = 0; y != size; y++) {
+		printf("0x%02x | ", y);
+		min_exponent = 128;
+
+		for (x = 0; x != size; x++) {
+			temp = table[((x + off) * size) + y];
+
+			mbin_fp_print(temp);
+
+			if (temp.defined == 0)
+				no_solution |= 1;
+
+			min_temp = temp.defined + temp.exponent;
+
+			if (min_temp < min_exponent)
+				min_exponent = min_temp;
+
+			if (x != (size - 1))
+				printf(", ");
+		}
+		printf("; undef=2**%d\n", min_exponent);
+	}
+	if (no_solution)
+		printf("this matrix has no solution due to undefined bits!\n");
 }
