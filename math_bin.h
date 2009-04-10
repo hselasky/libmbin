@@ -171,5 +171,6 @@ mbin_fp_t mbin_fp_mul(mbin_fp_t a, mbin_fp_t b);
 mbin_fp_t mbin_fp_div(mbin_fp_t a, mbin_fp_t b);
 uint8_t	mbin_fp_test_bit(mbin_fp_t a, int16_t _exp);
 void	mbin_fp_print(mbin_fp_t temp);
+uint8_t	mbin_fp_inv_mat(mbin_fp_t *table, uint32_t size);
 
 #endif					/* _MATH_BIN_H_ */

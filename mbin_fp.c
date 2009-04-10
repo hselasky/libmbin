@@ -228,3 +228,76 @@ mbin_fp_print(mbin_fp_t temp)
 		    (temp.exponent < 0) ? -temp.exponent : temp.exponent,
 		    temp.defined);
 }
+
+uint8_t
+mbin_fp_inv_mat(mbin_fp_t *table, uint32_t size)
+{
+	mbin_fp_t temp;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	uint32_t u;
+
+	/* invert matrix */
+
+	for (y = 0; y != size; y++) {
+
+		/* find non-zero entry in row */
+
+		for (x = 0; x != size; x++) {
+			if (table[(size * x) + y].remainder != 0) {
+				goto found_non_zero;
+			}
+		}
+
+		return (1);		/* failure */
+
+found_non_zero:
+
+		/* normalise row */
+
+		temp = table[(size * x) + y];
+
+		for (z = 0; z != (2 * size); z++) {
+			table[(size * z) + y] =
+			    mbin_fp_div(table[(size * z) + y], temp);
+		}
+
+		/* subtract row */
+
+		for (z = 0; z != size; z++) {
+			if ((z != y) && (table[(size * x) + z].remainder != 0)) {
+				temp = table[(size * x) + z];
+				for (u = 0; u != (2 * size); u++) {
+					table[(size * u) + z] = mbin_fp_sub(
+					    table[(size * u) + z],
+					    mbin_fp_mul(temp, table[(size * u) + y]));
+				}
+				if (table[(size * x) + z].remainder)
+					return (2);	/* failure */
+			}
+		}
+	}
+
+	/* sort matrix */
+
+	for (y = 0; y != size; y++) {
+		for (x = 0; x != size; x++) {
+			if (table[(size * x) + y].remainder) {
+				if (x != y) {
+					/* wrong order - swap */
+					for (z = 0; z != (2 * size); z++) {
+						temp = table[(size * z) + x];
+						table[(size * z) + x] = table[(size * z) + y];
+						table[(size * z) + y] = temp;
+					}
+					y--;
+				}
+				break;
+			}
+		}
+		if (x == size)
+			return (3);
+	}
+	return (0);			/* success */
+}
