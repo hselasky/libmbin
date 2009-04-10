@@ -164,6 +164,7 @@ typedef struct mbin_fp mbin_fp_t;
 
 uint64_t mbin_fp_remainder(mbin_fp_t temp, int16_t _exp);
 mbin_fp_t mbin_fp_number(uint64_t x, int16_t _exp);
+mbin_fp_t mbin_fp_power(mbin_fp_t base, uint64_t power);
 mbin_fp_t mbin_fp_add(mbin_fp_t a, mbin_fp_t b);
 mbin_fp_t mbin_fp_sub(mbin_fp_t a, mbin_fp_t b);
 mbin_fp_t mbin_fp_mul(mbin_fp_t a, mbin_fp_t b);

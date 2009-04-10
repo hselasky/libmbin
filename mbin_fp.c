@@ -87,6 +87,23 @@ mbin_fp_number(uint64_t x, int16_t _exp)
 	return (fix_fp_num(result));
 }
 
+mbin_fp_t
+mbin_fp_power(mbin_fp_t base, uint64_t power)
+{
+	mbin_fp_t temp;
+
+	temp = mbin_fp_number(1, 0);
+
+	while (power) {
+		if (power & 1) {
+			temp = mbin_fp_mul(temp, base);
+		}
+		base = mbin_fp_mul(base, base);
+		power /= 2;
+	}
+	return (temp);
+}
+
 static void
 align_fp_num(mbin_fp_t *pa, mbin_fp_t *pb)
 {
