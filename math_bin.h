@@ -92,6 +92,7 @@ void	mbin_xor_common16(uint16_t *pa, uint16_t *pb);
 void	mbin_xor_common8(uint8_t *pa, uint8_t *pb);
 
 uint32_t mbin_div_odd32(uint32_t r, uint32_t div);
+uint64_t mbin_div_odd64(uint64_t r, uint64_t div);
 uint32_t mbin_div_odd32_alt1(uint32_t r, uint32_t div);
 uint32_t mbin_div_odd32_alt2(uint32_t r, uint32_t div);
 uint16_t mbin_div_odd16(uint16_t r, uint16_t div);
@@ -151,5 +152,23 @@ uint32_t mbin_base_Hto2_32(uint32_t bh);
 void	mbin_baseH_get_state32(struct mbin_baseH_state32 *ps, uint32_t index);
 void	mbin_baseH_inc_state32(struct mbin_baseH_state32 *ps);
 uint32_t mbin_baseH_decipher_state32(struct mbin_baseH_state32 *ps);
+
+struct mbin_fp {
+	uint64_t remainder;		/* odd number, if not zero */
+	int16_t	exponent;		/* 2**exponent */
+	uint8_t	defined;		/* number of defined bits in
+					 * 'remainder' */
+};
+
+typedef struct mbin_fp mbin_fp_t;
+
+uint64_t mbin_fp_remainder(mbin_fp_t temp, int16_t _exp);
+mbin_fp_t mbin_fp_number(uint64_t x, int16_t _exp);
+mbin_fp_t mbin_fp_add(mbin_fp_t a, mbin_fp_t b);
+mbin_fp_t mbin_fp_sub(mbin_fp_t a, mbin_fp_t b);
+mbin_fp_t mbin_fp_mul(mbin_fp_t a, mbin_fp_t b);
+mbin_fp_t mbin_fp_div(mbin_fp_t a, mbin_fp_t b);
+uint8_t	mbin_fp_test_bit(mbin_fp_t a, int16_t _exp);
+void	mbin_fp_print(mbin_fp_t temp);
 
 #endif					/* _MATH_BIN_H_ */

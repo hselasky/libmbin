@@ -19,6 +19,7 @@ SRCS+=	mbin_dec.c
 SRCS+=	mbin_depolarise.c
 SRCS+=	mbin_div.c
 SRCS+=	mbin_expand.c
+SRCS+=	mbin_fp.c
 SRCS+=	mbin_inc.c
 SRCS+=	mbin_optimise.c
 SRCS+=	mbin_polarise.c

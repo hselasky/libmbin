@@ -79,6 +79,25 @@ mbin_div_odd32(uint32_t r, uint32_t div)
 	return (r);
 }
 
+uint64_t
+mbin_div_odd64(uint64_t r, uint64_t div)
+{
+	uint64_t m;
+
+	div = -div + 1;
+
+	m = 1;
+	while (m) {
+
+		if (r & m) {
+			r += div;
+		}
+		m *= 2;
+		div *= 2;
+	}
+	return (r);
+}
+
 /*
  * First version of Near Carry Less, NCL, binary division. This
  * function runs faster in hardware than in software.
