@@ -27,8 +27,10 @@
 
 #include "math_bin.h"
 
+/* XOR - transform */
+
 void
-mbin_transform_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t set_bits,
+mbin_transform_xor_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t set_bits,
     uint32_t f_slice, uint32_t t_slice)
 {
 	uint32_t x;
@@ -46,7 +48,7 @@ mbin_transform_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t set_bits,
 	x = set_bits;
 	while (1) {
 		if (ptr[x] & f_slice) {
-			mbin_expand_32x32(ptr, x, mask, t_slice);
+			mbin_expand_xor_32x32(ptr, x, mask, t_slice);
 		}
 		if (ptr[x] & t_slice) {
 			/* move statement */
@@ -57,5 +59,37 @@ mbin_transform_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t set_bits,
 			break;
 		x = mbin_inc32(x, set_bits);
 	}
-	return;
+}
+
+/* ADD - transform */
+
+void
+mbin_transform_add_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask)
+{
+	uint32_t x;
+	uint32_t val;
+
+	/* cleanup "t_slice" */
+	x = 0;
+	while (1) {
+		temp[x] = ptr[x];
+		if (x == mask)
+			break;
+		x++;
+	}
+
+	/* transform "f" */
+	x = 0;
+	while (1) {
+		val = temp[x];
+		if (val) {
+			/* expand logic expression */
+			mbin_expand_add_32x32(temp, x, mask, val);
+			/* restore original value */
+			temp[x] = val;
+		}
+		if (x == mask)
+			break;
+		x++;
+	}
 }

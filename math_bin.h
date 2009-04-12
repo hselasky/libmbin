@@ -33,9 +33,10 @@ void	mbin_print64(const char *fmt, uint64_t x);
 void	mbin_print8_abc(uint8_t x);
 void	mbin_print16_abc(uint16_t x);
 
-void	mbin_expand_32x32(uint32_t *ptr, uint32_t val, uint32_t mask, uint32_t slice);
-void	mbin_expand_16x32(uint16_t *ptr, uint32_t val, uint32_t mask, uint16_t slice);
-void	mbin_expand_8x32(uint8_t *ptr, uint32_t val, uint32_t mask, uint8_t slice);
+void	mbin_expand_add_32x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, uint32_t val);
+void	mbin_expand_xor_32x32(uint32_t *ptr, uint32_t val, uint32_t mask, uint32_t slice);
+void	mbin_expand_xor_16x32(uint16_t *ptr, uint32_t val, uint32_t mask, uint16_t slice);
+void	mbin_expand_xor_8x32(uint8_t *ptr, uint32_t val, uint32_t mask, uint8_t slice);
 
 uint32_t mbin_inc32(uint32_t val, uint32_t mask);
 uint16_t mbin_inc16(uint16_t val, uint16_t mask);
@@ -46,7 +47,8 @@ uint16_t mbin_dec16(uint16_t val, uint16_t mask);
 uint8_t	mbin_dec8(uint8_t val, uint8_t mask);
 
 void	mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap, uint32_t mask, uint32_t set_bits, uint32_t def_slice, uint32_t work_slice);
-void	mbin_transform_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t set_bits, uint32_t f_slice, uint32_t t_slice);
+void	mbin_transform_add_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
+void	mbin_transform_xor_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t set_bits, uint32_t f_slice, uint32_t t_slice);
 uint8_t	mbin_compute_value_32x32(uint32_t *ptr, const uint8_t *premap, uint32_t mask, uint32_t set_bits, uint32_t work_slice);
 
 uint8_t	mbin_sumbits32(uint32_t val);

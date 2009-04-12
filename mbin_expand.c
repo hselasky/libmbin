@@ -33,7 +33,26 @@
 #include "math_bin.h"
 
 void
-mbin_expand_32x32(uint32_t *ptr, uint32_t set_bits,
+mbin_expand_add_32x32(uint32_t *ptr, uint32_t set_bits,
+    uint32_t mask, uint32_t val)
+{
+	uint32_t x;
+
+	set_bits |= (~mask);
+	x = set_bits;
+
+	while (1) {
+		ptr[x & mask] -= val;
+		if (x == (uint32_t)(0 - 1)) {
+			break;
+		}
+		x++;
+		x |= set_bits;
+	}
+}
+
+void
+mbin_expand_xor_32x32(uint32_t *ptr, uint32_t set_bits,
     uint32_t mask, uint32_t slice)
 {
 	uint32_t x;
@@ -49,11 +68,10 @@ mbin_expand_32x32(uint32_t *ptr, uint32_t set_bits,
 		x++;
 		x |= set_bits;
 	}
-	return;
 }
 
 void
-mbin_expand_16x32(uint16_t *ptr, uint32_t set_bits,
+mbin_expand_xor_16x32(uint16_t *ptr, uint32_t set_bits,
     uint32_t mask, uint16_t slice)
 {
 	uint32_t x;
@@ -69,11 +87,10 @@ mbin_expand_16x32(uint16_t *ptr, uint32_t set_bits,
 		x++;
 		x |= set_bits;
 	}
-	return;
 }
 
 void
-mbin_expand_8x32(uint8_t *ptr, uint32_t set_bits,
+mbin_expand_xor_8x32(uint8_t *ptr, uint32_t set_bits,
     uint32_t mask, uint8_t slice)
 {
 	uint32_t x;
@@ -89,5 +106,4 @@ mbin_expand_8x32(uint8_t *ptr, uint32_t set_bits,
 		x++;
 		x |= set_bits;
 	}
-	return;
 }

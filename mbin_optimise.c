@@ -156,7 +156,7 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 		if (ptr[zc & mask] & tmp_used) {
 			if (ptr[zc & mask] & tmp_val) {
 				/* XOR in a one */
-				mbin_expand_32x32(ptr, zc,
+				mbin_expand_xor_32x32(ptr, zc,
 				    r_mask, work_slice);
 			}
 		} else {
@@ -165,7 +165,7 @@ mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
 			 * unused to reduce the expression.
 			 */
 			if (ptr[zc & mask] & work_slice) {
-				mbin_expand_32x32(ptr, zc,
+				mbin_expand_xor_32x32(ptr, zc,
 				    r_mask, work_slice);
 			}
 		}
