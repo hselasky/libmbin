@@ -150,7 +150,7 @@ mbin_print32_abc(uint32_t x)
 		putchar('1');
 	else
 		while (x) {
-			if (x & m)
+			if (x & 1)
 				putchar(*str);
 			str++;
 			x /= 2;

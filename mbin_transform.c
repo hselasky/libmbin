@@ -30,7 +30,7 @@
 /* XOR - transform */
 
 void
-mbin_transform_xor_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t set_bits,
+mbin_transform_xor_fwd_32x32(uint32_t *ptr, uint32_t mask,
     uint32_t f_slice, uint32_t t_slice)
 {
 	uint32_t x;
@@ -45,23 +45,17 @@ mbin_transform_xor_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t set_bits,
 	}
 
 	/* transform "f" */
-	x = set_bits;
+	x = 0;
 	while (1) {
-		if (ptr[x] & f_slice) {
+		if (ptr[x] & f_slice)
 			mbin_expand_xor_32x32(ptr, x, mask, t_slice);
-		}
-		if (ptr[x] & t_slice) {
-			/* move statement */
-			ptr[x] ^= t_slice;
-			ptr[x & ~set_bits] ^= t_slice;
-		}
 		if (x == mask)
 			break;
-		x = mbin_inc32(x, set_bits);
+		x++;
 	}
 }
 
-/* ADD - transform */
+/* XOR-ADD - transform */
 
 void
 mbin_transform_add_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask)

@@ -31,7 +31,7 @@
  * NOTE: "mask" and "set_bit" will be remapped by "premap"!
  */
 void
-mbin_optimise_32x32(uint32_t *ptr, const uint8_t *premap,
+mbin_optimise_xor_32x32(uint32_t *ptr, const uint8_t *premap,
     uint32_t mask, uint32_t set_bit,
     uint32_t def_slice, uint32_t work_slice /* destination */ )
 {
