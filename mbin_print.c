@@ -156,3 +156,29 @@ mbin_print32_abc(uint32_t x)
 			x /= 2;
 		}
 }
+
+uint32_t
+mbin_print_xor_analyse_fwd_32x32(uint32_t *ptr,
+    uint32_t fslice, uint32_t max)
+{
+	uint32_t x;
+	uint32_t count;
+
+	/* Do the XOR transform */
+	mbin_transform_xor_fwd_32x32(ptr,
+	    max - 1, fslice, 0x80000000);
+
+	/* Reset count */
+	count = 0;
+
+	/* Print out result */
+	for (x = 0; x != max; x++) {
+		if (ptr[x] & 0x80000000) {
+			mbin_print32_abc(x);
+			printf("\n");
+			count++;
+		}
+	}
+	printf("\nCount:%u\n", count);
+	return (count);
+}

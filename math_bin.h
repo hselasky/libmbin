@@ -33,6 +33,7 @@ void	mbin_print64(const char *fmt, uint64_t x);
 void	mbin_print8_abc(uint8_t x);
 void	mbin_print16_abc(uint16_t x);
 void	mbin_print32_abc(uint32_t x);
+uint32_t mbin_print_xor_analyse_fwd_32x32(uint32_t *ptr, uint32_t fslice, uint32_t max);
 
 void	mbin_expand_add_32x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, uint32_t val);
 void	mbin_expand_xor_32x32(uint32_t *ptr, uint32_t val, uint32_t mask, uint32_t slice);
