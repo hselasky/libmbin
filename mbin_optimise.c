@@ -39,10 +39,10 @@ mbin_optimise_xor_32x32(uint32_t *ptr, uint32_t mask,
 	uint32_t wd_slice;		/* work defined slice */
 	uint32_t wt_slice;		/* work temp slice (result) */
 	uint32_t last_x;
-	uint32_t last_y;
 	uint32_t x;
 	uint32_t y;
 	uint8_t value;
+	uint8_t value_last;
 
 	fv_slice = ~(func_slices - 1) & func_slices;
 	func_slices ^= fv_slice;
@@ -68,9 +68,8 @@ mbin_optimise_xor_32x32(uint32_t *ptr, uint32_t mask,
 
 	/* Optimise truth table */
 	x = 0;
-	last_x = x;
-	last_y = x;
-	value = 2;
+	last_x = 0;
+	value_last = 2;
 	while (1) {
 		if (ptr[x] & fd_slice) {
 
@@ -78,41 +77,38 @@ mbin_optimise_xor_32x32(uint32_t *ptr, uint32_t mask,
 			/* check defined value */
 
 			if (ptr[x] & fv_slice) {
-
-				/* got a defined one */
-				/* check for value difference */
-				if (value != 1) {
-					value = 1;
-					last_x = last_y;
-				}
-				/* move the one back */
-				y = mbin_msb32(x ^ last_x);
-				y = ((-y) & x);
-
-				/* put new one in the table */
-				ptr[y] |= wd_slice | wv_slice;
-
-				/* update last "x" value */
-				last_y = x;
-
+				ptr[x] |= wd_slice | wv_slice;
+				value = 1;
 			} else {
+				ptr[x] |= wd_slice;
+				value = 0;
+			}
 
-				/* got a defined zero */
-				/* check for value difference */
-				if (value != 0) {
-					value = 0;
-					last_x = last_y;
+			/* check for delta */
+			if (value_last == 2) {
+				if (value) {
+					ptr[0] |= wd_slice | wv_slice;
+				} else {
+					ptr[0] |= wd_slice;
 				}
-				/* move the zero back */
+			} else {
+				/* compute optimal change point hint */
+				/* move the value back */
 				y = mbin_msb32(x ^ last_x);
 				y = ((-y) & x);
 
-				/* put new zero in the table */
-				ptr[y] |= wd_slice;
-
-				/* update last "x" value */
-				last_y = x;
+				if (value) {
+					ptr[y] |= wd_slice | wv_slice;
+				} else {
+					ptr[y] |= wd_slice;
+				}
 			}
+
+			/* update last value */
+			value_last = value;
+
+			/* update last defined "x" value */
+			last_x = x;
 		}
 		if (x == mask)
 			break;
