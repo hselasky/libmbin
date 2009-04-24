@@ -159,7 +159,7 @@ mbin_print32_abc(uint32_t x)
 
 uint32_t
 mbin_print_xor_analyse_fwd_32x32(uint32_t *ptr,
-    uint32_t fslice, uint32_t mask)
+    uint32_t mask, uint32_t fslice)
 {
 	uint32_t x;
 	uint32_t count;
