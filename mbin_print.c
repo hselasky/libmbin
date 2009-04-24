@@ -170,6 +170,7 @@ mbin_print_xor_analyse_fwd_32x32(uint32_t *ptr,
 
 	/* Reset count */
 	count = 0;
+	x = 0;
 
 	/* Print out result */
 	while (1) {
