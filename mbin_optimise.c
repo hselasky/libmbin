@@ -27,151 +27,119 @@
 
 #include "math_bin.h"
 
-/*
- * NOTE: "mask" and "set_bit" will be remapped by "premap"!
- */
+/* XOR optimisation */
+
 void
-mbin_optimise_xor_32x32(uint32_t *ptr, const uint8_t *premap,
-    uint32_t mask, uint32_t set_bit,
-    uint32_t def_slice, uint32_t work_slice /* destination */ )
+mbin_optimise_xor_32x32(uint32_t *ptr, uint32_t mask,
+    uint32_t func_slices /* 2-bits */ , uint32_t tmp_slices /* 3-bits */ )
 {
+	uint32_t fv_slice;		/* function value slice */
+	uint32_t fd_slice;		/* function defined slice */
+	uint32_t wv_slice;		/* work value slice */
+	uint32_t wd_slice;		/* work defined slice */
+	uint32_t wt_slice;		/* work temp slice (result) */
 	uint32_t last_x;
 	uint32_t last_y;
-	uint32_t r_mask;
 	uint32_t x;
 	uint32_t y;
-	uint32_t zs;
-	uint32_t zc;
-	uint32_t tmp_used = 0x80000000;
-	uint32_t tmp_val = 0x40000000;
 	uint8_t value;
 
-	/* Remove "set_bit" from mask */
-	r_mask = mask & ~set_bit;
+	fv_slice = ~(func_slices - 1) & func_slices;
+	func_slices ^= fv_slice;
+	fd_slice = ~(func_slices - 1) & func_slices;
+	func_slices ^= fd_slice;
 
-	/*
-	 * Or "set_bit" with the complement of the "mask" before
-	 * reordering the mask!
-	 */
-	set_bit |= (~mask);
+	wv_slice = ~(tmp_slices - 1) & tmp_slices;
+	tmp_slices ^= wv_slice;
+	wd_slice = ~(tmp_slices - 1) & tmp_slices;
+	tmp_slices ^= wd_slice;
+	wt_slice = ~(tmp_slices - 1) & tmp_slices;
+	tmp_slices ^= wt_slice;
 
-	/* re-order mask bits */
-	if (premap) {
-		r_mask = mbin_recodeA_fwd32(r_mask, premap);
-		mask = mbin_recodeA_fwd32(mask, premap);
-	}
-	/* cleanup "work" slice */
-	x = set_bit;
-	y = ~(work_slice | tmp_used | tmp_val);
+	/* cleanup "work" slices */
+	x = 0;
+	y = ~(wv_slice | wd_slice | wt_slice);
 	while (1) {
-		if (premap) {
-			zs = mbin_recodeA_fwd32(x, premap);
-			zc = mbin_recodeA_fwd32(x ^ set_bit, premap);
-		} else {
-			zs = x;
-			zc = x ^ set_bit;
-		}
-		ptr[zs & mask] &= y;
-		ptr[zc & mask] &= y;
-
-		if (x == (0 - 1))
+		ptr[x] &= y;
+		if (x == mask)
 			break;
-		x = mbin_inc32(x, set_bit);
+		x++;
 	}
 
-	x = set_bit;
+	/* Optimise truth table */
+	x = 0;
 	last_x = x;
 	last_y = x;
 	value = 2;
 	while (1) {
-		if (premap) {
-			zs = mbin_recodeA_fwd32(x, premap);
-			zc = mbin_recodeA_fwd32(x ^ set_bit, premap);
-		} else {
-			zs = x;
-			zc = x ^ set_bit;
+		if (ptr[x] & fd_slice) {
+
+			/* got a defined value */
+			/* check defined value */
+
+			if (ptr[x] & fv_slice) {
+
+				/* got a defined one */
+				/* check for value difference */
+				if (value != 1) {
+					value = 1;
+					last_x = last_y;
+				}
+				/* move the one back */
+				y = mbin_msb32(x ^ last_x);
+				y = ((-y) & x);
+
+				/* put new one in the table */
+				ptr[y] |= wd_slice | wv_slice;
+
+				/* update last "x" value */
+				last_y = x;
+
+			} else {
+
+				/* got a defined zero */
+				/* check for value difference */
+				if (value != 0) {
+					value = 0;
+					last_x = last_y;
+				}
+				/* move the zero back */
+				y = mbin_msb32(x ^ last_x);
+				y = ((-y) & x);
+
+				/* put new zero in the table */
+				ptr[y] |= wd_slice;
+
+				/* update last "x" value */
+				last_y = x;
+			}
 		}
-
-		if (ptr[zs & mask] & def_slice) {
-
-			/* got a defined one */
-
-			if (value != 1) {
-				last_x = last_y;
-			}
-			/* move the one back */
-			y = mbin_msb32(x ^ last_x);
-			y = (((-y) | set_bit) & x) ^ set_bit;
-			if (premap) {
-				y = mbin_recodeA_fwd32(y, premap);
-			}
-			ptr[y & mask] |= tmp_used | tmp_val;
-
-			value = 1;
-
-			ptr[zc & mask] |= tmp_used | tmp_val;
-
-			last_y = x;
-
-		} else if (ptr[zc & mask] & def_slice) {
-
-			/* got a defined zero */
-
-			if (value != 0) {
-				last_x = last_y;
-			}
-			/* move the zero back */
-			y = mbin_msb32(x ^ last_x);
-			y = (((-y) | set_bit) & x) ^ set_bit;
-			if (premap) {
-				y = mbin_recodeA_fwd32(y, premap);
-			}
-			ptr[y & mask] |= tmp_used;
-
-			last_y = x;
-
-			value = 0;
-
-			ptr[zc & mask] |= tmp_used;
-		}
-		if (x == (uint32_t)(0 - 1))
+		if (x == mask)
 			break;
-		x = mbin_inc32(x, set_bit);
+		x++;
 	}
 
-	/* do an optimised transform which can take some time */
-	x = set_bit;
-	last_x = x;
+	/* Optimise statement table */
+	x = 0;
 	while (1) {
-		if (premap) {
-			zs = mbin_recodeA_fwd32(x, premap);
-			zc = mbin_recodeA_fwd32(x ^ set_bit, premap);
-		} else {
-			/* this variable has "set_bit" */
-			zs = x;
-			/* this variable does not have "set_bit" */
-			zc = x ^ set_bit;
-		}
-
-		if (ptr[zc & mask] & tmp_used) {
-			if (ptr[zc & mask] & tmp_val) {
+		if (ptr[x] & wd_slice) {
+			if (ptr[x] & wv_slice) {
 				/* XOR in a one */
-				mbin_expand_xor_32x32(ptr, zc,
-				    r_mask, work_slice);
+				mbin_expand_xor_32x32(ptr,
+				    x, mask, wt_slice);
 			}
 		} else {
 			/*
-			 * Default action: Toggle value to zero on
-			 * unused to reduce the expression.
+			 * Default action: Toggle statement to zero on
+			 * unused value to reduce the expression.
 			 */
-			if (ptr[zc & mask] & work_slice) {
-				mbin_expand_xor_32x32(ptr, zc,
-				    r_mask, work_slice);
+			if (ptr[x] & wt_slice) {
+				mbin_expand_xor_32x32(ptr,
+				    x, mask, wt_slice);
 			}
 		}
-		if (x == (uint32_t)(0 - 1))
+		if (x == mask)
 			break;
-		x = mbin_inc32(x, set_bit);
+		x++;
 	}
-	return;
 }
