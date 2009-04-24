@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008-2009 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -48,7 +48,6 @@ mbin_print8(const char *fmt, uint8_t x)
 		}
 		fmt++;
 	}
-	return;
 }
 
 void
@@ -68,7 +67,6 @@ mbin_print16(const char *fmt, uint16_t x)
 		}
 		fmt++;
 	}
-	return;
 }
 
 void
@@ -88,7 +86,6 @@ mbin_print32(const char *fmt, uint32_t x)
 		}
 		fmt++;
 	}
-	return;
 }
 
 void
@@ -110,41 +107,52 @@ mbin_print64(const char *fmt, uint64_t x)
 		}
 		fmt++;
 	}
-	return;
 }
 
 void
 mbin_print8_abc(uint8_t x)
 {
 	const char *str = "abcdefgh";
-	uint8_t m = 1;
 
 	if (x == 0)
 		putchar('1');
 	else
-		while (m) {
-			if (x & m)
+		while (x) {
+			if (x & 1)
 				putchar(*str);
-			m *= 2;
 			str++;
+			x /= 2;
 		}
-	return;
 }
 
 void
 mbin_print16_abc(uint16_t x)
 {
 	const char *str = "abcdefghijklmnop";
-	uint16_t m = 1;
 
 	if (x == 0)
 		putchar('1');
 	else
-		while (m) {
+		while (x) {
+			if (x & 1)
+				putchar(*str);
+			str++;
+			x /= 2;
+		}
+}
+
+void
+mbin_print32_abc(uint32_t x)
+{
+	const char *str = "abcdefghijklmnopqrstuvwxyz??????";
+
+	if (x == 0)
+		putchar('1');
+	else
+		while (x) {
 			if (x & m)
 				putchar(*str);
-			m *= 2;
 			str++;
+			x /= 2;
 		}
-	return;
 }
