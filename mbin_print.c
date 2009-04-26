@@ -202,8 +202,8 @@ mbin_print_xor_analyse_fwd_32x32(uint32_t *ptr,
 }
 
 uint32_t
-mbin_print_add_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
-    uint32_t mask)
+mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
+    uint32_t mask, uint8_t do_xor)
 {
 	uint32_t tcount;
 	uint32_t count;
@@ -214,9 +214,15 @@ mbin_print_add_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 	uint32_t z;
 	uint32_t t;
 	uint32_t u;
+	uint8_t mbits;
 
-	mbin_transform_add_fwd_32x32(ptr, temp, mask);
+	if (do_xor)
+		mbin_transform_multi_xor_fwd_32x32(ptr, temp, mask);
+	else
+		mbin_transform_add_fwd_32x32(ptr, temp, mask);
+
 	tcount = 0;
+	mbits = mbin_sumbits32(mask);
 
 	for (x = 1; x & mask; x *= 2) {
 		printf("Level = 0x%08x\n", x);
@@ -227,24 +233,10 @@ mbin_print_add_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 				if (y == 0)
 					m = 0;
 				else {
-					t = mbin_sumbits32(y);
-					if (t & 1) {
-						/* factor using MSB */
-						m = mbin_msb32(y);
-					} else {
-						/* split expression in two */
-						m = 0;
-						n = 1UL << 31;
-						t /= 2;
-						while (1) {
-							if (t == 0)
-								break;
-							if (y & n) {
-								m |= n;
-								t--;
-							}
-							n /= 2;
-						}
+					m = 0;
+					for (t = mbits / 2; t != mbits; t++) {
+						if (y & (1 << t))
+							m |= (1 << t);
 					}
 				}
 
