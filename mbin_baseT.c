@@ -38,6 +38,10 @@ mbin_base_2toT_32(uint32_t tm, uint32_t tp, uint32_t r)
 {
 	uint8_t x;
 
+	/* check for special case */
+	if ((tm == 0xFFFFFFFF) && (tp == 0))
+		return (mbin_polarise32(r, 0x55555555));
+
 	x = 32;
 	while (x--) {
 		r = r - (2 * (r & tm)) + (2 * (r & tp));
@@ -54,6 +58,10 @@ mbin_base_Tto2_32(uint32_t tm, uint32_t tp, uint32_t r)
 	uint8_t y;
 	uint32_t um;
 	uint32_t up;
+
+	/* check for special case */
+	if ((tm == 0xFFFFFFFF) && (tp == 0))
+		return (mbin_depolarise32(r, 0x55555555));
 
 	x = 32;
 	while (x--) {
