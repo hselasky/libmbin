@@ -159,30 +159,115 @@ mbin_print32_abc(uint32_t x)
 
 uint32_t
 mbin_print_xor_analyse_fwd_32x32(uint32_t *ptr,
-    uint32_t mask, uint32_t fslice)
+    uint32_t mask, uint32_t fslices)
 {
 	uint32_t x;
 	uint32_t count;
+	uint32_t tcount;
+	uint32_t fslice;
 
-	/* Do the XOR transform */
-	mbin_transform_xor_fwd_32x32(ptr,
-	    mask, fslice, 0x80000000);
+	tcount = 0;
 
-	/* Reset count */
-	count = 0;
-	x = 0;
+	for (fslice = 1; fslice; fslice *= 2) {
 
-	/* Print out result */
-	while (1) {
-		if (ptr[x] & 0x80000000) {
-			mbin_print32_abc(x);
-			printf("\n");
-			count++;
+		if (!(fslices & fslice))
+			continue;
+
+		if (fslices != fslice)
+			printf("Level = 0x%08x\n", fslice);
+
+		/* Do the XOR transform */
+		mbin_transform_xor_fwd_32x32(ptr,
+		    mask, fslice, 0x80000000);
+
+		/* Reset count */
+		count = 0;
+		x = 0;
+
+		/* Print out result */
+		while (1) {
+			if (ptr[x] & 0x80000000) {
+				mbin_print32_abc(x);
+				printf("\n");
+				count++;
+			}
+			if (x == mask)
+				break;
+			x++;
 		}
-		if (x == mask)
-			break;
-		x++;
+		printf("\nCount:%u\n\n", count);
+		tcount += count;
 	}
-	printf("\nCount:%u\n", count);
-	return (count);
+	return (tcount);
+}
+
+uint32_t
+mbin_print_add_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
+    uint32_t mask)
+{
+	uint32_t tcount;
+	uint32_t count;
+	uint32_t m;
+	uint32_t n;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	uint32_t t;
+	uint32_t u;
+
+	mbin_transform_add_fwd_32x32(ptr, temp, mask);
+	tcount = 0;
+
+	for (x = 1; x & mask; x *= 2) {
+		printf("Level = 0x%08x\n", x);
+		count = 0;
+		y = 0;
+		while (1) {
+			if (temp[y] & x) {
+				if (y == 0)
+					m = 0;
+				else
+					m = mbin_msb32(y);
+
+				/* get expression root */
+				z = y ^ m;
+				n = x;
+
+				mbin_print32_abc(z);
+				printf("(");
+
+				/* print factored expression */
+				while ((n <= mask) && (m <= mask)) {
+
+					u = z | m;
+
+					if (temp[u] & n) {
+						/* print out */
+						t = ((int32_t)(temp[u] &
+						    (-n))) / (int32_t)n;
+						printf("%d*", t);
+						temp[u] &= (n - 1);
+						mbin_print32_abc(m);
+						printf(",");
+					} else {
+						printf(" ,");
+					}
+
+					m *= 2;
+					n *= 2;
+				}
+
+				printf(")\n");
+				count++;
+			}
+			if (y == mask)
+				break;
+			y++;
+		}
+
+		printf("\nCount = %u\n\n", count);
+
+		tcount += count;
+	}
+	return (tcount);
 }
