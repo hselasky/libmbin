@@ -30,7 +30,7 @@
 /*
  * Number base conversion from binary to the T-base.
  *
- * You get 1.999 base when "tm = 0" and "tp = -1".
+ * You get 1.999 or (2/3) base when "tm = 0" and "tp = -1".
  */
 
 uint32_t
