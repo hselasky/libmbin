@@ -226,18 +226,40 @@ mbin_print_add_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 			if (temp[y] & x) {
 				if (y == 0)
 					m = 0;
-				else
-					m = mbin_msb32(y);
+				else {
+					t = mbin_sumbits32(y);
+					if (t & 1) {
+						/* factor using MSB */
+						m = mbin_msb32(y);
+					} else {
+						/* split expression in two */
+						m = 0;
+						n = 1UL << 31;
+						t /= 2;
+						while (1) {
+							if (t == 0)
+								break;
+							if (y & n) {
+								m |= n;
+								t--;
+							}
+							n /= 2;
+						}
+					}
+				}
 
 				/* get expression root */
 				z = y ^ m;
 				n = x;
 
 				mbin_print32_abc(z);
+
 				printf("(");
 
 				/* print factored expression */
-				while ((n <= mask) && (m <= mask)) {
+				while (n & mask) {
+
+					m &= mask;
 
 					u = z | m;
 
