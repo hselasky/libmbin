@@ -259,12 +259,19 @@ mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 						break;
 
 					if (temp[u] & n) {
+#if 1
 						/* print out */
 						t = ((int32_t)(temp[u] &
 						    (-n))) / (int32_t)n;
-						if (t != 1)
+						if (t == 1);
+						else if (t == 0xFFFFFFFF)
+							printf("-");
+						else
 							printf("%d*", t);
 						temp[u] &= (n - 1);
+#else
+						temp[u] &= ~n;
+#endif
 						mbin_print32_abc(m);
 						printf(",");
 					} else {
