@@ -203,7 +203,7 @@ mbin_print_xor_analyse_fwd_32x32(uint32_t *ptr,
 
 uint32_t
 mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
-    uint32_t mask, uint8_t do_xor)
+    uint32_t mask, uint32_t power, uint8_t do_xor)
 {
 	uint32_t tcount;
 	uint32_t count;
@@ -219,7 +219,7 @@ mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 	if (do_xor & 1)
 		mbin_transform_multi_xor_fwd_32x32(ptr, temp, mask);
 	else
-		mbin_transform_add_fwd_32x32(ptr, temp, mask);
+		mbin_transform_add_fwd_32x32(ptr, temp, mask, power);
 
 	tcount = 0;
 	mbits = mbin_sumbits32(mask);

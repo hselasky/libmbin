@@ -34,15 +34,22 @@
 
 void
 mbin_expand_add_32x32(uint32_t *ptr, uint32_t set_bits,
-    uint32_t mask, uint32_t val)
+    uint32_t mask, uint32_t val, uint32_t power)
 {
 	uint32_t x;
+	uint32_t sum;
 
 	set_bits |= (~mask);
 	x = set_bits;
+	sum = val;
 
 	while (1) {
-		ptr[x & mask] -= val;
+		if (power != 0) {
+			ptr[x & mask] -= mbin_power_32(sum, power);
+			sum += val;
+		} else {
+			ptr[x & mask] -= val;
+		}
 		if (x == (uint32_t)(0 - 1)) {
 			break;
 		}

@@ -34,9 +34,9 @@ void	mbin_print8_abc(uint8_t x);
 void	mbin_print16_abc(uint16_t x);
 void	mbin_print32_abc(uint32_t x);
 uint32_t mbin_print_xor_analyse_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t fslice);
-uint32_t mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask, uint8_t do_xor);
+uint32_t mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask, uint32_t power, uint8_t do_xor);
 
-void	mbin_expand_add_32x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, uint32_t val);
+void	mbin_expand_add_32x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, uint32_t val, uint32_t power);
 void	mbin_expand_xor_32x32(uint32_t *ptr, uint32_t val, uint32_t mask, uint32_t slice);
 void	mbin_expand_xor_16x32(uint16_t *ptr, uint32_t val, uint32_t mask, uint16_t slice);
 void	mbin_expand_xor_8x32(uint8_t *ptr, uint32_t val, uint32_t mask, uint8_t slice);
@@ -50,7 +50,7 @@ uint16_t mbin_dec16(uint16_t val, uint16_t mask);
 uint8_t	mbin_dec8(uint8_t val, uint8_t mask);
 
 void	mbin_optimise_xor_32x32(uint32_t *ptr, uint32_t mask, uint32_t func_slices, uint32_t tmp_slices);
-void	mbin_transform_add_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
+void	mbin_transform_add_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask, uint32_t power);
 void	mbin_transform_xor_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t f_slice, uint32_t t_slice);
 void	mbin_transform_multi_xor_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
 uint8_t	mbin_compute_value_32x32(uint32_t *ptr, const uint8_t *premap, uint32_t mask, uint32_t set_bits, uint32_t work_slice);
@@ -179,5 +179,7 @@ uint8_t	mbin_fp_test_bit(mbin_fp_t a, int16_t _exp);
 void	mbin_fp_print(mbin_fp_t temp);
 uint8_t	mbin_fp_inv_mat(mbin_fp_t *table, uint32_t size);
 void	mbin_fp_print_mat(mbin_fp_t *table, uint32_t size, uint8_t print_invert);
+
+uint32_t mbin_power_32(uint32_t x, uint32_t y);
 
 #endif					/* _MATH_BIN_H_ */
