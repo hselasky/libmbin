@@ -281,7 +281,10 @@ mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 					}
 
 					m *= 2;
-					n *= 2;
+					if (do_xor & 0x40)
+						n *= 4;
+					else
+						n *= 2;
 				}
 
 				printf(")\n");
