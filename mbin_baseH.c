@@ -107,15 +107,13 @@ mbin_baseH_get_state32(struct mbin_baseH_state32 *ps,
     uint32_t index)
 {
 	uint32_t ap;
-	uint32_t a;
-	uint32_t c;
+	uint32_t an;
 
-	ap = mbin_base_2toH_32(index - 1);
-	a = mbin_base_2toH_32(index);
-	c = 2 * (((~a ^ ap) & (4 * ap)) ^ ((~a) & ap));
-	ps->a = a;
-	ps->c = c;
-	return;
+	ap = mbin_base_2toH_32(index);
+	an = mbin_base_2toH_32(index + 1);
+
+	ps->a = ap;
+	ps->c = an ^ ap ^ (4 * ap);
 }
 
 /*
@@ -134,7 +132,6 @@ mbin_baseH_inc_state32(struct mbin_baseH_state32 *ps)
 
 	ps->a = a ^ (4 * a) ^ c;
 	ps->c = 2 * (((a ^ c) & (4 * a)) | (a & c));
-	return;
 }
 
 /*
