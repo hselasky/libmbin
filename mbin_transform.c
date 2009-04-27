@@ -93,7 +93,7 @@ mbin_transform_multi_xor_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 
 void
 mbin_transform_add_fwd_32x32(uint32_t *ptr, uint32_t *temp,
-    uint32_t mask, uint32_t power)
+    uint32_t mask)
 {
 	uint32_t x;
 	uint32_t val;
@@ -113,7 +113,7 @@ mbin_transform_add_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 		val = temp[x];
 		if (val) {
 			/* expand logic expression */
-			mbin_expand_add_32x32(temp, x, mask, val, power);
+			mbin_expand_add_32x32(temp, x, mask, val);
 			/* restore original value */
 			temp[x] = val;
 		}
