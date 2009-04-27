@@ -159,6 +159,17 @@ void	mbin_baseH_get_state32(struct mbin_baseH_state32 *ps, uint32_t index);
 void	mbin_baseH_inc_state32(struct mbin_baseH_state32 *ps);
 uint32_t mbin_baseH_decipher_state32(struct mbin_baseH_state32 *ps);
 
+struct mbin_baseU_state32 {
+	uint32_t a;
+	uint32_t c;
+};
+
+uint32_t mbin_base_2toU_32(uint32_t b2);
+uint32_t mbin_base_Uto2_32(uint32_t bu);
+void	mbin_baseU_get_state32(struct mbin_baseU_state32 *ps, uint32_t index);
+void	mbin_baseU_inc_state32(struct mbin_baseU_state32 *ps);
+uint32_t mbin_baseU_decipher_state32(struct mbin_baseU_state32 *ps);
+
 struct mbin_fp {
 	uint64_t remainder;		/* odd number, if not zero */
 	int16_t	exponent;		/* 2**exponent */

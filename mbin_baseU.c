@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2009 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,74 +24,41 @@
  */
 
 /*
- * baseH is an exponent function
+ * baseU is a "(1/3)**n" exponent function
  */
 
 #include <stdint.h>
 
 #include "math_bin.h"
 
-static uint32_t
-mbin_baseH_gen_div(void)
-{
-#if 0
-	uint8_t n = 32;
-	uint32_t x = 1;
-
-	while (n--) {
-		x = (x * x) + 4;
-	}
-	return (x);
-#else
-	return (0x3ef7226d);
-#endif
-}
-
-static uint32_t
-mbin_baseH_gen_mul(void)
-{
-#if 0
-	return (mbin_div_odd32(1, mbin_baseH_gen_div()));
-#else
-	return (0xf0423765);
-#endif
-}
-
 uint32_t
-mbin_base_2toH_32(uint32_t index)
+mbin_base_2toU_32(uint32_t b2)
 {
 	uint32_t f;
 	uint32_t g;
-	uint32_t t;
 	uint8_t n;
 
-#if 0
-	/* XXX constant origin needs to be investigated */
-	/* XXX probably this constant should be removed */
-	index -= 0x30c41244;
-#endif
+	g = mbin_power_32(3, -b2);
 
-	f = mbin_baseH_gen_mul();
-
-	g = mbin_power_32(f, index);
-
-	t = 1;
-	f = mbin_baseH_gen_div();
-	for (n = 2; n != 32; n++) {
-		t |= g & (1 << n);
-		g = g * f;
+	f = 0;
+	for (n = 0; n != 32; n++) {
+		f |= (g & (1 << n));
+		g *= 3;
 	}
-	return (t);
+	return (f);
 }
 
 uint32_t
-mbin_base_Hto2_32(uint32_t bh)
+mbin_base_Uto2_32(uint32_t bu)
 {
 	uint32_t b2 = 0;
-	uint32_t m = 4;
+	uint32_t m = 8;
+
+	if (!(bu & 2))
+		b2 ^= 1;
 
 	while (m) {
-		if ((mbin_base_2toH_32(b2) ^ bh) & m) {
+		if ((mbin_base_2toU_32(b2) ^ bu) & m) {
 			b2 ^= m / 4;
 		}
 		m *= 2;
@@ -99,58 +66,45 @@ mbin_base_Hto2_32(uint32_t bh)
 	return (b2);
 }
 
-/*
- * This function restores the state at the given index.
- */
 void
-mbin_baseH_get_state32(struct mbin_baseH_state32 *ps,
-    uint32_t index)
+mbin_baseU_get_state32(struct mbin_baseU_state32 *ps, uint32_t index)
 {
+	uint32_t an;
 	uint32_t ap;
-	uint32_t a;
-	uint32_t c;
 
-	ap = mbin_base_2toH_32(index - 1);
-	a = mbin_base_2toH_32(index);
-	c = 2 * (((~a ^ ap) & (4 * ap)) ^ ((~a) & ap));
-	ps->a = a;
-	ps->c = c;
-	return;
+	ap = mbin_base_2toU_32(index);
+	an = mbin_base_2toU_32(index + 1);
+
+	ps->a = ap;
+	ps->c = an ^ ap ^ ~(2 * ap);
 }
 
-/*
- * This function increments the state by one.
- */
 void
-mbin_baseH_inc_state32(struct mbin_baseH_state32 *ps)
+mbin_baseU_inc_state32(struct mbin_baseU_state32 *ps)
 {
 	uint32_t a;
+	uint32_t b;
 	uint32_t c;
 
 	a = ps->a;
-	c = ps->c;
+	b = ~(2 * a);
+	c = ps->c | 1;
 
-	/* standard addition formula */
-
-	ps->a = a ^ (4 * a) ^ c;
-	ps->c = 2 * (((a ^ c) & (4 * a)) | (a & c));
-	return;
+	ps->a = a ^ b ^ c;
+	ps->c = 2 * ((a & b) ^ (c & b) ^ (a & c));
 }
 
-/*
- * This function deciphers the state like an exponent,
- */
 uint32_t
-mbin_baseH_decipher_state32(struct mbin_baseH_state32 *ps)
+mbin_baseU_decipher_state32(struct mbin_baseU_state32 *ps)
 {
-	struct mbin_baseH_state32 psc = *ps;
+	struct mbin_baseU_state32 temp = *ps;
 	uint32_t t;
 	uint8_t n;
 
 	t = 0;
 	for (n = 0; n != 32; n++) {
-		t |= psc.a & (1 << n);
-		mbin_baseH_inc_state32(&psc);
+		t |= temp.a & (1 << n);
+		mbin_baseU_inc_state32(&temp);
 	}
 	return (t);
 }
