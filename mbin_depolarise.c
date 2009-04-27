@@ -58,8 +58,9 @@ mbin_depolarise32(uint32_t val, uint32_t neg_pol)
  * a == mbin_depolarise32(a,~a);
  *
  * 3)
- * a == (mbin_depolar_div32(t, x) =
- *   (mbin_div_odd32(t, -(x*x) + x) - mbin_div_odd32(t, x)))
+ * (t == 2**n) =>
+ *   (mbin_depolar_div32(t, 2*x) =
+ *     (mbin_div_odd32(t, -(2*x*x) + x) - mbin_div_odd32(t, x)) / 2)
  *
  * Also see: Greycode
  *
