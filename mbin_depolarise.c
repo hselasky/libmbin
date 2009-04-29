@@ -71,17 +71,15 @@ mbin_depolar_div32(uint32_t rem, uint32_t div)
 {
 	uint32_t m = 1;
 	uint32_t s = 0;
-	uint32_t temp = 0;
 
 	while (m) {
 		if ((rem ^ s) & m) {
 			s += div;
-			temp |= m;
 		}
 		m *= 2;
 		div *= 2;
 	}
-	return (temp);
+	return (rem ^ s);
 }
 
 uint16_t
@@ -99,17 +97,15 @@ mbin_depolar_div16(uint16_t rem, uint16_t div)
 {
 	uint16_t m = 1;
 	uint16_t s = 0;
-	uint16_t temp = 0;
 
 	while (m) {
 		if ((rem ^ s) & m) {
 			s += div;
-			temp |= m;
 		}
 		m *= 2;
 		div *= 2;
 	}
-	return (temp);
+	return (rem ^ s);
 }
 
 uint8_t
@@ -127,15 +123,13 @@ mbin_depolar_div8(uint8_t rem, uint8_t div)
 {
 	uint8_t m = 1;
 	uint8_t s = 0;
-	uint8_t temp = 0;
 
 	while (m) {
 		if ((rem ^ s) & m) {
 			s += div;
-			temp |= m;
 		}
 		m *= 2;
 		div *= 2;
 	}
-	return (temp);
+	return (rem ^ s);
 }
