@@ -201,22 +201,129 @@ mbin_print_xor_analyse_fwd_32x32(uint32_t *ptr,
 	return (tcount);
 }
 
+static void
+mbin_print_multi_factorise(uint32_t *temp, uint32_t mask,
+    uint32_t val, uint32_t level, uint8_t mbits)
+{
+	uint32_t a;
+	uint32_t b;
+	uint32_t c;
+	uint32_t an;
+	uint32_t bn;
+	uint32_t am;
+	uint32_t bm;
+	uint32_t lmask;
+	uint32_t hmask;
+
+	lmask = (1 << (mbits / 2)) - 1;
+	hmask = ~lmask & mask;
+
+	a = val & lmask;
+	b = val & hmask;
+	c = temp[a | b];
+
+	for (an = a, am = c; (an & lmask) == an; an *= 2, am *= 2) {
+		for (bn = b, bm = am; (bn & hmask) == bn; bn *= 2, bm *= 2) {
+			temp[an | bn] ^= bm;
+			if (bn == 0)
+				break;
+		}
+		if (an == 0)
+			break;
+	}
+
+	printf("0x%x*(", (int32_t)c / (int32_t)level);
+	for (an = a; (an & lmask) == an; an *= 2) {
+		mbin_print32_abc(an);
+		printf(", ");
+		if (an == 0)
+			break;
+	}
+	printf(")*(");
+
+	for (bn = b; (bn & hmask) == bn; bn *= 2) {
+		mbin_print32_abc(bn);
+		printf(", ");
+		if (bn == 0)
+			break;
+	}
+	printf(")\n");
+}
+
+static void
+mbin_print_simple_factorise(uint32_t *temp, uint32_t mask,
+    uint32_t val, uint32_t level, uint8_t mbits)
+{
+	uint32_t m;
+	uint32_t n;
+	uint32_t z;
+	uint32_t t;
+	uint32_t u;
+	uint32_t hmask;
+
+	hmask = (-(1 << (mbits / 2))) & mask;
+
+	if (val == 0)
+		m = 0;
+	else
+		m = mbin_msb32(val);
+
+	/* get expression root */
+	z = val ^ m;
+	n = level;
+
+	mbin_print32_abc(z);
+
+	printf("(");
+
+	/* print factored expression */
+	while (n & mask) {
+
+		m &= mask;
+
+		u = z | m;
+
+		if (!(temp[u] & -n))
+			break;
+
+		if (temp[u] & n) {
+#if 1
+			/* print out */
+			t = ((int32_t)(temp[u] &
+			    (-n))) / (int32_t)n;
+			if (t == 1);
+			else if (t == 0xFFFFFFFF)
+				printf("-");
+			else
+				printf("0x%x*", t);
+			temp[u] &= (n - 1);
+#else
+			temp[u] &= ~n;
+#endif
+			mbin_print32_abc(m);
+			printf(",");
+		} else {
+			printf(" ,");
+		}
+
+		m *= 2;
+		n *= 2;
+	}
+
+	printf(")\n");
+}
+
 uint32_t
 mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
     uint32_t mask, uint8_t do_xor)
 {
 	uint32_t tcount;
 	uint32_t count;
-	uint32_t m;
-	uint32_t n;
 	uint32_t x;
 	uint32_t y;
-	uint32_t z;
-	uint32_t t;
-	uint32_t u;
 	uint8_t mbits;
 
-	if (do_xor & 1)
+	if (do_xor & 0x01)
 		mbin_transform_multi_xor_fwd_32x32(ptr, temp, mask);
 	else
 		mbin_transform_add_fwd_32x32(ptr, temp, mask);
@@ -229,65 +336,13 @@ mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 		count = 0;
 		y = 0;
 		while (1) {
+
 			if (temp[y] & x) {
-				if (y == 0)
-					m = 0;
-				else if (do_xor & 0x80) {
-					m = mbin_msb32(y);
+				if (do_xor & 0x80) {
+					mbin_print_multi_factorise(temp, mask, y, x, mbits);
 				} else {
-					m = 0;
-					for (t = mbits / 2; t != mbits; t++) {
-						if (y & (1 << t))
-							m |= (1 << t);
-					}
+					mbin_print_simple_factorise(temp, mask, y, x, mbits);
 				}
-
-				/* get expression root */
-				z = y ^ m;
-				n = x;
-
-				mbin_print32_abc(z);
-
-				printf("(");
-
-				/* print factored expression */
-				while (n & mask) {
-
-					m &= mask;
-
-					u = z | m;
-
-					if (!(temp[u] & -n))
-						break;
-
-					if (temp[u] & n) {
-#if 1
-						/* print out */
-						t = ((int32_t)(temp[u] &
-						    (-n))) / (int32_t)n;
-						if (t == 1);
-						else if (t == 0xFFFFFFFF)
-							printf("-");
-						else
-							printf("0x%x*", t);
-						temp[u] &= (n - 1);
-#else
-						temp[u] &= ~n;
-#endif
-						mbin_print32_abc(m);
-						printf(",");
-					} else {
-						printf(" ,");
-					}
-
-					m *= 2;
-					if (do_xor & 0x40)
-						n *= 4;
-					else
-						n *= 2;
-				}
-
-				printf(")\n");
 				count++;
 			}
 			if (y == mask)
