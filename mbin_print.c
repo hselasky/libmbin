@@ -157,6 +157,19 @@ mbin_print32_abc(uint32_t x)
 		}
 }
 
+void
+mbin_print32_const(uint32_t x)
+{
+	while (x) {
+		if (x & 1) {
+			printf("1, ");
+		} else {
+			printf("0, ");
+		}
+		x /= 2;
+	}
+}
+
 uint32_t
 mbin_print_xor_analyse_fwd_32x32(uint32_t *ptr,
     uint32_t mask, uint32_t fslices)
@@ -219,7 +232,7 @@ mbin_print_multi_factorise(uint32_t *temp, uint32_t mask,
 	uint8_t ao;
 	uint8_t bo;
 	uint8_t co;
-	char *op;
+	uint8_t op;
 
 	lmask = (1 << (mbits / 2)) - 1;
 	hmask = ~lmask & mask;
@@ -231,12 +244,13 @@ mbin_print_multi_factorise(uint32_t *temp, uint32_t mask,
 	if (a != (b >> (mbits / 2))) {
 
 		/* not factorisable */
-
-		printf("0x%x*((", (int32_t)c / (int32_t)level);
+		printf("(");
+		mbin_print32_const((int32_t)c / (int32_t)level);
+		printf(")*(");
 		mbin_print32_abc(a);
 		printf(")*(");
 		mbin_print32_abc(b);
-		printf("))\n");
+		printf(")\n");
 
 		temp[a | b] ^= c;
 		return;
@@ -268,16 +282,17 @@ mbin_print_multi_factorise(uint32_t *temp, uint32_t mask,
 		break;
 	}
 
-	op = NULL;
+	op = 0;
+
 repeat:
 
 	for (ao = co, am = c;; am *= 2, ao--) {
 		an = (aodd >> ao) & lmask;
 		for (bo = co, bm = am;; bm *= 2, bo--) {
 			bn = (bodd >> bo) & hmask;
-			if (op == NULL) {
+			if (op == 0) {
 				if (!(temp[an | bn] & bm))
-					goto skip0;
+					goto print_and;
 			} else {
 				temp[an | bn] ^= bm;
 			}
@@ -292,33 +307,13 @@ repeat:
 			break;
 	}
 
-	if (op)
-		goto skip1;
-	else {
-		op = "*";
+	if (op == 0) {
+		op = 1;
 		goto repeat;
 	}
-
-skip0:
-	op = "&";
-	for (bo = co, ao = co, bm = c, am = c;;
-	    bm *= 2, am *= 2, bo--, ao--) {
-		an = (aodd >> ao) & lmask;
-		bn = (bodd >> bo) & hmask;
-		temp[an | bn] ^= bm;
-		if (bo == 0)
-			break;
-		if (bn == 0)
-			break;
-		if (ao == 0)
-			break;
-		if (an == 0)
-			break;
-	}
-
-skip1:
-
-	printf("0x%x*((", (int32_t)c / (int32_t)level);
+	printf("(");
+	mbin_print32_const((int32_t)c / (int32_t)level);
+	printf(")*(");
 	for (ao = co;; ao--) {
 		an = (aodd >> ao) & lmask;
 		mbin_print32_abc(an);
@@ -328,7 +323,7 @@ skip1:
 		if (an == 0)
 			break;
 	}
-	printf(")%s(", op);
+	printf(")*(");
 
 	for (bo = co;; bo--) {
 		bn = (bodd >> bo) & hmask;
@@ -339,7 +334,30 @@ skip1:
 		if (bn == 0)
 			break;
 	}
-	printf("))\n");
+	printf(")\n");
+	return;
+
+print_and:
+	printf("(");
+	mbin_print32_const((int32_t)c / (int32_t)level);
+	printf(")*(");
+	for (bo = co, ao = co, bm = c, am = c;;
+	    bm *= 2, am *= 2, bo--, ao--) {
+		an = (aodd >> ao) & lmask;
+		bn = (bodd >> bo) & hmask;
+		temp[an | bn] ^= bm;
+		mbin_print32_abc(an | bn);
+		printf(",");
+		if (bo == 0)
+			break;
+		if (bn == 0)
+			break;
+		if (ao == 0)
+			break;
+		if (an == 0)
+			break;
+	}
+	printf(")\n");
 }
 
 static void
@@ -407,7 +425,7 @@ mbin_print_simple_factorise(uint32_t *temp, uint32_t mask,
 
 uint32_t
 mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
-    uint32_t mask, uint8_t do_xor)
+    const char *remove, uint32_t mask, uint8_t do_xor)
 {
 	uint32_t tcount;
 	uint32_t count;
@@ -415,10 +433,13 @@ mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 	uint32_t y;
 	uint8_t mbits;
 
-	if (do_xor & 0x01)
+	if (do_xor & 0x01) {
 		mbin_transform_multi_xor_fwd_32x32(ptr, temp, mask);
-	else
+		mbin_parse32_xor(remove, temp, mask);
+	} else {
 		mbin_transform_add_fwd_32x32(ptr, temp, mask);
+		mbin_parse32_add(remove, temp, mask);
+	}
 
 	tcount = 0;
 	mbits = mbin_sumbits32(mask);

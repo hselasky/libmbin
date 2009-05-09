@@ -23,6 +23,7 @@ SRCS+=	mbin_expand.c
 SRCS+=	mbin_fp.c
 SRCS+=	mbin_inc.c
 SRCS+=	mbin_optimise.c
+SRCS+=	mbin_parse.c
 SRCS+=	mbin_polarise.c
 SRCS+=	mbin_power.c
 SRCS+=	mbin_print.c

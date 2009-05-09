@@ -33,8 +33,9 @@ void	mbin_print64(const char *fmt, uint64_t x);
 void	mbin_print8_abc(uint8_t x);
 void	mbin_print16_abc(uint16_t x);
 void	mbin_print32_abc(uint32_t x);
+void	mbin_print32_const(uint32_t x);
 uint32_t mbin_print_xor_analyse_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t fslice);
-uint32_t mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask, uint8_t do_xor);
+uint32_t mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp, const char *remove, uint32_t mask, uint8_t do_xor);
 
 void	mbin_expand_add_32x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, uint32_t val);
 void	mbin_expand_xor_32x32(uint32_t *ptr, uint32_t val, uint32_t mask, uint32_t slice);
@@ -192,5 +193,10 @@ uint8_t	mbin_fp_inv_mat(mbin_fp_t *table, uint32_t size);
 void	mbin_fp_print_mat(mbin_fp_t *table, uint32_t size, uint8_t print_invert);
 
 uint32_t mbin_power_32(uint32_t x, uint32_t y);
+
+uint32_t mbin_parse32_abc(const char *ptr, const char *end);
+void	mbin_parse32_add(const char *ptr, uint32_t *ptable, uint32_t mask);
+void	mbin_parse32_xor(const char *ptr, uint32_t *ptable, uint32_t mask);
+void	mbin_parse32_factor(const char *ptr, uint32_t *ptable, uint32_t mask, uint32_t var, uint8_t level, uint8_t is_xor);
 
 #endif					/* _MATH_BIN_H_ */
