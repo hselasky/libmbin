@@ -216,7 +216,7 @@ mbin_print_xor_analyse_fwd_32x32(uint32_t *ptr,
 
 static void
 mbin_print_multi_factorise(uint32_t *temp, uint32_t mask,
-    uint32_t val, uint32_t level, uint8_t mbits)
+    uint32_t val, uint32_t level, uint8_t mbits, uint8_t do_xor)
 {
 	uint32_t a;
 	uint32_t b;
@@ -252,7 +252,10 @@ mbin_print_multi_factorise(uint32_t *temp, uint32_t mask,
 		mbin_print32_abc(b);
 		printf(")\n");
 
-		temp[a | b] ^= c;
+		if (do_xor)
+			temp[a | b] ^= c;
+		else
+			temp[a | b] -= c;
 		return;
 	}
 	co = 0;
@@ -294,7 +297,10 @@ repeat:
 				if (!(temp[an | bn] & bm))
 					goto print_and;
 			} else {
-				temp[an | bn] ^= bm;
+				if (do_xor)
+					temp[an | bn] ^= bm;
+				else
+					temp[an | bn] -= bm;
 			}
 			if (bo == 0)
 				break;
@@ -345,7 +351,11 @@ print_and:
 	    bm *= 2, am *= 2, bo--, ao--) {
 		an = (aodd >> ao) & lmask;
 		bn = (bodd >> bo) & hmask;
-		temp[an | bn] ^= bm;
+		if (do_xor)
+			temp[an | bn] ^= bm;
+		else
+			temp[an | bn] -= bm;
+
 		mbin_print32_abc(an | bn);
 		printf(",");
 		if (bo == 0)
@@ -362,7 +372,7 @@ print_and:
 
 static void
 mbin_print_simple_factorise(uint32_t *temp, uint32_t mask,
-    uint32_t val, uint32_t level, uint8_t mbits)
+    uint32_t val, uint32_t level, uint8_t mbits, uint8_t do_xor)
 {
 	uint32_t m;
 	uint32_t n;
@@ -453,10 +463,10 @@ mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 			if (temp[y] & x) {
 				if (do_xor & 0x80) {
 					mbin_print_multi_factorise(temp,
-					    mask, y, x, mbits);
+					    mask, y, x, mbits, (do_xor & 0x01));
 				} else {
 					mbin_print_simple_factorise(temp,
-					    mask, y, x, mbits);
+					    mask, y, x, mbits, (do_xor & 0x01));
 				}
 				count++;
 			}
