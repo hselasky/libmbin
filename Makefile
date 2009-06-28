@@ -34,6 +34,7 @@ SRCS+=  mbin_msb.c
 SRCS+=  mbin_recode.c
 SRCS+=  mbin_submits.c
 SRCS+=  mbin_transform.c
+SRCS+=  mbin_sqrt.c
 
 INCS=	math_bin.h
 
