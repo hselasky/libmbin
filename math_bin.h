@@ -201,4 +201,34 @@ void	mbin_parse32_factor(const char *ptr, uint32_t *ptable, uint32_t mask, uint3
 
 uint32_t mbin_sqrt_64(uint64_t a);
 
+/* Expression prototypes */
+
+struct mbin_expr_and;
+struct mbin_expr_xor;
+struct mbin_expr;
+
+#define	MBIN_EXPR_TYPE_CONST 0
+#define	MBIN_EXPR_TYPE_VAR_A 1
+#define	MBIN_EXPR_TYPE_VAR_B 2
+#define	MBIN_EXPR_TYPE_VAR_C 3
+
+uint32_t mbin_expr_get_value_and(struct mbin_expr_and *pand);
+void	mbin_expr_set_value_and(struct mbin_expr_and *pand, uint32_t value);
+int8_t	mbin_expr_get_subtype_and(struct mbin_expr_and *pand);
+void	mbin_expr_set_subtype_and(struct mbin_expr_and *pand, int8_t subtype);
+int8_t	mbin_expr_get_shift_and(struct mbin_expr_and *pand);
+void	mbin_expr_set_shift_and(struct mbin_expr_and *pand, int8_t shift);
+void	mbin_expr_enqueue_and(struct mbin_expr_xor *pxor, struct mbin_expr_and *pand);
+void	mbin_expr_dequeue_and(struct mbin_expr_xor *pxor, struct mbin_expr_and *pand);
+struct mbin_expr_and *mbin_expr_foreach_and(struct mbin_expr_xor *pxor, struct mbin_expr_and *pand);
+void	mbin_expr_enqueue_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);
+void	mbin_expr_dequeue_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);
+struct mbin_expr_xor *mbin_expr_foreach_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);
+struct mbin_expr_and *mbin_expr_alloc_and(uint8_t type);
+struct mbin_expr_xor *mbin_expr_alloc_xor(void);
+struct mbin_expr *mbin_expr_alloc(void);
+void	mbin_expr_free_and(struct mbin_expr_xor *pxor, struct mbin_expr_and *pand);
+void	mbin_expr_free_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);
+void	mbin_expr_free(struct mbin_expr *pexpr);
+
 #endif					/* _MATH_BIN_H_ */

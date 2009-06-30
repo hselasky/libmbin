@@ -469,7 +469,6 @@ mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 		}
 		return (tcount);
 	}
-
 	for (x = 1; x & mask; x *= 2) {
 		printf("Level = 0x%08x\n", x);
 		count = 0;
