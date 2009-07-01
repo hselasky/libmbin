@@ -149,8 +149,181 @@ mbin_expr_foreach_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor)
 	return (pxor);
 }
 
+struct mbin_expr *
+mbin_expr_substitute_and_full(struct mbin_expr *pexpr,
+    struct mbin_expr *psubst, int8_t type, int8_t subtype)
+{
+	struct mbin_expr *pnexpr;
+	struct mbin_expr_and *paa;
+	struct mbin_expr_and *pab;
+	struct mbin_expr_and *pac;
+
+	struct mbin_expr_xor *pxa;
+	struct mbin_expr_xor *pxb;
+	struct mbin_expr_xor *pxc;
+
+	uint8_t alloc_pexpr;
+	uint8_t found;
+	int8_t shift;
+	int16_t temp;
+
+	if (type == MBIN_EXPR_TYPE_CONST)
+		return (NULL);		/* invalid */
+
+
+	alloc_pexpr = 0;
+
+repeat:
+
+	pnexpr = mbin_expr_alloc();
+	if (pnexpr == NULL)
+		goto failure;
+
+	found = 0;
+	pxa = NULL;
+	while ((pxa = mbin_expr_foreach_xor(pexpr, pxa))) {
+
+		paa = NULL;
+		while ((paa = mbin_expr_foreach_and(pxa, paa))) {
+			if ((paa->type == type) && (paa->subtype == subtype))
+				goto do_expand;
+		}
+
+		/* duplicate XOR statement */
+		pxc = mbin_expr_alloc_xor();
+		if (pxc == NULL)
+			goto failure;
+
+		mbin_expr_enqueue_xor(pnexpr, pxc);
+
+		pab = NULL;
+		while ((pab = mbin_expr_foreach_and(pxa, pab))) {
+			pac = mbin_expr_dup_and(pab);
+			if (pac == NULL)
+				goto failure;
+
+			mbin_expr_enqueue_and(pxc, pac);
+		}
+		continue;
+
+do_expand:
+		/* get shift level */
+		shift = paa->shift;
+
+		/* expand XOR statement */
+		found = 1;
+		pxb = NULL;
+		while ((pxb = mbin_expr_foreach_xor(psubst, pxb))) {
+
+			pxc = mbin_expr_alloc_xor();
+			if (pxc == NULL)
+				goto failure;
+
+			mbin_expr_enqueue_xor(pnexpr, pxc);
+
+			pab = NULL;
+			while ((pab = mbin_expr_foreach_and(pxa, pab))) {
+				if (pab == paa)
+					continue;
+
+				pac = mbin_expr_dup_and(pab);
+				if (pac == NULL)
+					goto failure;
+
+				mbin_expr_enqueue_and(pxc, pac);
+			}
+
+			pab = NULL;
+			while ((pab = mbin_expr_foreach_and(pxb, pab))) {
+				pac = mbin_expr_dup_and(pab);
+				if (pac == NULL)
+					goto failure;
+
+				mbin_expr_enqueue_and(pxc, pac);
+
+				if (pac->type == MBIN_EXPR_TYPE_CONST) {
+					if ((shift < -31) || (shift > 31))
+						pac->value = 0;
+					else if (shift < 0)
+						pac->value >>= -shift;
+					else if (shift > 0)
+						pac->value <<= shift;
+				} else {
+					temp = pac->shift + shift;
+					if (temp > 127)
+						temp = 127;
+					else if (temp < -127)
+						temp = -127;
+					pac->shift = temp;
+				}
+			}
+
+			/* TODO: check for duplicate ANDs */
+		}
+	}
+
+	if (alloc_pexpr)
+		mbin_expr_free(pexpr);
+
+	if (found) {
+		alloc_pexpr = 1;
+		pexpr = pnexpr;
+		goto repeat;
+	}
+	return (pnexpr);
+
+failure:
+	if (pnexpr)
+		mbin_expr_free(pnexpr);
+	if (alloc_pexpr)
+		mbin_expr_free(pexpr);
+	return (NULL);
+}
+
+void
+mbin_expr_substitute_and_simple(struct mbin_expr *pexpr,
+    int8_t from_type, int8_t from_subtype, int8_t to_type, int8_t to_subtype)
+{
+	struct mbin_expr_and *paa;
+	struct mbin_expr_xor *pxa;
+
+	if ((from_type == MBIN_EXPR_TYPE_CONST) ||
+	    (to_type == MBIN_EXPR_TYPE_CONST))
+		return;			/* invalid */
+
+	if ((from_type == to_type) && (from_subtype == to_subtype))
+		return;			/* no change */
+
+	pxa = NULL;
+	while ((pxa = mbin_expr_foreach_xor(pexpr, pxa))) {
+
+		paa = NULL;
+		while ((paa = mbin_expr_foreach_and(pxa, paa))) {
+			if ((paa->type == from_type) && (paa->subtype == from_subtype)) {
+				paa->type = to_type;
+				paa->subtype = to_subtype;
+			}
+		}
+	}
+}
+
 struct mbin_expr_and *
-mbin_expr_alloc_and(uint8_t type)
+mbin_expr_dup_and(struct mbin_expr_and *pand_old)
+{
+	struct mbin_expr_and *pand = malloc(sizeof(*pand));
+
+	if (pand == NULL)
+		return (NULL);
+
+	*pand = *pand_old;
+
+	memset(&pand->entry, 0, sizeof(pand->entry));
+
+	return (pand);
+}
+
+struct mbin_expr_and *
+mbin_expr_alloc_and(int8_t type)
 {
 	struct mbin_expr_and *pand = malloc(sizeof(*pand));
 

@@ -224,7 +224,10 @@ struct mbin_expr_and *mbin_expr_foreach_and(struct mbin_expr_xor *pxor, struct m
 void	mbin_expr_enqueue_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);
 void	mbin_expr_dequeue_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);
 struct mbin_expr_xor *mbin_expr_foreach_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);
-struct mbin_expr_and *mbin_expr_alloc_and(uint8_t type);
+void	mbin_expr_substitute_and_simple(struct mbin_expr *pexpr, int8_t from_type, int8_t from_subtype, int8_t to_type, int8_t to_subtype);
+struct mbin_expr_and *mbin_expr_dup_and(struct mbin_expr_and *pand_old);
+struct mbin_expr *mbin_expr_substitute_and_full(struct mbin_expr *pexpr, struct mbin_expr *psubst, int8_t type, int8_t subtype);
+struct mbin_expr_and *mbin_expr_alloc_and(int8_t type);
 struct mbin_expr_xor *mbin_expr_alloc_xor(void);
 struct mbin_expr *mbin_expr_alloc(void);
 void	mbin_expr_free_and(struct mbin_expr_xor *pxor, struct mbin_expr_and *pand);
