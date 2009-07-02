@@ -34,7 +34,6 @@
 
 struct mbin_expr_and {
 	TAILQ_ENTRY(mbin_expr_and) entry;
-	uint32_t value;
 	int8_t	type;
 	int8_t	subtype;
 	int8_t	shift;
@@ -44,6 +43,7 @@ struct mbin_expr_and {
 struct mbin_expr_xor {
 	TAILQ_ENTRY(mbin_expr_xor) entry;
 	TAILQ_HEAD(, mbin_expr_and) head;
+	uint32_t value;
 };
 
 struct mbin_expr {
@@ -52,18 +52,15 @@ struct mbin_expr {
 };
 
 uint32_t
-mbin_expr_get_value_and(struct mbin_expr_and *pand)
+mbin_expr_get_value_xor(struct mbin_expr_xor *pxor)
 {
-	if (pand->type == MBIN_EXPR_TYPE_CONST)
-		return (pand->value);
-	return (0);
+	return (pxor->value);
 }
 
 void
-mbin_expr_set_value_and(struct mbin_expr_and *pand, uint32_t value)
+mbin_expr_set_value_xor(struct mbin_expr_xor *pxor, uint32_t value)
 {
-	if (pand->type == MBIN_EXPR_TYPE_CONST)
-		pand->value = value;
+	pxor->value = value;
 }
 
 int8_t
@@ -81,33 +78,26 @@ mbin_expr_set_type_and(struct mbin_expr_and *pand, int8_t type)
 int8_t
 mbin_expr_get_subtype_and(struct mbin_expr_and *pand)
 {
-	if (pand->type != MBIN_EXPR_TYPE_CONST)
-		return (pand->subtype);
-	return (0);
+	return (pand->subtype);
 }
 
 void
 mbin_expr_set_subtype_and(struct mbin_expr_and *pand, int8_t subtype)
 {
-	if (pand->type != MBIN_EXPR_TYPE_CONST)
-		pand->subtype = subtype;
+	pand->subtype = subtype;
 }
 
 int8_t
 mbin_expr_get_shift_and(struct mbin_expr_and *pand)
 {
-	if (pand->type != MBIN_EXPR_TYPE_CONST)
-		return (pand->shift);
-	return (0);
+	return (pand->shift);
 }
 
 void
 mbin_expr_set_shift_and(struct mbin_expr_and *pand, int8_t shift)
 {
-	if (pand->type != MBIN_EXPR_TYPE_CONST)
-		pand->shift = shift;
+	pand->shift = shift;
 }
-
 
 void
 mbin_expr_enqueue_and(struct mbin_expr_xor *pxor, struct mbin_expr_and *pand)
@@ -171,22 +161,13 @@ mbin_expr_substitute_and_full(struct mbin_expr *pexpr,
 	struct mbin_expr_and *paa;
 	struct mbin_expr_and *pab;
 	struct mbin_expr_and *pac;
-	struct mbin_expr_and *pad;
 
 	struct mbin_expr_xor *pxa;
 	struct mbin_expr_xor *pxb;
 	struct mbin_expr_xor *pxc;
 
-	uint32_t temp_value;
-	int16_t temp;
 	uint8_t alloc_pexpr;
-	uint8_t temp_value_valid;
 	uint8_t found;
-	int8_t shift;
-
-	if (type == MBIN_EXPR_TYPE_CONST)
-		return (NULL);		/* invalid */
-
 
 	alloc_pexpr = 0;
 
@@ -200,6 +181,8 @@ repeat:
 	pxa = NULL;
 	while ((pxa = mbin_expr_foreach_xor(pexpr, pxa))) {
 
+		int8_t shift;
+
 		paa = NULL;
 		while ((paa = mbin_expr_foreach_and(pxa, paa))) {
 			if ((paa->type == type) && (paa->subtype == subtype))
@@ -210,6 +193,8 @@ repeat:
 		pxc = mbin_expr_alloc_xor(pnexpr);
 		if (pxc == NULL)
 			goto failure;
+
+		pxc->value = pxa->value;
 
 		pab = NULL;
 		while ((pab = mbin_expr_foreach_and(pxa, pab))) {
@@ -228,64 +213,48 @@ do_expand:
 		pxb = NULL;
 		while ((pxb = mbin_expr_foreach_xor(psubst, pxb))) {
 
+			int32_t temp;
+
 			pxc = mbin_expr_alloc_xor(pnexpr);
 			if (pxc == NULL)
 				goto failure;
 
-			pad = mbin_expr_alloc_and(pxc);
-			if (pad == NULL)
-				goto failure;
+			if ((shift < -31) || (shift > 31))
+				temp = 0;
+			else if (shift < 0)
+				temp = (pxb->value >> -shift);
+			else if (shift > 0)
+				temp = (pxb->value << shift);
+			else
+				temp = pxb->value;
 
-			temp_value = -1UL;
-			temp_value_valid = 0;
+			pxc->value = pxa->value & temp;
+			if (pxc->value == 0)
+				continue;
 
 			pab = NULL;
 			while ((pab = mbin_expr_foreach_and(pxa, pab))) {
 				if (pab == paa)
 					continue;
-
-				if (pab->type == MBIN_EXPR_TYPE_CONST) {
-					temp_value_valid = 1;
-					temp_value &= pab->value;
-				} else {
-					pac = mbin_expr_dup_and(pab, pxc);
-					if (pac == NULL)
-						goto failure;
-				}
+				pac = mbin_expr_dup_and(pab, pxc);
+				if (pac == NULL)
+					goto failure;
 			}
 
 			pab = NULL;
 			while ((pab = mbin_expr_foreach_and(pxb, pab))) {
 
-				if (pab->type == MBIN_EXPR_TYPE_CONST) {
+				pac = mbin_expr_dup_and(pab, pxc);
+				if (pac == NULL)
+					goto failure;
 
-					temp_value_valid = 1;
-					if ((shift < -31) || (shift > 31))
-						temp_value = 0;
-					else if (shift < 0)
-						temp_value &= (pab->value >> -shift);
-					else if (shift > 0)
-						temp_value &= (pab->value << shift);
-					else
-						temp_value &= pab->value;
-				} else {
-					pac = mbin_expr_dup_and(pab, pxc);
-					if (pac == NULL)
-						goto failure;
+				temp = pac->shift + shift;
+				if (temp > MBIN_BITS_MAX)
+					temp = MBIN_BITS_MAX;
+				else if (temp < MBIN_BITS_MIN)
+					temp = MBIN_BITS_MIN;
 
-					temp = pac->shift + shift;
-					if (temp > 127)
-						temp = 127;
-					else if (temp < -127)
-						temp = -127;
-					pac->shift = temp;
-				}
-			}
-
-			if (temp_value_valid) {
-				pad->value = temp_value;
-			} else {
-				mbin_expr_free_and(pxc, pad);
+				pac->shift = temp;
 			}
 
 			/* TODO: check for duplicate ANDs */
@@ -310,6 +279,25 @@ failure:
 	return (NULL);
 }
 
+int8_t
+mbin_expr_max_shift_xor(struct mbin_expr_xor *pxa)
+{
+	struct mbin_expr_and *paa;
+	int8_t max;
+
+	for (max = 0; max != 32; max++) {
+		if (pxa->value & (1 << max))
+			break;
+	}
+
+	paa = NULL;
+	while ((paa = mbin_expr_foreach_and(pxa, paa))) {
+		if (paa->shift > max)
+			max = paa->shift;
+	}
+	return (max);
+}
+
 void
 mbin_expr_substitute_and_simple(struct mbin_expr *pexpr,
     int8_t from_type, int32_t delta)
@@ -323,10 +311,7 @@ mbin_expr_substitute_and_simple(struct mbin_expr *pexpr,
 		paa = NULL;
 		while ((paa = mbin_expr_foreach_and(pxa, paa))) {
 			if (paa->type == from_type) {
-				if (paa->type == MBIN_EXPR_TYPE_CONST)
-					paa->value += delta;
-				else
-					paa->subtype += delta;
+				paa->subtype += delta;
 			}
 		}
 	}
@@ -335,24 +320,20 @@ mbin_expr_substitute_and_simple(struct mbin_expr *pexpr,
 void
 mbin_expr_print_and(struct mbin_expr_and *paa)
 {
-	if (paa->type == MBIN_EXPR_TYPE_CONST) {
-		printf("0x%x", paa->value);
-	} else {
-		char cvar;
+	char cvar;
 
-		cvar = paa->type - MBIN_EXPR_TYPE_VAR_A + 'a';
-		if ((cvar < 'a') || (cvar > 'z')) {
-			cvar = paa->type;
-			if (!isalpha(cvar))
-				cvar = '?';
-		}
-		printf("(%c%d", cvar, paa->subtype);
-		if (paa->shift > 0)
-			printf("<<%u", paa->shift);
-		else if (paa->shift < 0)
-			printf(">>%u", -paa->shift);
-		printf(")");
+	cvar = paa->type - MBIN_EXPR_TYPE_VAR_A + 'a';
+	if ((cvar < 'a') || (cvar > 'z')) {
+		cvar = paa->type;
+		if (!isalpha(cvar))
+			cvar = '?';
 	}
+	printf("(%c%d", cvar, paa->subtype);
+	if (paa->shift > 0)
+		printf("<<%u", paa->shift);
+	else if (paa->shift < 0)
+		printf(">>%u", -paa->shift);
+	printf(")");
 }
 
 void
@@ -368,12 +349,15 @@ mbin_expr_print_xor(struct mbin_expr_xor *pxa)
 	while ((paa = mbin_expr_foreach_and(pxa, paa))) {
 		if (had_expr)
 			printf("&");
+		else
+			printf("0x%x&", pxa->value);
+
 		mbin_expr_print_and(paa);
 		had_expr = 1;
 	}
 
 	if (had_expr == 0)
-		printf("0");
+		printf("0x%x", pxa->value);
 
 	printf(") ^ \n");
 }
@@ -435,6 +419,8 @@ mbin_expr_alloc_xor(struct mbin_expr *pexpr)
 
 	TAILQ_INIT(&pxor->head);
 
+	pxor->value = -1UL;
+
 	if (pexpr != NULL)
 		mbin_expr_enqueue_xor(pexpr, pxor);
 
@@ -485,4 +471,96 @@ mbin_expr_free(struct mbin_expr *pexpr)
 		mbin_expr_free_xor(pexpr, pxor);
 
 	free(pexpr);
+}
+
+void
+mbin_expr_optimise(struct mbin_expr *pexpr, uint32_t mask)
+{
+	struct mbin_expr_xor *pxa;
+	struct mbin_expr_xor *pxb;
+
+	struct mbin_expr_and *paa;
+	struct mbin_expr_and *pab;
+
+	uint32_t alen;
+	uint32_t blen;
+
+	uint8_t found;
+
+	pxa = NULL;
+	while ((pxa = mbin_expr_foreach_xor(pexpr, pxa))) {
+
+		/* remove all zero values */
+		while ((pxa->value & mask) == 0) {
+	delete:
+			/* get next element */
+			pxb = mbin_expr_foreach_xor(pexpr, pxa);
+			mbin_expr_free_xor(pexpr, pxa);
+			pxa = pxb;
+			if (pxa == NULL)
+				break;
+		}
+		if (pxa == NULL)
+			break;
+
+		alen = 0;
+
+		paa = NULL;
+		while ((paa = mbin_expr_foreach_and(pxa, paa))) {
+			if (paa->shift > 0) {
+				if (paa->shift > 31)
+					goto delete;
+				if (!(mask & (1 << paa->shift)))
+					goto delete;
+			} else if (paa->shift < 0) {
+				if (paa->shift < -31)
+					goto delete;
+			}
+			alen++;
+		}
+
+repeat:
+
+		pxb = pxa;
+		while ((pxb = mbin_expr_foreach_xor(pexpr, pxb))) {
+
+			blen = 0;
+
+			pab = NULL;
+			while ((pab = mbin_expr_foreach_and(pxb, pab))) {
+				blen++;
+			}
+
+			if (alen != blen)
+				continue;
+
+			found = 0;
+
+			paa = NULL;
+			while ((paa = mbin_expr_foreach_and(pxa, paa))) {
+
+				found = 0;
+
+				pab = NULL;
+				while ((pab = mbin_expr_foreach_and(pxb, pab))) {
+
+					if ((paa->type == pab->type) &&
+					    (paa->subtype == pab->subtype) &&
+					    (paa->shift == pab->shift)) {
+						found = 1;
+						break;
+					}
+				}
+
+				if (!found)
+					break;
+			}
+
+			if (found || (alen == 0)) {
+				pxa->value ^= pxb->value;
+				mbin_expr_free_xor(pexpr, pxb);
+				goto repeat;
+			}
+		}
+	}
 }

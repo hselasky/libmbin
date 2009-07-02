@@ -207,15 +207,14 @@ struct mbin_expr_and;
 struct mbin_expr_xor;
 struct mbin_expr;
 
-#define	MBIN_EXPR_TYPE_CONST 0
-#define	MBIN_EXPR_TYPE_VAR_A 1
-#define	MBIN_EXPR_TYPE_VAR_B 2
-#define	MBIN_EXPR_TYPE_VAR_C 3
+#define	MBIN_EXPR_TYPE_VAR_A 0
+#define	MBIN_EXPR_TYPE_VAR_B 1
+#define	MBIN_EXPR_TYPE_VAR_C 2
 #define	MBIN_BITS_MAX 127
 #define	MBIN_BITS_MIN (-127)
 
-uint32_t mbin_expr_get_value_and(struct mbin_expr_and *pand);
-void	mbin_expr_set_value_and(struct mbin_expr_and *pand, uint32_t value);
+uint32_t mbin_expr_get_value_and(struct mbin_expr_and *pxor);
+void	mbin_expr_set_value_and(struct mbin_expr_and *pxor, uint32_t value);
 int8_t	mbin_expr_get_type_and(struct mbin_expr_and *pand);
 void	mbin_expr_set_type_and(struct mbin_expr_and *pand, int8_t type);
 int8_t	mbin_expr_get_subtype_and(struct mbin_expr_and *pand);
@@ -228,6 +227,7 @@ struct mbin_expr_and *mbin_expr_foreach_and(struct mbin_expr_xor *pxor, struct m
 void	mbin_expr_enqueue_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);
 void	mbin_expr_dequeue_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);
 struct mbin_expr_xor *mbin_expr_foreach_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);
+int8_t	mbin_expr_max_shift_xor(struct mbin_expr_xor *pxa);
 void	mbin_expr_substitute_and_simple(struct mbin_expr *pexpr, int8_t from_type, int32_t delta);
 void	mbin_expr_print_and(struct mbin_expr_and *paa);
 void	mbin_expr_print_xor(struct mbin_expr_xor *pxa);
@@ -240,5 +240,6 @@ struct mbin_expr *mbin_expr_alloc(void);
 void	mbin_expr_free_and(struct mbin_expr_xor *pxor, struct mbin_expr_and *pand);
 void	mbin_expr_free_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);
 void	mbin_expr_free(struct mbin_expr *pexpr);
+void	mbin_expr_optimise(struct mbin_expr *pexpr, uint32_t mask);
 
 #endif					/* _MATH_BIN_H_ */
