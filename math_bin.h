@@ -211,9 +211,13 @@ struct mbin_expr;
 #define	MBIN_EXPR_TYPE_VAR_A 1
 #define	MBIN_EXPR_TYPE_VAR_B 2
 #define	MBIN_EXPR_TYPE_VAR_C 3
+#define	MBIN_BITS_MAX 127
+#define	MBIN_BITS_MIN (-127)
 
 uint32_t mbin_expr_get_value_and(struct mbin_expr_and *pand);
 void	mbin_expr_set_value_and(struct mbin_expr_and *pand, uint32_t value);
+int8_t	mbin_expr_get_type_and(struct mbin_expr_and *pand);
+void	mbin_expr_set_type_and(struct mbin_expr_and *pand, int8_t type);
 int8_t	mbin_expr_get_subtype_and(struct mbin_expr_and *pand);
 void	mbin_expr_set_subtype_and(struct mbin_expr_and *pand, int8_t subtype);
 int8_t	mbin_expr_get_shift_and(struct mbin_expr_and *pand);
@@ -224,11 +228,14 @@ struct mbin_expr_and *mbin_expr_foreach_and(struct mbin_expr_xor *pxor, struct m
 void	mbin_expr_enqueue_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);
 void	mbin_expr_dequeue_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);
 struct mbin_expr_xor *mbin_expr_foreach_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);
-void	mbin_expr_substitute_and_simple(struct mbin_expr *pexpr, int8_t from_type, int8_t from_subtype, int8_t to_type, int8_t to_subtype);
-struct mbin_expr_and *mbin_expr_dup_and(struct mbin_expr_and *pand_old);
+void	mbin_expr_substitute_and_simple(struct mbin_expr *pexpr, int8_t from_type, int32_t delta);
+void	mbin_expr_print_and(struct mbin_expr_and *paa);
+void	mbin_expr_print_xor(struct mbin_expr_xor *pxa);
+void	mbin_expr_print(struct mbin_expr *pexpr);
+struct mbin_expr_and *mbin_expr_dup_and(struct mbin_expr_and *pand_old, struct mbin_expr_xor *pxor);
 struct mbin_expr *mbin_expr_substitute_and_full(struct mbin_expr *pexpr, struct mbin_expr *psubst, int8_t type, int8_t subtype);
-struct mbin_expr_and *mbin_expr_alloc_and(int8_t type);
-struct mbin_expr_xor *mbin_expr_alloc_xor(void);
+struct mbin_expr_and *mbin_expr_alloc_and(struct mbin_expr_xor *pxor);
+struct mbin_expr_xor *mbin_expr_alloc_xor(struct mbin_expr *pexpr);
 struct mbin_expr *mbin_expr_alloc(void);
 void	mbin_expr_free_and(struct mbin_expr_xor *pxor, struct mbin_expr_and *pand);
 void	mbin_expr_free_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);

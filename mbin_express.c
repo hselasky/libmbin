@@ -27,6 +27,8 @@
 #include <string.h>
 #include <sys/queue.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
 
 #include "math_bin.h"
 
@@ -62,6 +64,18 @@ mbin_expr_set_value_and(struct mbin_expr_and *pand, uint32_t value)
 {
 	if (pand->type == MBIN_EXPR_TYPE_CONST)
 		pand->value = value;
+}
+
+int8_t
+mbin_expr_get_type_and(struct mbin_expr_and *pand)
+{
+	return (pand->type);
+}
+
+void
+mbin_expr_set_type_and(struct mbin_expr_and *pand, int8_t type)
+{
+	pand->type = type;
 }
 
 int8_t
@@ -157,15 +171,18 @@ mbin_expr_substitute_and_full(struct mbin_expr *pexpr,
 	struct mbin_expr_and *paa;
 	struct mbin_expr_and *pab;
 	struct mbin_expr_and *pac;
+	struct mbin_expr_and *pad;
 
 	struct mbin_expr_xor *pxa;
 	struct mbin_expr_xor *pxb;
 	struct mbin_expr_xor *pxc;
 
+	uint32_t temp_value;
+	int16_t temp;
 	uint8_t alloc_pexpr;
+	uint8_t temp_value_valid;
 	uint8_t found;
 	int8_t shift;
-	int16_t temp;
 
 	if (type == MBIN_EXPR_TYPE_CONST)
 		return (NULL);		/* invalid */
@@ -190,19 +207,15 @@ repeat:
 		}
 
 		/* duplicate XOR statement */
-		pxc = mbin_expr_alloc_xor();
+		pxc = mbin_expr_alloc_xor(pnexpr);
 		if (pxc == NULL)
 			goto failure;
 
-		mbin_expr_enqueue_xor(pnexpr, pxc);
-
 		pab = NULL;
 		while ((pab = mbin_expr_foreach_and(pxa, pab))) {
-			pac = mbin_expr_dup_and(pab);
+			pac = mbin_expr_dup_and(pab, pxc);
 			if (pac == NULL)
 				goto failure;
-
-			mbin_expr_enqueue_and(pxc, pac);
 		}
 		continue;
 
@@ -215,40 +228,51 @@ do_expand:
 		pxb = NULL;
 		while ((pxb = mbin_expr_foreach_xor(psubst, pxb))) {
 
-			pxc = mbin_expr_alloc_xor();
+			pxc = mbin_expr_alloc_xor(pnexpr);
 			if (pxc == NULL)
 				goto failure;
 
-			mbin_expr_enqueue_xor(pnexpr, pxc);
+			pad = mbin_expr_alloc_and(pxc);
+			if (pad == NULL)
+				goto failure;
+
+			temp_value = -1UL;
+			temp_value_valid = 0;
 
 			pab = NULL;
 			while ((pab = mbin_expr_foreach_and(pxa, pab))) {
 				if (pab == paa)
 					continue;
 
-				pac = mbin_expr_dup_and(pab);
-				if (pac == NULL)
-					goto failure;
-
-				mbin_expr_enqueue_and(pxc, pac);
+				if (pab->type == MBIN_EXPR_TYPE_CONST) {
+					temp_value_valid = 1;
+					temp_value &= pab->value;
+				} else {
+					pac = mbin_expr_dup_and(pab, pxc);
+					if (pac == NULL)
+						goto failure;
+				}
 			}
 
 			pab = NULL;
 			while ((pab = mbin_expr_foreach_and(pxb, pab))) {
-				pac = mbin_expr_dup_and(pab);
-				if (pac == NULL)
-					goto failure;
 
-				mbin_expr_enqueue_and(pxc, pac);
+				if (pab->type == MBIN_EXPR_TYPE_CONST) {
 
-				if (pac->type == MBIN_EXPR_TYPE_CONST) {
+					temp_value_valid = 1;
 					if ((shift < -31) || (shift > 31))
-						pac->value = 0;
+						temp_value = 0;
 					else if (shift < 0)
-						pac->value >>= -shift;
+						temp_value &= (pab->value >> -shift);
 					else if (shift > 0)
-						pac->value <<= shift;
+						temp_value &= (pab->value << shift);
+					else
+						temp_value &= pab->value;
 				} else {
+					pac = mbin_expr_dup_and(pab, pxc);
+					if (pac == NULL)
+						goto failure;
+
 					temp = pac->shift + shift;
 					if (temp > 127)
 						temp = 127;
@@ -256,6 +280,12 @@ do_expand:
 						temp = -127;
 					pac->shift = temp;
 				}
+			}
+
+			if (temp_value_valid) {
+				pad->value = temp_value;
+			} else {
+				mbin_expr_free_and(pxc, pad);
 			}
 
 			/* TODO: check for duplicate ANDs */
@@ -282,33 +312,85 @@ failure:
 
 void
 mbin_expr_substitute_and_simple(struct mbin_expr *pexpr,
-    int8_t from_type, int8_t from_subtype, int8_t to_type, int8_t to_subtype)
+    int8_t from_type, int32_t delta)
 {
 	struct mbin_expr_and *paa;
 	struct mbin_expr_xor *pxa;
-
-	if ((from_type == MBIN_EXPR_TYPE_CONST) ||
-	    (to_type == MBIN_EXPR_TYPE_CONST))
-		return;			/* invalid */
-
-	if ((from_type == to_type) && (from_subtype == to_subtype))
-		return;			/* no change */
 
 	pxa = NULL;
 	while ((pxa = mbin_expr_foreach_xor(pexpr, pxa))) {
 
 		paa = NULL;
 		while ((paa = mbin_expr_foreach_and(pxa, paa))) {
-			if ((paa->type == from_type) && (paa->subtype == from_subtype)) {
-				paa->type = to_type;
-				paa->subtype = to_subtype;
+			if (paa->type == from_type) {
+				if (paa->type == MBIN_EXPR_TYPE_CONST)
+					paa->value += delta;
+				else
+					paa->subtype += delta;
 			}
 		}
 	}
 }
 
+void
+mbin_expr_print_and(struct mbin_expr_and *paa)
+{
+	if (paa->type == MBIN_EXPR_TYPE_CONST) {
+		printf("0x%x", paa->value);
+	} else {
+		char cvar;
+
+		cvar = paa->type - MBIN_EXPR_TYPE_VAR_A + 'a';
+		if ((cvar < 'a') || (cvar > 'z')) {
+			cvar = paa->type;
+			if (!isalpha(cvar))
+				cvar = '?';
+		}
+		printf("(%c%d", cvar, paa->subtype);
+		if (paa->shift > 0)
+			printf("<<%u", paa->shift);
+		else if (paa->shift < 0)
+			printf(">>%u", -paa->shift);
+		printf(")");
+	}
+}
+
+void
+mbin_expr_print_xor(struct mbin_expr_xor *pxa)
+{
+	struct mbin_expr_and *paa;
+	uint8_t had_expr;
+
+	printf("(");
+
+	had_expr = 0;
+	paa = NULL;
+	while ((paa = mbin_expr_foreach_and(pxa, paa))) {
+		if (had_expr)
+			printf("&");
+		mbin_expr_print_and(paa);
+		had_expr = 1;
+	}
+
+	if (had_expr == 0)
+		printf("0");
+
+	printf(") ^ \n");
+}
+
+void
+mbin_expr_print(struct mbin_expr *pexpr)
+{
+	struct mbin_expr_xor *pxa;
+
+	pxa = NULL;
+	while ((pxa = mbin_expr_foreach_xor(pexpr, pxa))) {
+		mbin_expr_print_xor(pxa);
+	}
+}
+
 struct mbin_expr_and *
-mbin_expr_dup_and(struct mbin_expr_and *pand_old)
+mbin_expr_dup_and(struct mbin_expr_and *pand_old, struct mbin_expr_xor *pxor)
 {
 	struct mbin_expr_and *pand = malloc(sizeof(*pand));
 
@@ -319,11 +401,14 @@ mbin_expr_dup_and(struct mbin_expr_and *pand_old)
 
 	memset(&pand->entry, 0, sizeof(pand->entry));
 
+	if (pxor != NULL)
+		mbin_expr_enqueue_and(pxor, pand);
+
 	return (pand);
 }
 
 struct mbin_expr_and *
-mbin_expr_alloc_and(int8_t type)
+mbin_expr_alloc_and(struct mbin_expr_xor *pxor)
 {
 	struct mbin_expr_and *pand = malloc(sizeof(*pand));
 
@@ -332,13 +417,14 @@ mbin_expr_alloc_and(int8_t type)
 
 	memset(pand, 0, sizeof(*pand));
 
-	pand->type = type;
+	if (pxor != NULL)
+		mbin_expr_enqueue_and(pxor, pand);
 
 	return (pand);
 }
 
 struct mbin_expr_xor *
-mbin_expr_alloc_xor(void)
+mbin_expr_alloc_xor(struct mbin_expr *pexpr)
 {
 	struct mbin_expr_xor *pxor = malloc(sizeof(*pxor));
 
@@ -348,6 +434,9 @@ mbin_expr_alloc_xor(void)
 	memset(pxor, 0, sizeof(*pxor));
 
 	TAILQ_INIT(&pxor->head);
+
+	if (pexpr != NULL)
+		mbin_expr_enqueue_xor(pexpr, pxor);
 
 	return (pxor);
 }
