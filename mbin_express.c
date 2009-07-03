@@ -256,8 +256,6 @@ do_expand:
 
 				pac->shift = temp;
 			}
-
-			/* TODO: check for duplicate ANDs */
 		}
 	}
 

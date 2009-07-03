@@ -372,7 +372,8 @@ print_and:
 
 static void
 mbin_print_simple_factorise(uint32_t *temp, uint32_t mask,
-    uint32_t val, uint32_t level, uint8_t mbits, uint8_t do_xor)
+    uint32_t val, uint32_t level, uint8_t mbits,
+    uint8_t do_xor, uint8_t do_mask)
 {
 	uint32_t m;
 	uint32_t n;
@@ -409,7 +410,10 @@ mbin_print_simple_factorise(uint32_t *temp, uint32_t mask,
 		if (temp[u] & n) {
 #if 1
 			/* print out */
-			t = ((int32_t)(temp[u] &
+			t = temp[u];
+			if (do_mask)
+				t &= mask;
+			t = ((int32_t)(t &
 			    (-n))) / (int32_t)n;
 			if (t == 1);
 			else if (t == 0xFFFFFFFF)
@@ -481,7 +485,8 @@ mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 					    mask, y, x, mbits, (do_xor & 0x01));
 				} else {
 					mbin_print_simple_factorise(temp,
-					    mask, y, x, mbits, (do_xor & 0x01));
+					    mask, y, x, mbits, (do_xor & 0x01),
+					    (do_xor & 0x02));
 				}
 				count++;
 			}
