@@ -215,6 +215,47 @@ mbin_print_xor_analyse_fwd_32x32(uint32_t *ptr,
 }
 
 static void
+mbin_print_number_factorise(uint32_t *temp, uint32_t mask,
+    uint32_t val, uint32_t level, uint8_t mbits, uint8_t do_xor)
+{
+	uint32_t factor;
+	uint32_t x;
+	uint8_t prev;
+
+	factor = temp[val];
+	temp[val] = 0;
+
+	printf("0x%x*(", factor / level);
+	mbin_print32_abc(val);
+	prev = 1;
+
+	while (factor) {
+		x = 0;
+		while (1) {
+			if (temp[x] == factor) {
+				temp[x] = 0;
+				if (prev)
+					printf(" ^ ");
+				mbin_print32_abc(x);
+				prev = 1;
+			}
+			if (x == mask)
+				break;
+			x++;
+		}
+		if (!(factor & mask))
+			break;
+		if (factor & 0x80000000)
+			break;
+		printf(",");
+		prev = 0;
+		factor *= 2;
+	}
+
+	printf(")\n");
+}
+
+static void
 mbin_print_multi_factorise(uint32_t *temp, uint32_t mask,
     uint32_t val, uint32_t level, uint8_t mbits, uint8_t do_xor)
 {
@@ -480,7 +521,10 @@ mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 		while (1) {
 
 			if (temp[y] & x) {
-				if (do_xor & 0x80) {
+				if (do_xor & 0x20) {
+					mbin_print_number_factorise(temp,
+					    mask, y, x, mbits, (do_xor & 0x01));
+				} else if (do_xor & 0x80) {
 					mbin_print_multi_factorise(temp,
 					    mask, y, x, mbits, (do_xor & 0x01));
 				} else {

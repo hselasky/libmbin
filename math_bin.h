@@ -193,6 +193,7 @@ uint8_t	mbin_fp_inv_mat(mbin_fp_t *table, uint32_t size);
 void	mbin_fp_print_mat(mbin_fp_t *table, uint32_t size, uint8_t print_invert);
 
 uint32_t mbin_power_32(uint32_t x, uint32_t y);
+uint64_t mbin_power_64(uint64_t x, uint64_t y);
 
 uint32_t mbin_parse32_abc(const char *ptr, const char *end);
 void	mbin_parse32_add(const char *ptr, uint32_t *ptable, uint32_t mask);
