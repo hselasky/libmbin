@@ -245,8 +245,6 @@ mbin_print_number_factorise(uint32_t *temp, uint32_t mask,
 		}
 		if (!(factor & mask))
 			break;
-		if (factor & 0x80000000)
-			break;
 		printf(",");
 		prev = 0;
 		factor *= 2;
