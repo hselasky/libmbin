@@ -218,6 +218,7 @@ static void
 mbin_print_number_factorise(uint32_t *temp, uint32_t mask,
     uint32_t val, uint32_t level, uint8_t mbits, uint8_t do_xor)
 {
+	uint32_t myfact;
 	uint32_t factor;
 	uint32_t x;
 	uint8_t prev;
@@ -225,7 +226,13 @@ mbin_print_number_factorise(uint32_t *temp, uint32_t mask,
 	factor = temp[val];
 	temp[val] = 0;
 
-	printf("0x%x*(", factor / level);
+	myfact = factor;
+
+	if (myfact & 0x80000000) {
+		printf("-");
+		myfact = -myfact;
+	}
+	printf("0x%x*(", myfact / level);
 	mbin_print32_abc(val);
 	prev = 1;
 
