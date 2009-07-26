@@ -493,7 +493,13 @@ mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 	uint32_t y;
 	uint8_t mbits;
 
-	if (do_xor & 0x01) {
+	if (do_xor & 0x10) {
+		mbin_transform_gte_fwd_32x32(ptr, temp, mask);
+		if (remove != NULL) {
+			printf("Removing GTE statements is not supported\n");
+			return (0);
+		}
+	} else if (do_xor & 0x01) {
 		mbin_transform_multi_xor_fwd_32x32(ptr, temp, mask);
 		mbin_parse32_xor(remove, temp, mask);
 	} else {

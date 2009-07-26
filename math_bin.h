@@ -37,6 +37,7 @@ void	mbin_print32_const(uint32_t x);
 uint32_t mbin_print_xor_analyse_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t fslice);
 uint32_t mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp, const char *remove, uint32_t mask, uint8_t do_xor);
 
+void	mbin_expand_gte_32x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, uint32_t val);
 void	mbin_expand_add_32x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, uint32_t val);
 void	mbin_expand_xor_32x32(uint32_t *ptr, uint32_t val, uint32_t mask, uint32_t slice);
 void	mbin_expand_xor_16x32(uint16_t *ptr, uint32_t val, uint32_t mask, uint16_t slice);
@@ -54,6 +55,8 @@ void	mbin_optimise_xor_32x32(uint32_t *ptr, uint32_t mask, uint32_t func_slices,
 void	mbin_transform_add_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
 void	mbin_transform_xor_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t f_slice, uint32_t t_slice);
 void	mbin_transform_multi_xor_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
+void	mbin_transform_gte_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
+
 uint8_t	mbin_compute_value_32x32(uint32_t *ptr, const uint8_t *premap, uint32_t mask, uint32_t set_bits, uint32_t work_slice);
 
 uint8_t	mbin_sumbits32(uint32_t val);
