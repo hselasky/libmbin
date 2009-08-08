@@ -109,6 +109,9 @@ mbin_expr_enqueue_and(struct mbin_expr_xor *pxor, struct mbin_expr_and *pand)
 void
 mbin_expr_dequeue_and(struct mbin_expr_xor *pxor, struct mbin_expr_and *pand)
 {
+	if (pxor == NULL)
+		return;
+
 	if (pand->entry.tqe_prev != NULL) {
 		TAILQ_REMOVE(&pxor->head, pand, entry);
 		pand->entry.tqe_prev = NULL;
@@ -136,6 +139,9 @@ mbin_expr_enqueue_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor)
 void
 mbin_expr_dequeue_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor)
 {
+	if (pexpr == NULL)
+		return;
+
 	if (pxor->entry.tqe_prev != NULL) {
 		TAILQ_REMOVE(&pexpr->head, pxor, entry);
 		pxor->entry.tqe_prev = NULL;
@@ -315,6 +321,160 @@ mbin_expr_substitute_and_simple(struct mbin_expr *pexpr,
 	}
 }
 
+struct mbin_expr_and *
+mbin_expr_parse_and(struct mbin_expr_xor *pxor, const char *ptr, int *plen)
+{
+	struct mbin_expr_and *pand;
+	const char *ptr_old;
+	int balance;
+	char c;
+	char is_neg;
+
+	balance = 0;
+
+	*plen = -1;
+
+	pand = mbin_expr_alloc_and(pxor);
+	if (pand == NULL)
+		goto error;
+
+	ptr_old = ptr;
+
+next_char0:
+	c = *ptr;
+	switch (c) {
+	case '\0':
+		goto error;
+	case '(':
+		balance++;
+		ptr++;
+		goto next_char0;
+	case '&':
+	case ' ':
+	case '\t':
+	case '\n':
+	case '\r':
+		ptr++;
+		goto next_char0;
+	}
+
+	if ((c >= 'a' && c <= 'z') ||
+	    (c >= 'A' && c <= 'Z')) {
+		pand->type = c;
+		ptr++;
+	} else {
+		goto error;
+	}
+
+	pand->subtype = 0;
+	is_neg = 0;
+
+next_char1:
+	c = *ptr;
+	switch (c) {
+	case '\0':
+		goto error;
+	case '-':
+		is_neg = 1;
+		ptr++;
+		goto next_char1;
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+		if (is_neg) {
+			pand->subtype *= 10;
+			pand->subtype -= c - '0';
+		} else {
+			pand->subtype *= 10;
+			pand->subtype += c - '0';
+		}
+		ptr++;
+		goto next_char1;
+	case ' ':
+	case '\t':
+	case '\n':
+	case '\r':
+		ptr++;
+		goto next_char1;
+	}
+
+	pand->shift = 0;
+	is_neg = 0;
+
+next_char2:
+	c = *ptr;
+	switch (c) {
+	case '\0':
+		goto error;
+
+	case '*':
+		ptr++;
+		goto next_char2;
+
+	case '<':
+		is_neg = 0;
+		ptr++;
+		goto next_char2;
+
+	case '-':
+	case '>':
+		is_neg = 1;
+		ptr++;
+		goto next_char2;
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+		if (is_neg) {
+			pand->shift *= 10;
+			pand->shift -= c - '0';
+		} else {
+			pand->shift *= 10;
+			pand->shift += c - '0';
+		}
+		ptr++;
+		goto next_char2;
+
+	case ' ':
+	case '\t':
+	case '\n':
+	case '\r':
+		ptr++;
+		goto next_char2;
+
+	case ')':
+		balance--;
+		if (balance >= 0) {
+			ptr++;
+			goto next_char2;
+		}
+		break;
+	}
+
+	*plen = ptr - ptr_old;
+	return (pand);
+
+error:
+
+	if (pand != NULL)
+		mbin_expr_free_and(pxor, pand);
+
+	return (NULL);
+}
+
 void
 mbin_expr_print_and(struct mbin_expr_and *paa)
 {
@@ -332,6 +492,163 @@ mbin_expr_print_and(struct mbin_expr_and *paa)
 	else if (paa->shift < 0)
 		printf(">>%u", -paa->shift);
 	printf(")");
+}
+
+struct mbin_expr_xor *
+mbin_expr_parse_xor(struct mbin_expr *pexpr, const char *ptr, int *plen)
+{
+	struct mbin_expr_xor *pxor;
+	const char *ptr_old;
+	char c;
+	char is_neg;
+	int len;
+	int balance;
+	int factor;
+	int first_digit;
+
+	*plen = -1;
+
+	pxor = mbin_expr_alloc_xor(pexpr);
+	if (pxor == NULL)
+		goto error;
+
+	ptr_old = ptr;
+	pxor->value = -1UL;
+	is_neg = 0;
+	balance = 0;
+	factor = 10;
+	first_digit = 1;
+
+next_char0:
+	c = *ptr;
+	switch (c) {
+	case '^':
+		ptr++;
+		/* ignore double XOR */
+		if (first_digit)
+			goto next_char0;
+	case '\0':
+		/* check for error */
+		if (balance)
+			goto error;
+		if (first_digit) {
+			*plen = 0;
+			goto error;
+		}
+		/* complete */
+		break;
+	case '-':
+		if (first_digit) {
+			first_digit = 0;
+			pxor->value = 0;
+		}
+		is_neg = 1;
+		ptr++;
+		goto next_char0;
+	case 'x':
+		factor = 16;
+		ptr++;
+		goto next_char0;
+
+	case ' ':
+	case '\t':
+	case '\n':
+	case '\r':
+		ptr++;
+		goto next_char0;
+	case '(':
+		balance++;
+		ptr++;
+		goto next_char0;
+
+	case ')':
+		balance--;
+		ptr++;
+		goto next_char0;
+
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+		if (first_digit) {
+			first_digit = 0;
+			pxor->value = 0;
+		}
+		if (is_neg) {
+			pxor->value *= factor;
+			pxor->value -= c - '0';
+		} else {
+			pxor->value *= factor;
+			pxor->value += c - '0';
+		}
+		ptr++;
+		goto next_char0;
+
+	case 'a':
+	case 'b':
+	case 'c':
+	case 'd':
+	case 'e':
+	case 'f':
+		if (first_digit) {
+			first_digit = 0;
+			pxor->value = 0;
+		}
+		if (is_neg) {
+			pxor->value *= factor;
+			pxor->value -= c - 'a' + 10;
+		} else {
+			pxor->value *= factor;
+			pxor->value += c - 'a' + 10;
+		}
+		ptr++;
+		goto next_char0;
+
+	case 'A':
+	case 'B':
+	case 'C':
+	case 'D':
+	case 'E':
+	case 'F':
+		if (first_digit) {
+			first_digit = 0;
+			pxor->value = 0;
+		}
+		if (is_neg) {
+			pxor->value *= factor;
+			pxor->value -= c - 'A' + 10;
+		} else {
+			pxor->value *= factor;
+			pxor->value += c - 'A' + 10;
+		}
+		ptr++;
+		goto next_char0;
+
+	case '&':
+		if (mbin_expr_parse_and(pxor, ptr, &len) == NULL) {
+			goto error;
+		}
+		ptr += len;
+		goto next_char0;
+	default:
+		goto error;
+	}
+
+	*plen = ptr - ptr_old;
+
+	return (pxor);
+
+error:
+	if (pxor != NULL)
+		mbin_expr_free_xor(pexpr, pxor);
+
+	return (NULL);
 }
 
 void
@@ -358,6 +675,34 @@ mbin_expr_print_xor(struct mbin_expr_xor *pxa)
 		printf("0x%x", pxa->value);
 
 	printf(") ^ \n");
+}
+
+struct mbin_expr *
+mbin_expr_parse(const char *ptr)
+{
+	struct mbin_expr *pexpr;
+	int len;
+
+	pexpr = mbin_expr_alloc();
+	if (pexpr == NULL)
+		goto error;
+
+	while (1) {
+		if (mbin_expr_parse_xor(pexpr, ptr, &len) == NULL) {
+			if (len < 0)
+				goto error;
+			else
+				break;
+		}
+		ptr += len;
+	}
+	return (pexpr);
+
+error:
+	if (pexpr != NULL)
+		mbin_expr_free(pexpr);
+
+	return (NULL);
 }
 
 void
@@ -406,6 +751,33 @@ mbin_expr_alloc_and(struct mbin_expr_xor *pxor)
 }
 
 struct mbin_expr_xor *
+mbin_expr_dup_xor(struct mbin_expr_xor *pxor_old, struct mbin_expr *pexpr)
+{
+	struct mbin_expr_xor *pxor = malloc(sizeof(*pxor));
+	struct mbin_expr_and *pand;
+
+	if (pxor == NULL)
+		return (NULL);
+
+	*pxor = *pxor_old;
+
+	memset(&pxor->entry, 0, sizeof(pxor->entry));
+
+	TAILQ_INIT(&pxor->head);
+
+	if (pexpr != NULL)
+		mbin_expr_enqueue_xor(pexpr, pxor);
+
+	TAILQ_FOREACH(pand, &pxor_old->head, entry) {
+		if (mbin_expr_dup_and(pand, pxor) == NULL) {
+			mbin_expr_free_xor(pexpr, pxor);
+			return (NULL);
+		}
+	}
+	return (pxor);
+}
+
+struct mbin_expr_xor *
 mbin_expr_alloc_xor(struct mbin_expr *pexpr)
 {
 	struct mbin_expr_xor *pxor = malloc(sizeof(*pxor));
@@ -423,6 +795,30 @@ mbin_expr_alloc_xor(struct mbin_expr *pexpr)
 		mbin_expr_enqueue_xor(pexpr, pxor);
 
 	return (pxor);
+}
+
+struct mbin_expr *
+mbin_expr_dup(struct mbin_expr *pexpr_old)
+{
+	struct mbin_expr *pexpr = malloc(sizeof(*pexpr));
+	struct mbin_expr_xor *pxor;
+
+	if (pexpr == NULL)
+		return (NULL);
+
+	*pexpr = *pexpr_old;
+
+	memset(&pexpr->entry, 0, sizeof(pexpr->entry));
+
+	TAILQ_INIT(&pexpr->head);
+
+	TAILQ_FOREACH(pxor, &pexpr_old->head, entry) {
+		if (mbin_expr_dup_xor(pxor, pexpr) == NULL) {
+			mbin_expr_free(pexpr);
+			return (NULL);
+		}
+	}
+	return (pexpr);
 }
 
 struct mbin_expr *
