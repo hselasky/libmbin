@@ -217,6 +217,8 @@ struct mbin_expr;
 #define	MBIN_BITS_MAX 127
 #define	MBIN_BITS_MIN (-127)
 
+uint32_t mbin_expr_get_value_xor(struct mbin_expr_xor *pxor);
+void	mbin_expr_set_value_xor(struct mbin_expr_xor *pxor, uint32_t value);
 uint32_t mbin_expr_get_value_and(struct mbin_expr_and *pxor);
 void	mbin_expr_set_value_and(struct mbin_expr_and *pxor, uint32_t value);
 int8_t	mbin_expr_get_type_and(struct mbin_expr_and *pand);
@@ -244,6 +246,7 @@ struct mbin_expr *mbin_expr_substitute_and_full(struct mbin_expr *pexpr, struct 
 struct mbin_expr_and *mbin_expr_alloc_and(struct mbin_expr_xor *pxor);
 struct mbin_expr_xor *mbin_expr_dup_xor(struct mbin_expr_xor *pxor_old, struct mbin_expr *pexpr);
 struct mbin_expr_xor *mbin_expr_alloc_xor(struct mbin_expr *pexpr);
+struct mbin_expr *mbin_expr_dup(struct mbin_expr *pexpr_old);
 struct mbin_expr *mbin_expr_alloc(void);
 void	mbin_expr_free_and(struct mbin_expr_xor *pxor, struct mbin_expr_and *pand);
 void	mbin_expr_free_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);

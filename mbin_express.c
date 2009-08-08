@@ -867,6 +867,17 @@ mbin_expr_free(struct mbin_expr *pexpr)
 	free(pexpr);
 }
 
+static struct mbin_expr_xor *
+mbin_expr_xor_delete(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor)
+{
+	struct mbin_expr_xor *pnext;
+
+	/* get next element */
+	pnext = mbin_expr_foreach_xor(pexpr, pxor);
+	mbin_expr_free_xor(pexpr, pxor);
+	return (pnext);
+}
+
 void
 mbin_expr_optimise(struct mbin_expr *pexpr, uint32_t mask)
 {
@@ -881,21 +892,10 @@ mbin_expr_optimise(struct mbin_expr *pexpr, uint32_t mask)
 
 	uint8_t found;
 
-	pxa = NULL;
-	while ((pxa = mbin_expr_foreach_xor(pexpr, pxa))) {
+	pxa = mbin_expr_foreach_xor(pexpr, NULL);
+	while (pxa) {
 
-		/* remove all zero values */
-		while ((pxa->value & mask) == 0) {
-	delete:
-			/* get next element */
-			pxb = mbin_expr_foreach_xor(pexpr, pxa);
-			mbin_expr_free_xor(pexpr, pxa);
-			pxa = pxb;
-			if (pxa == NULL)
-				break;
-		}
-		if (pxa == NULL)
-			break;
+		/* compute AND expression length */
 
 		alen = 0;
 
@@ -903,21 +903,30 @@ mbin_expr_optimise(struct mbin_expr *pexpr, uint32_t mask)
 		while ((paa = mbin_expr_foreach_and(pxa, paa))) {
 			if (paa->shift > 0) {
 				if (paa->shift > 31)
-					goto delete;
-				if (!(mask & (1 << paa->shift)))
-					goto delete;
+					pxa->value = 0;
+				else
+					pxa->value &= -(1 << paa->shift);
 			} else if (paa->shift < 0) {
 				if (paa->shift < -31)
-					goto delete;
+					pxa->value = 0;
+				else
+					pxa->value &= (2 << (31 - paa->shift)) - 1;
 			}
 			alen++;
 		}
 
-repeat:
+		/* remove all zero values */
+
+		if ((pxa->value & mask) == 0) {
+			pxa = mbin_expr_xor_delete(pexpr, pxa);
+			continue;
+		}
+		/* look for matching AND expression */
 
 		pxb = pxa;
-		while ((pxb = mbin_expr_foreach_xor(pexpr, pxb))) {
+		pxb = mbin_expr_foreach_xor(pexpr, pxb);
 
+		while (pxb != NULL) {
 			blen = 0;
 
 			pab = NULL;
@@ -925,10 +934,11 @@ repeat:
 				blen++;
 			}
 
-			if (alen != blen)
+			if (alen != blen) {
+				pxb = mbin_expr_foreach_xor(pexpr, pxb);
 				continue;
-
-			found = 0;
+			}
+			found = 1;
 
 			paa = NULL;
 			while ((paa = mbin_expr_foreach_and(pxa, paa))) {
@@ -950,11 +960,21 @@ repeat:
 					break;
 			}
 
-			if (found || (alen == 0)) {
+			if (found) {
+				/* accumulate AND expression */
 				pxa->value ^= pxb->value;
-				mbin_expr_free_xor(pexpr, pxb);
-				goto repeat;
+				pxb = mbin_expr_xor_delete(pexpr, pxb);
+				continue;
 			}
+			pxb = mbin_expr_foreach_xor(pexpr, pxb);
 		}
+
+		/* check for zero */
+
+		if ((pxa->value & mask) == 0) {
+			pxa = mbin_expr_xor_delete(pexpr, pxa);
+			continue;
+		}
+		pxa = mbin_expr_foreach_xor(pexpr, pxa);
 	}
 }
