@@ -159,6 +159,17 @@ mbin_expr_foreach_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor)
 	return (pxor);
 }
 
+static struct mbin_expr_and *
+mbin_expr_and_delete(struct mbin_expr_xor *pxor, struct mbin_expr_and *pand)
+{
+	struct mbin_expr_and *pnext;
+
+	/* get next element */
+	pnext = mbin_expr_foreach_and(pxor, pand);
+	mbin_expr_free_and(pxor, pand);
+	return (pnext);
+}
+
 struct mbin_expr *
 mbin_expr_substitute_and_full(struct mbin_expr *pexpr,
     struct mbin_expr *psubst, int8_t type, int8_t subtype)
@@ -261,6 +272,20 @@ do_expand:
 					temp = MBIN_BITS_MIN;
 
 				pac->shift = temp;
+			}
+
+			/* remove duplicate AND's */
+			pab = NULL;
+			while ((pab = mbin_expr_foreach_and(pxc, pab))) {
+				pac = mbin_expr_foreach_and(pxc, pab);
+				while (pac != NULL) {
+					if ((pab->type == pac->type) &&
+					    (pab->subtype == pac->subtype) &&
+					    (pab->shift == pac->shift))
+						pac = mbin_expr_and_delete(pxc, pac);
+					else
+						pac = mbin_expr_foreach_and(pxc, pac);
+				}
 			}
 		}
 	}
