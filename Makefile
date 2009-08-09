@@ -15,6 +15,7 @@ SRCS+=	mbin_baseM.c
 SRCS+=	mbin_baseN.c
 SRCS+=	mbin_baseT.c
 SRCS+=	mbin_baseU.c
+SRCS+=	mbin_baseV.c
 SRCS+=	mbin_bitreverse.c
 SRCS+=	mbin_dec.c
 SRCS+=	mbin_depolarise.c

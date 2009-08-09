@@ -24,28 +24,28 @@
  */
 
 /*
- * baseU is a "(3)**(-n)" exponent function
+ * baseV is a "(-3)**(-n)" exponent function
  *
  * Relationships for sum of "a" and "c":
  * =====================================
  *
- * z0 = (a + c) / 2;
- * z1 = (c - a) / 2;
+ * z0 = (c - a) / 4;
+ * z1 = ((3*a) + c) / 4;
  *
- * a = (z0 - z1);
- * c = (z0 + z1);
+ * a = (z1 - z0);
+ * c = (z1 + (3*z0));
  *
  * How to compute next sum:
  * ========================
  *
- * z2 = z1 + (a ^ (2*a) ^ c ^ 2);
+ * z2 = z1 - (a ^ (2*a) ^ c);
  *
  *
  * Relationship for sequential "a" as a function of "a":
  * =====================================================
  *
- * a2 = a1 ^ (~(2 * a1) & ~(2 * a0) & (4 * a0)) ^
- *           ((2 * a1) & (2 * a0) & ~(4 * a0));
+ * a2 = a1 ^ -4 ^ (((2*a1) ^ (4*a0)) & ((2*a1) ^ (2*a0)));
+ *
  */
 
 #include <stdint.h>
@@ -53,33 +53,33 @@
 #include "math_bin.h"
 
 uint32_t
-mbin_base_2toU_32(uint32_t b2)
+mbin_base_2toV_32(uint32_t b2)
 {
 	uint32_t f;
 	uint32_t g;
 	uint8_t n;
 
-	g = mbin_power_32(3, -b2);
+	g = mbin_power_32(-3, -b2);
 
 	f = 0;
 	for (n = 0; n != 32; n++) {
 		f |= (g & (1 << n));
-		g *= 3;
+		g *= -3;
 	}
 	return (f);
 }
 
 uint32_t
-mbin_base_Uto2_32(uint32_t bu)
+mbin_base_Vto2_32(uint32_t bv)
 {
 	uint32_t b2 = 0;
 	uint32_t m = 8;
 
-	if (!(bu & 2))
+	if (bv & 4)
 		b2 ^= 1;
 
 	while (m) {
-		if ((mbin_base_2toU_32(b2) ^ bu) & m) {
+		if ((mbin_base_2toV_32(b2) ^ bv) & m) {
 			b2 ^= m / 4;
 		}
 		m *= 2;
@@ -88,44 +88,46 @@ mbin_base_Uto2_32(uint32_t bu)
 }
 
 void
-mbin_baseU_get_state32(struct mbin_baseU_state32 *ps, uint32_t index)
+mbin_baseV_get_state32(struct mbin_baseV_state32 *ps, uint32_t index)
 {
 	uint32_t an;
 	uint32_t ap;
 
-	ap = mbin_base_2toU_32(index);
-	an = mbin_base_2toU_32(index + 1);
+	ap = mbin_base_2toV_32(index);
+	an = mbin_base_2toV_32(index + 1);
 
 	ps->a = ap;
-	ps->c = an ^ ap ^ ~(2 * ap);
+	ps->c = an ^ ap ^ (2 * ap) ^ -2UL;
 }
 
 void
-mbin_baseU_inc_state32(struct mbin_baseU_state32 *ps)
+mbin_baseV_inc_state32(struct mbin_baseV_state32 *ps)
 {
 	uint32_t a;
 	uint32_t b;
 	uint32_t c;
 
 	a = ps->a;
-	b = ~(2 * a);
-	c = ps->c | 1;
+	b = (2 * ps->a);
+	c = ps->c;
 
-	ps->a = a ^ b ^ c;
+	/* standard addition formula */
+
+	ps->a = a ^ b ^ c ^ -2UL;
 	ps->c = 2 * ((a & b) ^ (c & b) ^ (a & c));
 }
 
 uint32_t
-mbin_baseU_decipher_state32(struct mbin_baseU_state32 *ps)
+mbin_baseV_decipher_state32(struct mbin_baseV_state32 *ps)
 {
-	struct mbin_baseU_state32 temp = *ps;
+	struct mbin_baseV_state32 temp = *ps;
 	uint32_t t;
 	uint8_t n;
 
 	t = 0;
 	for (n = 0; n != 32; n++) {
 		t |= temp.a & (1 << n);
-		mbin_baseU_inc_state32(&temp);
+		mbin_baseV_inc_state32(&temp);
 	}
 	return (t);
 }
