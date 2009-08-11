@@ -264,4 +264,6 @@ void	mbin_expr_free_xor(struct mbin_expr *pexpr, struct mbin_expr_xor *pxor);
 void	mbin_expr_free(struct mbin_expr *pexpr);
 void	mbin_expr_optimise(struct mbin_expr *pexpr, uint32_t mask);
 
+int32_t	mbin_correlate_32x32(uint32_t *pa, uint32_t *pb, uint32_t mask, uint32_t slice);
+
 #endif					/* _MATH_BIN_H_ */
