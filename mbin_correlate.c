@@ -28,7 +28,8 @@
 #include "math_bin.h"
 
 int32_t
-mbin_correlate_32x32(uint32_t *pa, uint32_t *pb, uint32_t mask, uint32_t slice)
+mbin_correlate_32x32(uint32_t *pa, uint32_t *pb, uint32_t mask,
+    uint32_t slice_a, uint32_t slice_b)
 {
 	int32_t sum;
 	int8_t temp;
@@ -39,12 +40,12 @@ mbin_correlate_32x32(uint32_t *pa, uint32_t *pb, uint32_t mask, uint32_t slice)
 
 	while (1) {
 
-		if (pa[x & mask] & slice)
+		if (pa[x & mask] & slice_a)
 			temp = 1;
 		else
 			temp = -1;
 
-		if (!(pb[x & mask] & slice))
+		if (!(pb[x & mask] & slice_b))
 			temp = -temp;
 
 		sum += temp;
