@@ -45,7 +45,7 @@ mbin_expand_gte_32x32(uint32_t *ptr, uint32_t set_bits,
 	x = set_bits | (~mask);
 
 	while (1) {
-		ptr[x & mask] ^= val;
+		ptr[x & mask] -= val;
 
 		if (x == (uint32_t)(0 - 1)) {
 			break;
