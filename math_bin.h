@@ -266,4 +266,6 @@ void	mbin_expr_optimise(struct mbin_expr *pexpr, uint32_t mask);
 
 int32_t	mbin_correlate_32x32(uint32_t *pa, uint32_t *pb, uint32_t mask, uint32_t slice_a, uint32_t slice_b);
 
+uint32_t mbin_sos_32(uint32_t x, uint32_t y);
+
 #endif					/* _MATH_BIN_H_ */
