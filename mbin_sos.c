@@ -44,13 +44,33 @@
 #include "math_bin.h"
 
 uint32_t
-mbin_sos_32(uint32_t x, uint32_t y)
+mbin_sos_32(int32_t x, int32_t y)
 {
 	uint32_t rem;
 	uint32_t div;
 	uint32_t n;
 	uint32_t temp;
 	uint32_t fact;
+
+	/* handle some special cases */
+
+	if ((x < 0) || (y < 0))
+		return (0);
+
+	if (y == 0)
+		return (1);
+
+	if (x == 0)
+		return (0);
+
+	/* try to optimise */
+
+	if (x < (y + 1)) {
+		/* swap X and Y due to symmetry */
+		temp = (x - 1);
+		x = y + 1;
+		y = temp;
+	}
 
 	rem = 1;
 	div = 1;
