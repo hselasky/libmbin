@@ -56,6 +56,7 @@ void	mbin_transform_add_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
 void	mbin_transform_xor_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t f_slice, uint32_t t_slice);
 void	mbin_transform_multi_xor_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
 void	mbin_transform_gte_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
+void	mbin_transform_sos_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t *scratch, uint32_t mask);
 
 uint8_t	mbin_compute_value_32x32(uint32_t *ptr, const uint8_t *premap, uint32_t mask, uint32_t set_bits, uint32_t work_slice);
 

@@ -71,7 +71,6 @@ mbin_sos_32(int32_t x, int32_t y)
 		x = y + 1;
 		y = temp;
 	}
-
 	rem = 1;
 	div = 1;
 
