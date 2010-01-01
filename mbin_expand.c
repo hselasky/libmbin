@@ -80,6 +80,26 @@ mbin_expand_add_32x32(uint32_t *ptr, uint32_t set_bits,
 }
 
 void
+mbin_expand_add_mod_32x32(uint32_t *ptr, uint32_t set_bits,
+    uint32_t mask, uint32_t val, uint32_t mod)
+{
+	uint32_t x;
+
+	set_bits |= (~mask);
+	x = set_bits;
+
+	while (1) {
+		ptr[x & mask] = (mod + ptr[x & mask] - val) % mod;
+
+		if (x == (uint32_t)(0 - 1)) {
+			break;
+		}
+		x++;
+		x |= set_bits;
+	}
+}
+
+void
 mbin_expand_xor_32x32(uint32_t *ptr, uint32_t set_bits,
     uint32_t mask, uint32_t slice)
 {

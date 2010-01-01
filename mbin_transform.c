@@ -123,6 +123,40 @@ mbin_transform_add_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 	}
 }
 
+/* XOR-ADD-MODULUS - transform */
+
+void
+mbin_transform_add_mod_fwd_32x32(uint32_t *ptr, uint32_t *temp,
+    uint32_t mask, uint32_t mod)
+{
+	uint32_t x;
+	uint32_t val;
+
+	/* cleanup "t_slice" */
+	x = 0;
+	while (1) {
+		temp[x] = ptr[x];
+		if (x == mask)
+			break;
+		x++;
+	}
+
+	/* transform "f" */
+	x = 0;
+	while (1) {
+		val = temp[x];
+		if (val) {
+			/* expand logic expression */
+			mbin_expand_add_mod_32x32(temp, x, mask, val, mod);
+			/* restore original value */
+			temp[x] = val;
+		}
+		if (x == mask)
+			break;
+		x++;
+	}
+}
+
 /* Greater Equal, GTE - transform */
 
 void
