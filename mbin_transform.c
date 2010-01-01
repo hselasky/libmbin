@@ -183,8 +183,8 @@ mbin_transform_sos_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t *scratch,
 	x = 0;
 	while (1) {
 		val = temp[x];
+		sum = 0;
 		if (val) {
-			sum = 0;
 			for (y = x;; y++) {
 				sum += scratch[y - x];
 				temp[y] -= sum * val;
@@ -193,6 +193,61 @@ mbin_transform_sos_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t *scratch,
 					break;
 			}
 			temp[x] = val;
+		} else {
+			for (y = x;; y++) {
+				sum += scratch[y - x];
+				scratch[y - x] = sum;
+				if (y == mask)
+					break;
+			}
+		}
+		if (x == mask)
+			break;
+		x++;
+	}
+}
+
+/* Polynom transform */
+
+void
+mbin_transform_poly_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t *scratch,
+    uint32_t mask)
+{
+	uint32_t x;
+	uint32_t y;
+	uint32_t val;
+	uint32_t sum;
+
+	x = 0;
+	while (1) {
+		scratch[x] = 1;
+		temp[x] = ptr[x];
+		if (x == mask)
+			break;
+		x++;
+	}
+
+	/* transform "f" */
+	x = 0;
+	while (1) {
+		val = temp[x];
+		sum = 0;
+		if (val) {
+			for (y = x;; y++) {
+				sum = scratch[y - x] * (y - x + 1);
+				temp[y] -= sum * val;
+				scratch[y - x] = sum;
+				if (y == mask)
+					break;
+			}
+			temp[x] = val;
+		} else {
+			for (y = x;; y++) {
+				sum = scratch[y - x] * (y - x + 1);
+				scratch[y - x] = sum;
+				if (y == mask)
+					break;
+			}
 		}
 		if (x == mask)
 			break;
