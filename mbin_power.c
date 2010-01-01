@@ -54,3 +54,21 @@ mbin_power_64(uint64_t x, uint64_t y)
 	}
 	return (r);
 }
+
+uint32_t
+mbin_power_mod_32(uint32_t x, uint32_t y, uint32_t mod)
+{
+	uint64_t r = 1;
+	uint64_t t = x % mod;
+
+	while (y) {
+		if (y & 1) {
+			r *= t;
+			r %= mod;
+		}
+		t *= t;
+		t %= mod;
+		y /= 2;
+	}
+	return (r);
+}
