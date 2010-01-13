@@ -276,5 +276,6 @@ uint32_t mbin_sos_32(int32_t x, int32_t y);
 
 uint32_t mbin_integrate_32(uint32_t *ptr, uint32_t max);
 void	mbin_derivate_32(uint32_t *ptr, uint32_t max);
+uint32_t mbin_sum_32(uint32_t *ptr, uint32_t max, uint8_t sstep);
 
 #endif					/* _MATH_BIN_H_ */

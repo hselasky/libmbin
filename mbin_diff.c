@@ -37,7 +37,6 @@ mbin_integrate_32(uint32_t *ptr, uint32_t max)
 		sum += ptr[n];
 		ptr[n] = sum;
 	}
-
 	return (sum);
 }
 
@@ -53,4 +52,21 @@ mbin_derivate_32(uint32_t *ptr, uint32_t max)
 		ptr[n] -= last;
 		last = temp;
 	}
+}
+
+uint32_t
+mbin_sum_32(uint32_t *ptr, uint32_t max, uint8_t sstep)
+{
+	uint32_t sum = 0;
+	uint32_t n;
+	uint8_t shift = 0;
+
+	for (n = 0; n != max; n++) {
+		sum += ptr[n] << shift;
+
+		shift += sstep;
+		if (shift >= 32)
+			break;
+	}
+	return (sum);
 }
