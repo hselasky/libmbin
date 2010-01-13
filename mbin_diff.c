@@ -23,77 +23,34 @@
  * SUCH DAMAGE.
  */
 
-/*
- * Function to compute the Sum of Sums, SoS:
- *
- *  +-------------->  (y)
- *  | 1   0   0   0   0   0
- *  | 1   1   1   1   1   1
- *  | 1   2   3   4   5   6
- *  | 1   3   6  10  15  21
- *  | 1   4  10  20  35  56
- *  | 1   5  15  35  70 126
- *  | 1   6  21  56 126 252
- *  V
- *
- * (x)
- */
-
 #include <stdint.h>
 
 #include "math_bin.h"
 
 uint32_t
-mbin_sos_32(int32_t x, int32_t y)
+mbin_integrate_32(uint32_t *ptr, uint32_t max)
 {
-	uint32_t rem;
-	uint32_t div;
+	uint32_t sum = 0;
 	uint32_t n;
+
+	for (n = 0; n != max; n++) {
+		sum += ptr[n];
+		ptr[n] = sum;
+	}
+
+	return (sum);
+}
+
+void
+mbin_derivate_32(uint32_t *ptr, uint32_t max)
+{
+	uint32_t last = 0;
 	uint32_t temp;
-	uint32_t fact;
+	uint32_t n;
 
-	/* handle some special cases */
-
-	if ((x < 0) || (y < 0))
-		return (0);
-
-	if (y == 0)
-		return (1);
-
-	if (x == 0)
-		return (0);
-
-	/* try to optimise */
-
-	if (x < (y + 1)) {
-		/* swap X and Y due to symmetry */
-		temp = (x - 1);
-		x = y + 1;
-		y = temp;
+	for (n = 0; n != max; n++) {
+		temp = ptr[n];
+		ptr[n] -= last;
+		last = temp;
 	}
-	rem = 1;
-	div = 1;
-
-	for (n = 0; n != (uint32_t)y; n++) {
-		/* compute scaling factor */
-		temp = (~n) & (n + 1);
-		div *= (n + 1) / temp;
-		fact = (x + n);
-
-		/* remove common divisor */
-		while ((~fact) & (~temp) & 1) {
-			fact /= 2;
-			temp /= 2;
-		}
-
-		/* compute Sum of Sum */
-		rem *= fact;
-		rem /= temp;
-	}
-
-	/* for better accuracy modulo (2**n) division is used */
-
-	rem = mbin_div_odd32(rem, div);
-
-	return (rem);
 }

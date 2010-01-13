@@ -538,7 +538,7 @@ mbin_expr_parse_xor(struct mbin_expr *pexpr, const char *ptr, int *plen)
 		goto error;
 
 	ptr_old = ptr;
-	pxor->value = -1UL;
+	pxor->value = 0xFFFFFFFFUL;
 	is_neg = 0;
 	balance = 0;
 	factor = 10;
@@ -814,7 +814,7 @@ mbin_expr_alloc_xor(struct mbin_expr *pexpr)
 
 	TAILQ_INIT(&pxor->head);
 
-	pxor->value = -1UL;
+	pxor->value = 0xFFFFFFFFUL;
 
 	if (pexpr != NULL)
 		mbin_expr_enqueue_xor(pexpr, pxor);

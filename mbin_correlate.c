@@ -50,7 +50,7 @@ mbin_correlate_32x32(uint32_t *pa, uint32_t *pb, uint32_t mask,
 
 		sum += temp;
 
-		if (x == -1UL)
+		if (x == 0xFFFFFFFFUL)
 			break;
 
 		x++;

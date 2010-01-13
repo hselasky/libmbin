@@ -485,7 +485,7 @@ mbin_print_simple_factorise(uint32_t *temp, uint32_t mask,
 
 uint32_t
 mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
-    const char *remove, uint32_t mask, uint8_t do_xor)
+    const char *pdelete, uint32_t mask, uint8_t do_xor)
 {
 	uint32_t tcount;
 	uint32_t count;
@@ -495,16 +495,16 @@ mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 
 	if (do_xor & 0x10) {
 		mbin_transform_gte_fwd_32x32(ptr, temp, mask);
-		if (remove != NULL) {
+		if (pdelete != NULL) {
 			printf("Removing GTE statements is not supported\n");
 			return (0);
 		}
 	} else if (do_xor & 0x01) {
 		mbin_transform_multi_xor_fwd_32x32(ptr, temp, mask);
-		mbin_parse32_xor(remove, temp, mask);
+		mbin_parse32_xor(pdelete, temp, mask);
 	} else {
 		mbin_transform_add_fwd_32x32(ptr, temp, mask);
-		mbin_parse32_add(remove, temp, mask);
+		mbin_parse32_add(pdelete, temp, mask);
 	}
 
 	tcount = 0;

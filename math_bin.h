@@ -274,4 +274,7 @@ int32_t	mbin_correlate_32x32(uint32_t *pa, uint32_t *pb, uint32_t mask, uint32_t
 
 uint32_t mbin_sos_32(int32_t x, int32_t y);
 
+uint32_t mbin_integrate_32(uint32_t *ptr, uint32_t max);
+void	mbin_derivate_32(uint32_t *ptr, uint32_t max);
+
 #endif					/* _MATH_BIN_H_ */

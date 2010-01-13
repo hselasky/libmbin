@@ -223,7 +223,7 @@ mbin_fp_print(mbin_fp_t temp)
 		printf("0x%016llx:%s0x%02x:0x%02x", 0ULL, "---", 0, 0);
 	else
 		printf("0x%016llx:%s0x%02x:0x%02x",
-		    temp.remainder,
+		    (long long unsigned int)temp.remainder,
 		    (temp.exponent < 0) ? "e=-" : "e=+",
 		    (temp.exponent < 0) ? -temp.exponent : temp.exponent,
 		    temp.defined);
