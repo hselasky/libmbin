@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008-2010 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -186,6 +186,21 @@ mbin_div_odd32_alt2(uint32_t rem, uint32_t div)
 		div *= 2;
 	}
 	return (t);
+}
+
+uint32_t
+mbin_div_odd32_alt3(uint32_t rem, uint32_t div)
+{
+	uint8_t n;
+
+	div = -div + 1;
+
+	div = mbin_bitrev32(div / 2);
+
+	for (n = 1; n != 32; n++) {
+		rem += mbin_sumbits32(rem & (div >> (32 - n))) << n;
+	}
+	return (rem);
 }
 
 uint16_t
