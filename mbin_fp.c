@@ -30,9 +30,32 @@
 
 #define	BITS_REMAINDER 64
 
+static uint32_t mod_prime = 0;
+
+void
+mbin_fp_set_modulus32(uint32_t prime)
+{
+	mod_prime = prime;
+}
+
 static mbin_fp_t
 fix_fp_num(mbin_fp_t result)
 {
+	if (mod_prime != 0) {
+		if (result.remainder & (1ULL << 63)) {
+			/* negative */
+			result.remainder = -result.remainder;
+			result.remainder %= mod_prime;
+			if (result.remainder != 0)
+				result.remainder = mod_prime - result.remainder;
+		} else {
+			/* positive */
+			result.remainder %= mod_prime;
+		}
+		result.defined = BITS_REMAINDER;
+		result.exponent = 0;
+		goto done;
+	}
 	if (result.remainder) {
 		/*
 		 * Remove zero bits at the beginning of the remainder:
@@ -53,6 +76,7 @@ fix_fp_num(mbin_fp_t result)
 	if (result.defined < BITS_REMAINDER)
 		result.remainder &= (1ULL << result.defined) - 1ULL;
 
+done:
 	return (result);
 }
 
@@ -64,6 +88,24 @@ mbin_fp_remainder(mbin_fp_t temp, int16_t _exp)
 
 	exp_lsb = temp.exponent - _exp;
 
+	if (mod_prime != 0) {
+
+		result = temp.remainder;
+
+		while (exp_lsb > 0) {
+			result *= 2;
+			if (result >= mod_prime)
+				result -= mod_prime;
+			exp_lsb--;
+		}
+
+		while (exp_lsb < 0) {
+			if (result & 1)
+				result += mod_prime;
+			result /= 2;
+			exp_lsb++;
+		}
+	}
 	if (exp_lsb <= -BITS_REMAINDER)
 		result = 0;
 	else if (exp_lsb < 0)
@@ -81,6 +123,22 @@ mbin_fp_number(uint64_t x, int16_t _exp)
 {
 	mbin_fp_t result;
 
+	if (mod_prime != 0) {
+		x %= mod_prime;
+
+		while (_exp > 0) {
+			x *= 2;
+			if (x >= mod_prime)
+				x -= mod_prime;
+			_exp--;
+		}
+		while (_exp < 0) {
+			if (x & 1)
+				x += mod_prime;
+			x /= 2;
+			_exp++;
+		}
+	}
 	result.exponent = _exp;
 	result.defined = BITS_REMAINDER;
 	result.remainder = x;
@@ -108,6 +166,9 @@ static void
 align_fp_num(mbin_fp_t *pa, mbin_fp_t *pb)
 {
 	uint32_t diff_exp;
+
+	if (mod_prime)
+		return;
 
 	/*
 	 * Align the numbers at the same exponent. Currently the
@@ -185,19 +246,24 @@ mbin_fp_mul(mbin_fp_t a, mbin_fp_t b)
 	if (b.defined < a.defined)
 		a.defined = b.defined;
 
-	return (a);
+	return (fix_fp_num(a));
 }
 
 mbin_fp_t
 mbin_fp_div(mbin_fp_t a, mbin_fp_t b)
 {
-	a.remainder = mbin_div_odd64(a.remainder, b.remainder);
+	if (mod_prime != 0) {
+		a.remainder = a.remainder *
+		mbin_power_mod_32(b.remainder, mod_prime - 2, mod_prime);
+	} else {
+		a.remainder = mbin_div_odd64(a.remainder, b.remainder);
+	}
 	a.exponent -= b.exponent;
 
 	if (b.defined < a.defined)
 		a.defined = b.defined;
 
-	return (a);
+	return (fix_fp_num(a));
 }
 
 uint8_t
