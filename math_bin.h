@@ -111,6 +111,7 @@ uint64_t mbin_div_odd64(uint64_t r, uint64_t div);
 uint32_t mbin_div_odd32_alt1(uint32_t r, uint32_t div);
 uint32_t mbin_div_odd32_alt2(uint32_t r, uint32_t div);
 uint32_t mbin_div_odd32_alt3(uint32_t r, uint32_t div);
+uint32_t mbin_div_odd32_alt4(uint32_t r, uint32_t div);
 uint16_t mbin_div_odd16(uint16_t r, uint16_t div);
 uint8_t	mbin_div_odd8(uint8_t r, uint8_t div);
 
@@ -216,6 +217,10 @@ void	mbin_fp_print_mat(mbin_fp_t *table, uint32_t size, uint8_t print_invert);
 uint32_t mbin_power_32(uint32_t x, uint32_t y);
 uint64_t mbin_power_64(uint64_t x, uint64_t y);
 uint32_t mbin_power_mod_32(uint32_t x, uint32_t y, uint32_t mod);
+
+uint32_t mbin_log_5(uint32_t x);
+uint32_t mbin_exp_5(uint32_t r, uint32_t x);
+uint32_t mbin_power_odd_32(uint32_t rem, uint32_t base, uint32_t exp);
 
 uint32_t mbin_parse32_abc(const char *ptr, const char *end);
 void	mbin_parse32_add(const char *ptr, uint32_t *ptable, uint32_t mask);

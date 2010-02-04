@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2009 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2009-2010 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -71,4 +71,85 @@ mbin_power_mod_32(uint32_t x, uint32_t y, uint32_t mod)
 		y /= 2;
 	}
 	return (r);
+}
+
+static const uint32_t mbin_log5_table[32] = {
+	0x00000000,
+	0x00000000,
+	0x00000004,
+	0xca253518,
+	0x106b8670,
+	0xb7240de0,
+	0xbe959fc0,
+	0x7e7d4f80,
+	0xb822df00,
+	0x5be6be00,
+	0x5e517c00,
+	0x16b2f800,
+	0x95a5f000,
+	0xcc4be000,
+	0x1c97c000,
+	0x492f8000,
+	0xd25f0000,
+	0xa4be0000,
+	0x497c0000,
+	0x92f80000,
+	0x25f00000,
+	0x4be00000,
+	0x97c00000,
+	0x2f800000,
+	0x5f000000,
+	0xbe000000,
+	0x7c000000,
+	0xf8000000,
+	0xf0000000,
+	0xe0000000,
+	0xc0000000,
+	0x80000000,
+};
+
+uint32_t
+mbin_log_5(uint32_t x)
+{
+	uint32_t r = 0;
+	uint8_t n;
+
+	if (x & 2) {
+		/* value is considered negative */
+		x = -x;
+	}
+	for (n = 2; n != 32; n++) {
+		if (x & (1 << n)) {
+			x = x + (x << n);
+			r -= mbin_log5_table[n];
+		}
+	}
+	return (r);
+}
+
+uint32_t
+mbin_exp_5(uint32_t r, uint32_t x)
+{
+	uint8_t n;
+
+	for (n = 2; n != 32; n++) {
+		if (x & (1 << n)) {
+			r = r + (r << n);
+			x -= mbin_log5_table[n];
+		}
+	}
+	return (r);
+}
+
+uint32_t
+mbin_power_odd_32(uint32_t rem, uint32_t base, uint32_t exp)
+{
+	if (base & 2) {
+		/* divider is considered negative */
+		base = -base;
+		/* check if result should be negative */
+		if (exp & 1)
+			rem = -rem;
+	}
+	return (mbin_exp_5(rem, mbin_log_5(base) * exp));
 }
