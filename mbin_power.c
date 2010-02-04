@@ -109,9 +109,8 @@ static const uint32_t mbin_log5_table[32] = {
 };
 
 uint32_t
-mbin_log_5(uint32_t x)
+mbin_log_5(uint32_t r, uint32_t x)
 {
-	uint32_t r = 0;
 	uint8_t n;
 
 	if (x & 2) {
@@ -151,5 +150,5 @@ mbin_power_odd_32(uint32_t rem, uint32_t base, uint32_t exp)
 		if (exp & 1)
 			rem = -rem;
 	}
-	return (mbin_exp_5(rem, mbin_log_5(base) * exp));
+	return (mbin_exp_5(rem, mbin_log_5(0, base) * exp));
 }
