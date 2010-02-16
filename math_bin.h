@@ -162,11 +162,12 @@ uint32_t mbin_baseG_carry_32(uint32_t f, uint32_t a);
 struct mbin_baseH_state32 {
 	uint32_t a;
 	uint32_t c;
+	uint8_t	s;
 };
 
-uint32_t mbin_base_2toH_32(uint32_t b2);
-uint32_t mbin_base_Hto2_32(uint32_t bh);
-void	mbin_baseH_get_state32(struct mbin_baseH_state32 *ps, uint32_t index);
+uint32_t mbin_base_2toH_32(uint32_t b2, uint8_t shift);
+uint32_t mbin_base_Hto2_32(uint32_t bh, uint8_t shift);
+void	mbin_baseH_get_state32(struct mbin_baseH_state32 *ps, uint32_t index, uint8_t shift);
 void	mbin_baseH_inc_state32(struct mbin_baseH_state32 *ps);
 uint32_t mbin_baseH_decipher_state32(struct mbin_baseH_state32 *ps);
 

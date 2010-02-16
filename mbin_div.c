@@ -208,12 +208,7 @@ mbin_div_odd32_alt4(uint32_t rem, uint32_t div)
 {
 	uint8_t n;
 
-	if (div & 2) {
-		/* divider is considered negative */
-		div = -div;
-		rem = -rem;
-	}
-	for (n = 2; n != 32; n++) {
+	for (n = 1; n != 32; n++) {
 		if (div & (1 << n)) {
 			div = div + (div << n);
 			rem = rem + (rem << n);
