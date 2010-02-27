@@ -217,6 +217,24 @@ mbin_div_odd32_alt4(uint32_t rem, uint32_t div)
 	return (rem);
 }
 
+uint32_t
+mbin_div_odd32_alt5(uint32_t rem, uint32_t div)
+{
+	/*
+	 * Not as fast in hardware like the algorithm above, but same
+	 * principle.
+	 */
+
+	if (!(div & 1))
+		return (0);
+
+	while (div != 1) {
+		rem = rem * div;
+		div = div * div;
+	}
+	return (rem);
+}
+
 uint16_t
 mbin_div_odd16(uint16_t r, uint16_t div)
 {

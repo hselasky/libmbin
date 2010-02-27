@@ -27,6 +27,13 @@
  * baseH is an exponent function
  */
 
+/*
+ * Rewritten step function:
+ *
+ * a2 = a1 ^ (a1 << s) ^
+ *     (2 * (((~a1) & (a0 << s)) | (a0 & (~a1 ^ (a0 << s)))));
+ */
+
 #include <stdint.h>
 
 #include "math_bin.h"

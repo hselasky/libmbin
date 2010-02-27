@@ -112,6 +112,7 @@ uint32_t mbin_div_odd32_alt1(uint32_t r, uint32_t div);
 uint32_t mbin_div_odd32_alt2(uint32_t r, uint32_t div);
 uint32_t mbin_div_odd32_alt3(uint32_t r, uint32_t div);
 uint32_t mbin_div_odd32_alt4(uint32_t r, uint32_t div);
+uint32_t mbin_div_odd32_alt5(uint32_t r, uint32_t div);
 uint16_t mbin_div_odd16(uint16_t r, uint16_t div);
 uint8_t	mbin_div_odd8(uint8_t r, uint8_t div);
 
