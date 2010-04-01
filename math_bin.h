@@ -287,4 +287,18 @@ uint32_t mbin_integrate_32(uint32_t *ptr, uint32_t max);
 void	mbin_derivate_32(uint32_t *ptr, uint32_t max);
 uint32_t mbin_sum_32(uint32_t *ptr, uint32_t max, uint8_t sstep);
 
+struct mbin_fet_32;
+struct mbin_fet_32_mod {
+	uint32_t base;
+	uint32_t mod;
+	uint32_t length;
+	uint32_t corr;
+};
+
+struct mbin_fet_32 *mbin_fet_32_init_alloc(uint32_t base, uint32_t nexp, uint32_t mod);
+uint32_t *mbin_fet_32_ds_alloc(struct mbin_fet_32 *pfet);
+void	mbin_fet_32(struct mbin_fet_32 *pfet, const uint32_t *fin, uint32_t *fout);
+void	mbin_fet_32_correlate(struct mbin_fet_32 *pfet, const uint32_t *pa, const uint32_t *pb, uint32_t *pc, uint32_t *ta, uint32_t *tb, uint32_t *tc);
+void	mbin_fet_32_find_mod(struct mbin_fet_32_mod *pmod);
+
 #endif					/* _MATH_BIN_H_ */
