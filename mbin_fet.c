@@ -379,7 +379,7 @@ mbin_fet_32_find_mod(struct mbin_fet_32_mod *pmod)
 			if (x == 1)
 				break;
 
-			if (y == max)
+			if (y == pmod->mod)
 				goto skip;
 		}
 
