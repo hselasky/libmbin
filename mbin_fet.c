@@ -378,12 +378,16 @@ mbin_fet_32_find_mod(struct mbin_fet_32_mod *pmod)
 			y++;
 			if (x == 1)
 				break;
+
+			if (y == max)
+				goto skip;
 		}
 
 		pmod->length = y;
 		pmod->corr = mbin_power_mod_32(y, pmod->mod - 2, pmod->mod);
 
 		return;
+	skip:;
 	}
 
 	pmod->length = 0;
