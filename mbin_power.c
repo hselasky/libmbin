@@ -73,34 +73,34 @@ mbin_power_mod_32(uint32_t x, uint32_t y, uint32_t mod)
 	return (r);
 }
 
-static const uint32_t mbin_log5_table[32] = {
+static const uint32_t mbin_log_32_table[32] = {
 	0x00000000,
 	0x00000000,
-	0x00000004,
-	0xca253518,
-	0x106b8670,
-	0xb7240de0,
-	0xbe959fc0,
-	0x7e7d4f80,
-	0xb822df00,
-	0x5be6be00,
-	0x5e517c00,
-	0x16b2f800,
-	0x95a5f000,
-	0xcc4be000,
-	0x1c97c000,
-	0x492f8000,
-	0xd25f0000,
-	0xa4be0000,
-	0x497c0000,
-	0x92f80000,
-	0x25f00000,
-	0x4be00000,
-	0x97c00000,
-	0x2f800000,
-	0x5f000000,
-	0xbe000000,
-	0x7c000000,
+	0xd3cfd984,
+	0x9ee62e18,
+	0xe83d9070,
+	0xb59e81e0,
+	0xa17407c0,
+	0xce601f80,
+	0xf4807f00,
+	0xe701fe00,
+	0xbe07fc00,
+	0xfc1ff800,
+	0xf87ff000,
+	0xf1ffe000,
+	0xe7ffc000,
+	0xdfff8000,
+	0xffff0000,
+	0xfffe0000,
+	0xfffc0000,
+	0xfff80000,
+	0xfff00000,
+	0xffe00000,
+	0xffc00000,
+	0xff800000,
+	0xff000000,
+	0xfe000000,
+	0xfc000000,
 	0xf8000000,
 	0xf0000000,
 	0xe0000000,
@@ -108,33 +108,73 @@ static const uint32_t mbin_log5_table[32] = {
 	0x80000000,
 };
 
+/*
+ * The following table generator was created by the help of
+ * Donald E. Knuth at Stanford University.
+ */
+
+void
+mbin_log_table_gen_32(uint32_t *pt)
+{
+	const uint32_t d = 32;		/* number of bits */
+	uint32_t j;
+	uint32_t k;
+	uint32_t s;
+	uint32_t x;
+
+	pt[d - 1] = 1 << (d - 1);
+	pt[0] = 0;
+
+	for (k = d - 2; k != 1; k--) {
+		x = 1 + (1 << k);
+		x += (x << k);
+		for (j = k + 1, s = 0; x != 1; j++) {
+			if (x & (1 << j)) {
+				x += x << j;
+				s += pt[j];
+			}
+		}
+		pt[k] = -(s >> 1);
+	}
+}
+
 uint32_t
-mbin_log_5(uint32_t r, uint32_t x)
+mbin_log_32(uint32_t r, uint32_t x)
 {
 	uint8_t n;
 
-	if (x & 2) {
-		/* value is considered negative */
-		x = -x;
-	}
-	for (n = 2; n != 32; n++) {
+	for (n = 2; n != 16; n++) {
 		if (x & (1 << n)) {
 			x = x + (x << n);
-			r -= mbin_log5_table[n];
+			r -= mbin_log_32_table[n];
+		}
+	}
+
+	for (; n != 32; n++) {
+		if (x & (1 << n)) {
+			x = x + (x << n);
+			r += (1 << n);
 		}
 	}
 	return (r);
 }
 
 uint32_t
-mbin_exp_5(uint32_t r, uint32_t x)
+mbin_exp_32(uint32_t r, uint32_t x)
 {
 	uint8_t n;
 
-	for (n = 2; n != 32; n++) {
+	for (n = 2; n != 16; n++) {
 		if (x & (1 << n)) {
 			r = r + (r << n);
-			x -= mbin_log5_table[n];
+			x -= mbin_log_32_table[n];
+		}
+	}
+
+	for (; n != 32; n++) {
+		if (x & (1 << n)) {
+			r = r + (r << n);
+			x += (1 << n);
 		}
 	}
 	return (r);
@@ -150,5 +190,5 @@ mbin_power_odd_32(uint32_t rem, uint32_t base, uint32_t exp)
 		if (exp & 1)
 			rem = -rem;
 	}
-	return (mbin_exp_5(rem, mbin_log_5(0, base) * exp));
+	return (mbin_exp_32(rem, mbin_log_32(0, base) * exp));
 }
