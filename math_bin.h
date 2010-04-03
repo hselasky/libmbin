@@ -220,8 +220,9 @@ uint32_t mbin_power_32(uint32_t x, uint32_t y);
 uint64_t mbin_power_64(uint64_t x, uint64_t y);
 uint32_t mbin_power_mod_32(uint32_t x, uint32_t y, uint32_t mod);
 
-uint32_t mbin_log_5(uint32_t r, uint32_t x);
-uint32_t mbin_exp_5(uint32_t r, uint32_t x);
+void	mbin_log_table_gen_32(uint32_t *pt);
+uint32_t mbin_log_32(uint32_t r, uint32_t x);
+uint32_t mbin_exp_32(uint32_t r, uint32_t x);
 uint32_t mbin_power_odd_32(uint32_t rem, uint32_t base, uint32_t exp);
 
 uint32_t mbin_parse32_abc(const char *ptr, const char *end);

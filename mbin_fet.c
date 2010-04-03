@@ -143,9 +143,13 @@ mbin_fet_32_ds_alloc(struct mbin_fet_32 *pfet)
  * Mark Borgerding
  */
 
-static void mbin_fet_32_generic(struct mbin_fet_32 *pfet, uint32_t *p_out, const uint32_t fstride);
+static void 
+mbin_fet_32_generic(struct mbin_fet_32 *pfet,
+    uint32_t *p_out, const uint32_t fstride);
 
-static void mbin_fet_32_2(struct mbin_fet_32 *pfet, uint32_t *p_out, const uint32_t fstride);
+static void 
+mbin_fet_32_2(struct mbin_fet_32 *pfet,
+    uint32_t *p_out, const uint32_t fstride);
 
 static void
 mbin_fet_32_work(
@@ -177,8 +181,8 @@ mbin_fet_32_work(
 		} while (p_out != p_out_end);
 	} else {
 		do {
-
-			mbin_fet_32_work(pfet, p_out, f, factor + 2, fstride * p);
+			mbin_fet_32_work(pfet, p_out, f,
+			    factor + 2, fstride * p);
 
 			f += fstride;
 			p_out += m;
@@ -200,7 +204,8 @@ mbin_fet_32_work(
 }
 
 static void
-mbin_fet_32_generic(struct mbin_fet_32 *pfet, uint32_t *p_out, const uint32_t fstride)
+mbin_fet_32_generic(struct mbin_fet_32 *pfet, uint32_t *p_out,
+    const uint32_t fstride)
 {
 	uint32_t u;
 	uint32_t k;
@@ -221,6 +226,7 @@ mbin_fet_32_generic(struct mbin_fet_32 *pfet, uint32_t *p_out, const uint32_t fs
 
 		k = u;
 		for (a = 0; a != pfet->p; a++) {
+
 			uint32_t i_exp = 0;
 
 			t0 = scratchbuf[0];
@@ -250,29 +256,34 @@ mbin_fet_32_generic(struct mbin_fet_32 *pfet, uint32_t *p_out, const uint32_t fs
 }
 
 static void
-mbin_fet_32_2(struct mbin_fet_32 *pfet, uint32_t *p_out, const uint32_t fstride)
+mbin_fet_32_2(struct mbin_fet_32 *pfet, uint32_t *p_out,
+    const uint32_t fstride)
 {
 	uint32_t *p_out_m;
 	uint32_t *p_out_end;
 	uint32_t *p_exp = pfet->k_exp;
+	uint32_t t;
 	uint64_t s;
-
-	s = ((uint64_t)pfet->mod_value) * ((uint64_t)pfet->mod_value);
 
 	p_out_end = p_out_m = p_out + pfet->m;
 
 	while (p_out != p_out_end) {
 
-		uint64_t t;
-
-		t = ((uint64_t)*p_out_m) * ((uint64_t)*p_exp);
-
+		t = (((uint64_t)*p_out_m) * ((uint64_t)*p_exp)) % pfet->mod_value;
 		p_exp += fstride;
 
-		*p_out_m = (s - t + ((uint64_t)*p_out)) % pfet->mod_value;
+		s = ((uint64_t)(pfet->mod_value - t)) + ((uint64_t)(*p_out));
+		if (s >= (uint64_t)pfet->mod_value)
+			s -= pfet->mod_value;
+
+		*p_out_m = s;
 		p_out_m++;
 
-		*p_out = (t + ((uint64_t)*p_out)) % pfet->mod_value;
+		s = ((uint64_t)(t)) + ((uint64_t)(*p_out));
+		if (s >= (uint64_t)pfet->mod_value)
+			s -= pfet->mod_value;
+
+		*p_out = s;
 		p_out++;
 	}
 }
@@ -283,7 +294,6 @@ mbin_fet_32(struct mbin_fet_32 *pfet, const uint32_t *fin, uint32_t *fout)
 	mbin_fet_32_work(pfet, fout, fin, 0, 1);
 }
 
-
 void
 mbin_fet_32_correlate(struct mbin_fet_32 *pfet,
     const uint32_t *pa,
@@ -293,28 +303,27 @@ mbin_fet_32_correlate(struct mbin_fet_32 *pfet,
     uint32_t *tb,
     uint32_t *tc)
 {
-	uint32_t x;
 	uint32_t mod;
-	uint64_t mod_s;
+	uint32_t x;
 
 	mbin_fet_32(pfet, pa, ta);
 	mbin_fet_32(pfet, pb, tb);
 
 	mod = pfet->mod_value;
 
-	mod_s = (((uint64_t)mod) * ((uint64_t)mod));
-
 	pc[0] = (((uint64_t)ta[0]) * ((uint64_t)tb[0])) % mod;
 
 	for (x = 1; x != pfet->n_exp; x++) {
-		pc[x] = (((uint64_t)ta[x]) * ((uint64_t)tb[pfet->n_exp - x])) % mod;
+		pc[pfet->n_exp - x] = (((uint64_t)ta[x]) *
+		    ((uint64_t)tb[x])) % mod;
 	}
 
 	mbin_fet_32(pfet, pc, tc);
 
 	/* adjust output */
 	for (x = 0; x != pfet->n_exp; x++) {
-		tc[x] = (((uint64_t)tc[x]) * ((uint64_t)pfet->corr_f)) % mod;
+		tc[x] = (((uint64_t)tc[x]) *
+		    ((uint64_t)pfet->corr_f)) % mod;
 	}
 }
 
@@ -387,7 +396,7 @@ mbin_fet_32_find_mod(struct mbin_fet_32_mod *pmod)
 		pmod->corr = mbin_power_mod_32(y, pmod->mod - 2, pmod->mod);
 
 		return;
-	skip:;
+skip:		;
 	}
 
 	pmod->length = 0;
