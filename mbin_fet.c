@@ -28,6 +28,8 @@
  * integer correlation.
  */
 
+#include <stdio.h>
+
 #include <stdint.h>
 
 #include <stdlib.h>
@@ -36,305 +38,299 @@
 
 #include "math_bin.h"
 
-struct mbin_fet_32 {
-	uint32_t k_fact[32];
-	uint32_t n_exp;
-	uint32_t mod_value;
-	uint32_t m;
-	uint32_t p;
-	uint32_t corr_f;
-	uint32_t k_exp[0];
-};
+#define	FET32_PRIME		0xC0000001U
+#define	FET32_RING_SIZE		0x30000000U
 
-static void
-mbin_fet_32_factor(uint32_t n, uint32_t *factbuf)
+uint32_t
+mbin_fet_32_generate_power(uint64_t y)
 {
-	uint32_t p;
+	uint64_t r = 1;
+	uint64_t t = 2;
 
-	if (n == 0)
-		return;
+	y %= (FET32_PRIME - 1);
 
-	while (!(n & 1)) {
-		n /= 2;
-
-		*factbuf++ = 2;
-		*factbuf++ = n;
-	}
-
-	if (n == 1)
-		return;
-
-	while (1) {
-
-		for (p = 3;; p += 2) {
-
-			if ((n % p) == 0) {
-				n /= p;
-
-				*factbuf++ = p;
-				*factbuf++ = n;
-
-				if (n == 1)
-					return;
-				break;
-			}
+	while (y) {
+		if (y & 1) {
+			r *= t;
+			r %= FET32_PRIME;
 		}
+		t *= t;
+		t %= FET32_PRIME;
+
+		y /= 2;
 	}
-}
-
-struct mbin_fet_32 *
-mbin_fet_32_init_alloc(uint32_t base, uint32_t nexp, uint32_t mod)
-{
-	struct mbin_fet_32 *pfet;
-	uint64_t temp;
-	uint32_t size;
-	uint32_t n;
-
-	size = sizeof(*pfet) + (nexp * sizeof(uint32_t));
-
-	pfet = malloc(size);
-
-	if (pfet == NULL)
-		return (NULL);
-
-	memset(pfet, 0, sizeof(*pfet));
-
-	pfet->n_exp = nexp;
-
-	pfet->mod_value = mod;
-
-	pfet->corr_f = mbin_power_mod_32(nexp, mod - 2, mod);
-
-	mbin_fet_32_factor(nexp, pfet->k_fact);
-
-	temp = 1;
-
-	for (n = 0; n != nexp; n++) {
-		pfet->k_exp[n] = temp;
-		temp *= base;
-		temp %= mod;
-	}
-
-	if (temp != 1) {
-		/* not periodic */
-		free(pfet);
-		return (NULL);
-	}
-	return (pfet);
-}
-
-uint32_t *
-mbin_fet_32_ds_alloc(struct mbin_fet_32 *pfet)
-{
-	uint32_t *ptr;
-	uint32_t size;
-
-	size = sizeof(uint32_t) * pfet->n_exp;
-
-	ptr = malloc(size);
-	if (ptr)
-		memset(ptr, 0, size);
-
-	return (ptr);
-}
-
-/*
- * This function is inspired by the KISS FFT library written by:
- * Mark Borgerding
- */
-
-static void 
-mbin_fet_32_generic(struct mbin_fet_32 *pfet,
-    uint32_t *p_out, const uint32_t fstride);
-
-static void 
-mbin_fet_32_2(struct mbin_fet_32 *pfet,
-    uint32_t *p_out, const uint32_t fstride);
-
-static void
-mbin_fet_32_work(
-    struct mbin_fet_32 *pfet,
-    uint32_t *p_out,
-    const uint32_t *f,
-    const uint32_t factor,
-    const uint32_t fstride)
-{
-	uint32_t *p_out_beg;
-	uint32_t *p_out_end;
-	uint32_t p;
-	uint32_t m;
-
-	p = pfet->k_fact[factor];
-	m = pfet->k_fact[factor + 1];
-
-	p_out_beg = p_out;
-	p_out_end = p_out + (p * m);
-
-	if (m == 1) {
-		do {
-			*p_out = *f;
-
-			f += fstride;
-
-			p_out++;
-
-		} while (p_out != p_out_end);
-	} else {
-		do {
-			mbin_fet_32_work(pfet, p_out, f,
-			    factor + 2, fstride * p);
-
-			f += fstride;
-			p_out += m;
-
-		} while (p_out != p_out_end);
-	}
-
-	pfet->p = p;
-	pfet->m = m;
-
-	switch (p) {
-	case 2:
-		mbin_fet_32_2(pfet, p_out_beg, fstride);
-		break;
-	default:
-		mbin_fet_32_generic(pfet, p_out_beg, fstride);
-		break;
-	}
+	return (r);
 }
 
 static void
-mbin_fet_32_generic(struct mbin_fet_32 *pfet, uint32_t *p_out,
-    const uint32_t fstride)
+mbin_fet_generate_bitrev(uint8_t power, const char *br_type)
 {
-	uint32_t u;
+	uint32_t i;
+	uint32_t j;
 	uint32_t k;
-	uint32_t a;
-	uint32_t b;
-	uint32_t *scratchbuf;
-	uint64_t t0;
-	uint64_t t1;
+	uint32_t max = (1U << power);
+	uint32_t lim;
 
-	scratchbuf = alloca(sizeof(uint32_t) * pfet->p);
+	lim = 0;
 
-	for (u = 0; u != pfet->m; u++) {
-		k = u;
-		for (a = 0; a != pfet->p; a++) {
-			scratchbuf[a] = p_out[k];
-			k += pfet->m;
+	for (i = 0; i != max; i++) {
+
+		j = mbin_bitrev32(i << (32 - power));
+
+		if (j < i) {
+			lim++;
 		}
+	}
 
-		k = u;
-		for (a = 0; a != pfet->p; a++) {
+	printf("\t" "static const %s bit_rev[0x%x] = {\n",
+	    (power <= 8) ? "uint8_t" :
+	    (power <= 16) ? "uint16_t" :
+	    "uint32_t", (2 * lim) + 8);
 
-			uint32_t i_exp = 0;
+	printf("\t\t");
 
-			t0 = scratchbuf[0];
-			t1 = 0;
-			for (b = 1; b != pfet->p; b++) {
-				uint64_t t;
+	k = 0;
 
-				i_exp += fstride * k;
-				if (i_exp >= pfet->n_exp)
-					i_exp -= pfet->n_exp;
-				t = (((uint64_t)scratchbuf[b]) * ((uint64_t)pfet->k_exp[i_exp]));
-				t0 += (uint32_t)(t);
-				t1 += (uint32_t)(t >> 32);
+	for (i = 0; i != max; i++) {
+
+		j = mbin_bitrev32(i << (32 - power));
+
+		if (j < i) {
+			printf("0x%03x, 0x%03x, ", i, j);
+			k++;
+			if (((k & 3) == 0) && (k != lim))
+				printf("\n\t\t");
+		}
+	}
+
+	printf("\n\t};\n");
+	return;
+}
+
+static int32_t
+mbin_fet_32_fix_factor(int32_t factor, uint32_t mod)
+{
+	/* avoid numerical overflow */
+	if (factor < 0)
+		factor = -(mod - factor);
+
+	return (factor);
+}
+
+void
+mbin_fet_32_generate(uint8_t power)
+{
+	uint32_t *ktable;
+	uint32_t *ktemp;
+	const char *br_type;
+	uint32_t freq;
+	uint32_t size;
+	uint32_t factor;
+	uint32_t prem;
+	uint32_t max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	uint32_t n;
+	uint32_t mod;
+
+	br_type = (power <= 8) ? "uint8_t" :
+	    (power <= 16) ? "uint16_t" :
+	    "uint32_t";
+
+	printf("static void\n"
+	    "mbin_fet_%d_32(int64_t *data)\n", 1 << power);
+
+	printf("{\n");
+
+	mbin_fet_generate_bitrev(power, br_type);
+
+	size = (power << power) * sizeof(ktable[0]);
+
+	ktable = malloc(size);
+
+	if (ktable == NULL) {
+		printf("#error \"Out of memory\"\n");
+		return;
+	}
+	memset(ktable, 0, size);
+
+	size = (1 << power) * sizeof(ktemp[0]);
+
+	ktemp = malloc(size);
+
+	if (ktemp == NULL) {
+		printf("#error \"Out of memory\"\n");
+		free(ktable);
+		return;
+	}
+	memset(ktemp, 0, size);
+
+	max = 1 << power;
+
+	mod = FET32_PRIME;
+
+	for (freq = 0; freq != max; freq++) {
+
+		uint32_t ta;
+		uint32_t tb;
+
+		for (x = 0; x != max; x++)
+			ktemp[x] = mbin_fet_32_generate_power(((freq * x) % max) * (FET32_RING_SIZE / max));
+
+		y = 0;
+		for (n = 0; n != power; n++) {
+			for (z = 0; z != (1 << (power - 1 - n)); z++) {
+				ta = ktemp[y + z];
+				tb = ktemp[y + z + (1 << (power - 1 - n))];
+
+				factor = (((uint64_t)ta) *
+				    ((uint64_t)mbin_power_mod_32(tb, mod - 2, mod))) % mod;
+
+				if (freq & (1 << n)) {
+					factor = (mod - factor) % mod;
+				}
+				size = (n << power) + y + z + (1 << (power - 1 - n));
+
+				if ((ktable[size] != 0) && (ktable[size] != factor))
+					goto error;
+
+				ktable[size] = factor;
+
+				factor = 1;
+
+				size = (n << power) + y + z;
+
+				if ((ktable[size] != 0) && (ktable[size] != factor))
+					goto error;
+
+				ktable[size] = factor;
+
+				if (freq & (1 << n)) {
+					ktemp[y + z] = 0;
+					ktemp[y + z + (1 << (power - 1 - n))] = ((uint64_t)ta * (uint64_t)2) % mod;
+				} else {
+					ktemp[y + z] = ((uint64_t)ta * (uint64_t)2) % mod;
+					ktemp[y + z + (1 << (power - 1 - n))] = 0;
+				}
 			}
 
-			t1 %= pfet->mod_value;
-			t0 %= pfet->mod_value;
-
-			t0 += t1 << 32;
-			t0 %= pfet->mod_value;
-
-			p_out[k] = t0;
-
-			k += pfet->m;
+			if (freq & (1 << n))
+				y += (1 << (power - 1 - n));
 		}
 	}
-}
 
-static void
-mbin_fet_32_2(struct mbin_fet_32 *pfet, uint32_t *p_out,
-    const uint32_t fstride)
-{
-	uint32_t *p_out_m;
-	uint32_t *p_out_end;
-	uint32_t *p_exp = pfet->k_exp;
-	uint32_t t;
-	uint64_t s;
+	prem = mbin_power_mod_32(2, (2 * 30 * power), mod);
 
-	p_out_end = p_out_m = p_out + pfet->m;
+	prem = mbin_fet_32_fix_factor(prem, mod);
 
-	while (p_out != p_out_end) {
-
-		t = (((uint64_t)*p_out_m) * ((uint64_t)*p_exp)) % pfet->mod_value;
-		p_exp += fstride;
-
-		s = ((uint64_t)(pfet->mod_value - t)) + ((uint64_t)(*p_out));
-		if (s >= (uint64_t)pfet->mod_value)
-			s -= pfet->mod_value;
-
-		*p_out_m = s;
-		p_out_m++;
-
-		s = ((uint64_t)(t)) + ((uint64_t)(*p_out));
-		if (s >= (uint64_t)pfet->mod_value)
-			s -= pfet->mod_value;
-
-		*p_out = s;
-		p_out++;
-	}
-}
-
-void
-mbin_fet_32(struct mbin_fet_32 *pfet, const uint32_t *fin, uint32_t *fout)
-{
-	mbin_fet_32_work(pfet, fout, fin, 0, 1);
-}
-
-void
-mbin_fet_32_correlate(struct mbin_fet_32 *pfet,
-    const uint32_t *pa,
-    const uint32_t *pb,
-    uint32_t *pc,
-    uint32_t *ta,
-    uint32_t *tb,
-    uint32_t *tc)
-{
-	uint32_t mod;
-	uint32_t x;
-
-	mbin_fet_32(pfet, pa, ta);
-	mbin_fet_32(pfet, pb, tb);
-
-	mod = pfet->mod_value;
-
-	pc[0] = (((uint64_t)ta[0]) * ((uint64_t)tb[0])) % mod;
-
-	for (x = 1; x != pfet->n_exp; x++) {
-		pc[pfet->n_exp - x] = (((uint64_t)ta[x]) *
-		    ((uint64_t)tb[x])) % mod;
+	n = power - 1;
+	x = 0;
+	for (y = 0; y != max; y += (1 << (power - n))) {
+		x += (max >> (n + 1));
 	}
 
-	mbin_fet_32(pfet, pc, tc);
+	printf("\t" "static const int32_t ktable[0x%x] = {\n", (int)x);
 
-	/* adjust output */
-	for (x = 0; x != pfet->n_exp; x++) {
-		tc[x] = (((uint64_t)tc[x]) *
-		    ((uint64_t)pfet->corr_f)) % mod;
+	for (n = (power - 1); n != power; n++) {
+		for (y = 0; y != max; y += (1 << (power - n))) {
+			for (x = 0; x != (max >> (n + 1)); x++) {
+
+				z = ktable[(n << power) + x + y + (max >> (n + 1))];
+
+				if (x != 0) {
+					if (factor != z)
+						goto error;
+					continue;
+				}
+				factor = z;
+
+				printf("\t\t%d,\n", mbin_fet_32_fix_factor(factor, mod));
+			}
+		}
 	}
-}
 
-uint8_t
-mbin_fet_16_multiply(
-    uint8_t *pa, uint16_t abits,
-    uint8_t *pb, uint16_t bbits,
-    uint8_t *pc, uint16_t cbits)
-{
+	printf("\t" "};\n");
 
-	return (0);			/* success */
+	printf("\n");
+
+	printf("\t" "const int32_t *ptab;\n");
+	printf("\t" "const %s *p = bit_rev;\n", br_type);
+	printf("\t" "int64_t ta;\n");
+	printf("\t" "int64_t tb;\n");
+	printf("\t" "int64_t tc;\n");
+	printf("\t" "int32_t td;\n");
+	printf("\t" "%s x;\n", br_type);
+	printf("\t" "%s y;\n", br_type);
+
+	printf("\n");
+
+	for (n = 0; n != power; n++) {
+
+		printf("\t" "/* round %d */\n", n);
+		printf("\t" "ptab = ktable;\n");
+
+		printf("\t" "for (y = 0; y != 0x%x; y += 0x%x) {\n", max, 1 << (power - n));
+
+		if (n != 0) {
+			printf("\t\t" "td = *(ptab++);\n");
+		}
+		printf("\t\t" "for (x = 0; x != 0x%x; x++) {\n", (max >> (n + 1)));
+
+		if (n != 0) {
+			printf("\t\t\t" "ta = data[x];\n");
+			printf("\t\t\t" "tb = data[x+0x%x] * (int64_t)(td);\n", (max >> (n + 1)));
+		} else {
+			printf("\t\t\t" "ta = data[x] * %dLL;\n", (int32_t)prem);
+			printf("\t\t\t" "tb = data[x+0x%x] * %dLL;\n", (max >> (n + 1)), (int32_t)prem);
+		}
+
+		printf("\t\t\t" "tc = ta + tb;\n");
+		printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
+		printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
+		printf("\t\t\t" "data[x] = tc;\n");
+
+		printf("\t\t\t" "tc = ta - tb;\n");
+		printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
+		printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
+		printf("\t\t\t" "data[x+0x%x] = tc;\n", (max >> (n + 1)));
+
+		printf("\t\t" "}\n");
+		printf("\t\t" "data += 0x%x;\n", 1 << (power - n));
+		printf("\t" "}\n");
+		printf("\t" "data -= 0x%x;\n", max);
+	}
+
+	printf("\t/* In-place index bit-reversal */\n");
+
+	printf(
+	    "\t" "while (*p) {\n"
+	    "\t\t" "int64_t t;\n"
+	    "\t\t" "%s a,b;\n\n"
+	    "\t\t" "a = *(p + 0);\n"
+	    "\t\t" "b = *(p + 1);\n"
+	    "\t\t" "t = data[b];\n"
+	    "\t\t" "data[b] = data[a];\n"
+	    "\t\t" "data[a] = t;\n"
+	    "\n"
+	    "\t\t" "a = *(p + 2);\n"
+	    "\t\t" "b = *(p + 3);\n"
+	    "\t\t" "p += 4;\n"
+	    "\t\t" "t = data[b];\n"
+	    "\t\t" "data[b] = data[a];\n"
+	    "\t\t" "data[a] = t;\n"
+	    "\t" "}\n", br_type);
+
+	printf("}\n");
+
+	goto done;
+
+error:
+	printf("#error \"Wrong factor\"\n");
+done:
+	free(ktable);
+	free(ktemp);
+	return;
 }
 
 void
