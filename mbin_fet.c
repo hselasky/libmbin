@@ -134,11 +134,15 @@ mbin_fet_32_generate(uint8_t power)
 	uint32_t n;
 	uint32_t mod;
 
+	if (power >= 30 || power <= 0) {
+		printf("#error \"Invalid power\"\n");
+		return;
+	}
 	br_type = (power <= 8) ? "uint8_t" :
 	    (power <= 16) ? "uint16_t" :
 	    "uint32_t";
 
-	printf("static void\n"
+	printf("void\n"
 	    "mbin_fet_%d_32(int64_t *data)\n", 1 << power);
 
 	printf("{\n");
@@ -320,6 +324,42 @@ mbin_fet_32_generate(uint8_t power)
 	    "\t\t" "data[b] = data[a];\n"
 	    "\t\t" "data[a] = t;\n"
 	    "\t" "}\n", br_type);
+
+	printf("}\n");
+
+	factor = (((uint64_t)mbin_power_mod_32(2, 2 * 60, mod)) *
+	    ((uint64_t)mbin_power_mod_32(max, mod - 2, mod))) % mod;
+
+	factor = mbin_fet_32_fix_factor(factor, mod);
+
+	printf("void\n"
+	    "mbin_fet_corr_%d_32(int64_t *a, int64_t *b, int64_t *c)\n", max);
+
+	printf("{\n"
+	    "\t" "int64_t ta;\n"
+	    "\t" "int64_t tb;\n"
+	    "\t" "uint32_t x;\n"
+	    "\n"
+	    "\t" "for (x = 0; x != 0x400; x++) {\n"
+	    "\t\t" "ta = a[x];\n"
+	    "\t\t" "if (ta < 0)\n"
+	    "\t\t\t" "ta += 0xC0000001LL;\n"
+	    "\t\t" "if (ta < 0)\n"
+	    "\t\t\t" "ta += 0xC0000001LL;\n"
+	    "\t\t" "tb = b[x];\n"
+	    "\t\t" "if (tb < 0)\n"
+	    "\t\t\t" "tb += 0xC0000001LL;\n"
+	    "\t\t" "if (tb < 0)\n"
+	    "\t\t\t" "tb += 0xC0000001LL;\n"
+	    "\t\t" "ta = ((uint64_t)(uint32_t)ta) * ((uint64_t)(uint32_t)tb);\n"
+	    "\t\t" "ta = (((uint64_t)ta) >> 30) - ((ta & 0x3fffffff) * 3);\n"
+	    "\t\t" "ta = (ta >> 30) - ((ta & 0x3fffffff) * 3);\n"
+	    "\t\t" "ta = ta * (int64_t)%d;\n"
+	    "\t\t" "ta = (ta >> 30) - ((ta & 0x3fffffff) * 3);\n"
+	    "\t\t" "ta = (ta >> 30) - ((ta & 0x3fffffff) * 3);\n"
+	    "\t\t" "c[(0x%x - x) & (0x%x - 1)] = ta;\n"
+	    "\t" "}\n",
+	    factor, max, max);
 
 	printf("}\n");
 
