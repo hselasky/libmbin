@@ -332,8 +332,9 @@ mbin_fet_32_generate(uint8_t power)
 
 	factor = mbin_fet_32_fix_factor(factor, mod);
 
-	printf("void\n"
-	    "mbin_fet_corr_%d_32(int64_t *a, int64_t *b, int64_t *c)\n", max);
+	printf("\n"
+	    "void\n"
+	    "mbin_fet_corr_%d_32(const int64_t *a, const int64_t *b, int64_t *c)\n", max);
 
 	printf("{\n"
 	    "\t" "int64_t ta;\n"
@@ -357,9 +358,18 @@ mbin_fet_32_generate(uint8_t power)
 	    "\t\t" "ta = ta * (int64_t)%d;\n"
 	    "\t\t" "ta = (ta >> 30) - ((ta & 0x3fffffff) * 3);\n"
 	    "\t\t" "ta = (ta >> 30) - ((ta & 0x3fffffff) * 3);\n"
-	    "\t\t" "c[(0x%x - x) & (0x%x - 1)] = ta;\n"
+	    "\t\t" "c[x] = ta;\n"
 	    "\t" "}\n",
-	    factor, max, max);
+	    factor);
+
+	printf("\n"
+	    "\t" "for (x = 1; x != 0x%x; x++) {\n"
+	    "\t\t" "/* swap */\n"
+	    "\t\t" "ta = c[0x%x - x];\n"
+	    "\t\t" "tb = c[x];\n"
+	    "\t\t" "c[x] = ta;\n"
+	    "\t\t" "c[0x%x - x] = tb;\n"
+	    "\t" "}\n", max / 2, max, max);
 
 	printf("}\n");
 
