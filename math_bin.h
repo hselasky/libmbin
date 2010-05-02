@@ -292,7 +292,7 @@ struct mbin_fet_32_mod {
 	uint32_t base;
 	uint32_t mod;
 	uint32_t length;
-	uint32_t corr;
+	uint32_t conv;
 };
 
 void	mbin_fet_32_find_mod(struct mbin_fet_32_mod *pmod);

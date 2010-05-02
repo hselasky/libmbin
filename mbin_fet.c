@@ -25,7 +25,7 @@
 
 /*
  * This file implements a fast transform that can be used for fast
- * integer correlation.
+ * integer convolution.
  */
 
 #include <stdio.h>
@@ -334,7 +334,7 @@ mbin_fet_32_generate(uint8_t power)
 
 	printf("\n"
 	    "void\n"
-	    "mbin_fet_corr_%d_32(const int64_t *a, const int64_t *b, int64_t *c)\n", max);
+	    "mbin_fet_conv_%d_32(const int64_t *a, const int64_t *b, int64_t *c)\n", max);
 
 	printf("{\n"
 	    "\t" "int64_t ta;\n"
@@ -439,7 +439,7 @@ mbin_fet_32_find_mod(struct mbin_fet_32_mod *pmod)
 		}
 
 		pmod->length = y;
-		pmod->corr = mbin_power_mod_32(y, pmod->mod - 2, pmod->mod);
+		pmod->conv = mbin_power_mod_32(y, pmod->mod - 2, pmod->mod);
 
 		return;
 skip:		;
