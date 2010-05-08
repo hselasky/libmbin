@@ -108,7 +108,7 @@ mbin_fet_generate_bitrev(uint8_t power, const char *br_type)
 }
 
 static int32_t
-mbin_fet_32_fix_factor(int32_t factor, uint32_t mod)
+mbin_fet_32_fix_factor(uint32_t factor, uint32_t mod)
 {
 	/* correctly handle negative values */
 	if (factor >= (mod / 2))
