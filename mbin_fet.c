@@ -41,8 +41,6 @@
 #define	FET32_PRIME		0xC0000001U
 #define	FET32_RING_SIZE		0x30000000U
 
-#undef FET32_PROVE
-
 uint32_t
 mbin_fet_32_generate_power(uint64_t y)
 {
@@ -112,9 +110,9 @@ mbin_fet_generate_bitrev(uint8_t power, const char *br_type)
 static int32_t
 mbin_fet_32_fix_factor(int32_t factor, uint32_t mod)
 {
-	/* avoid numerical overflow */
-	if (factor < 0)
-		factor = -(mod - factor);
+	/* correctly handle negative values */
+	if (factor >= (mod / 2))
+		factor -= mod;
 
 	return (factor);
 }
@@ -271,7 +269,7 @@ mbin_fet_32_generate(uint8_t power)
 	freq = (FET32_RING_SIZE >> power);
 	for (y = 0; y != (1 << (power - 1)); y++) {
 		z = mbin_bitrev32(y << (32 - (power - 1)));
-		factor = mbin_power_mod_32(2, FET32_RING_SIZE - (freq * z), mod);
+		factor = mbin_fet_32_generate_power(FET32_RING_SIZE - (freq * z));
 		printf("\t\t%d,\n", mbin_fet_32_fix_factor(factor, mod));
 	}
 #endif
