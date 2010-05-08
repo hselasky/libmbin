@@ -41,6 +41,8 @@
 #define	FET32_PRIME		0xC0000001U
 #define	FET32_RING_SIZE		0x30000000U
 
+#undef FET32_PROVE
+
 uint32_t
 mbin_fet_32_generate_power(uint64_t y)
 {
@@ -151,6 +153,7 @@ mbin_fet_32_generate(uint8_t power)
 
 	size = (power << power) * sizeof(ktable[0]);
 
+#ifdef FET32_PROVE
 	ktable = malloc(size);
 
 	if (ktable == NULL) {
@@ -169,11 +172,18 @@ mbin_fet_32_generate(uint8_t power)
 		return;
 	}
 	memset(ktemp, 0, size);
+#endif
+
+#ifndef FET32_PROVE
+	ktable = NULL;
+	ktemp = NULL;
+#endif
 
 	max = 1 << power;
 
 	mod = FET32_PRIME;
 
+#ifdef FET32_PROVE
 	for (freq = 0; freq != max; freq++) {
 
 		uint32_t ta;
@@ -223,6 +233,7 @@ mbin_fet_32_generate(uint8_t power)
 				y += (1 << (power - 1 - n));
 		}
 	}
+#endif
 
 	prem = mbin_power_mod_32(2, (2 * 30 * power), mod);
 
@@ -236,6 +247,7 @@ mbin_fet_32_generate(uint8_t power)
 
 	printf("\t" "static const int32_t ktable[0x%x] = {\n", (int)x);
 
+#ifdef FET32_PROVE
 	for (n = (power - 1); n != power; n++) {
 		for (y = 0; y != max; y += (1 << (power - n))) {
 			for (x = 0; x != (max >> (n + 1)); x++) {
@@ -253,6 +265,16 @@ mbin_fet_32_generate(uint8_t power)
 			}
 		}
 	}
+#endif
+
+#ifndef FET32_PROVE
+	freq = (FET32_RING_SIZE >> power);
+	for (y = 0; y != (1 << (power - 1)); y++) {
+		z = mbin_bitrev32(y << (32 - (power - 1)));
+		factor = mbin_power_mod_32(2, FET32_RING_SIZE - (freq * z), mod);
+		printf("\t\t%d,\n", mbin_fet_32_fix_factor(factor, mod));
+	}
+#endif
 
 	printf("\t" "};\n");
 
@@ -341,7 +363,7 @@ mbin_fet_32_generate(uint8_t power)
 	    "\t" "int64_t tb;\n"
 	    "\t" "uint32_t x;\n"
 	    "\n"
-	    "\t" "for (x = 0; x != 0x400; x++) {\n"
+	    "\t" "for (x = 0; x != 0x%x; x++) {\n"
 	    "\t\t" "ta = a[x];\n"
 	    "\t\t" "if (ta < 0)\n"
 	    "\t\t\t" "ta += 0xC0000001LL;\n"
@@ -360,7 +382,7 @@ mbin_fet_32_generate(uint8_t power)
 	    "\t\t" "ta = (ta >> 30) - ((ta & 0x3fffffff) * 3);\n"
 	    "\t\t" "c[x] = ta;\n"
 	    "\t" "}\n",
-	    factor);
+	    max, factor);
 
 	printf("\n"
 	    "\t" "for (x = 1; x != 0x%x; x++) {\n"
@@ -375,11 +397,16 @@ mbin_fet_32_generate(uint8_t power)
 
 	goto done;
 
+#ifdef FET32_PROVE
 error:
 	printf("#error \"Wrong factor\"\n");
+#endif
+
 done:
-	free(ktable);
-	free(ktemp);
+	if (ktable != NULL)
+		free(ktable);
+	if (ktemp != NULL)
+		free(ktemp);
 	return;
 }
 
