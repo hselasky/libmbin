@@ -108,8 +108,10 @@ mbin_fet_generate_bitrev(uint8_t power, const char *br_type)
 }
 
 static int32_t
-mbin_fet_32_fix_factor(uint32_t factor, uint32_t mod)
+mbin_fet_32_fix_factor(uint32_t factor, uint32_t mul, uint32_t mod)
 {
+	factor = (((uint64_t)factor) * ((uint64_t)mul)) % FET32_PRIME;
+
 	/* correctly handle negative values */
 	if (factor >= (mod / 2))
 		factor -= mod;
@@ -143,7 +145,7 @@ mbin_fet_32_generate(uint8_t power)
 	    "uint32_t";
 
 	printf("void\n"
-	    "mbin_fet_%d_32(int64_t *data)\n", 1 << power);
+	    "fet_%d_32(int64_t *data)\n", 1 << power);
 
 	printf("{\n");
 
@@ -180,6 +182,8 @@ mbin_fet_32_generate(uint8_t power)
 	max = 1 << power;
 
 	mod = FET32_PRIME;
+
+	prem = mbin_power_mod_32(2, 30, mod);
 
 #ifdef FET32_PROVE
 	for (freq = 0; freq != max; freq++) {
@@ -233,10 +237,6 @@ mbin_fet_32_generate(uint8_t power)
 	}
 #endif
 
-	prem = mbin_power_mod_32(2, (2 * 30 * power), mod);
-
-	prem = mbin_fet_32_fix_factor(prem, mod);
-
 	n = power - 1;
 	x = 0;
 	for (y = 0; y != max; y += (1 << (power - n))) {
@@ -259,7 +259,7 @@ mbin_fet_32_generate(uint8_t power)
 				}
 				factor = z;
 
-				printf("\t\t%d,\n", mbin_fet_32_fix_factor(factor, mod));
+				printf("\t\t%d,\n", mbin_fet_32_fix_factor(factor, prem, mod));
 			}
 		}
 	}
@@ -270,7 +270,7 @@ mbin_fet_32_generate(uint8_t power)
 	for (y = 0; y != (1 << (power - 1)); y++) {
 		z = mbin_bitrev32(y << (32 - (power - 1)));
 		factor = mbin_fet_32_generate_power(FET32_RING_SIZE - (freq * z));
-		printf("\t\t%d,\n", mbin_fet_32_fix_factor(factor, mod));
+		printf("\t\t%d,\n", mbin_fet_32_fix_factor(factor, prem, mod));
 	}
 #endif
 
@@ -289,6 +289,10 @@ mbin_fet_32_generate(uint8_t power)
 
 	printf("\n");
 
+	prem = mbin_power_mod_32(2, (30 * (power + 1)), mod);
+
+	prem = mbin_fet_32_fix_factor(prem, 1, mod);
+
 	for (n = 0; n != power; n++) {
 
 		printf("\t" "/* round %d */\n", n);
@@ -304,20 +308,29 @@ mbin_fet_32_generate(uint8_t power)
 		if (n != 0) {
 			printf("\t\t\t" "ta = data[x];\n");
 			printf("\t\t\t" "tb = data[x+0x%x] * (int64_t)(td);\n", (max >> (n + 1)));
+			printf("\t\t\t" "tb = (tb >> 30) - ((tb & 0x3fffffff) * 3);\n");
+
+			printf("\t\t\t" "tc = ta + tb;\n");
+			printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
+			printf("\t\t\t" "data[x] = tc;\n");
+
+			printf("\t\t\t" "tc = ta - tb;\n");
+			printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
+			printf("\t\t\t" "data[x+0x%x] = tc;\n", (max >> (n + 1)));
 		} else {
 			printf("\t\t\t" "ta = data[x] * %dLL;\n", (int32_t)prem);
 			printf("\t\t\t" "tb = data[x+0x%x] * %dLL;\n", (max >> (n + 1)), (int32_t)prem);
+
+			printf("\t\t\t" "tc = ta + tb;\n");
+			printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
+			printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
+			printf("\t\t\t" "data[x] = tc;\n");
+
+			printf("\t\t\t" "tc = ta - tb;\n");
+			printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
+			printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
+			printf("\t\t\t" "data[x+0x%x] = tc;\n", (max >> (n + 1)));
 		}
-
-		printf("\t\t\t" "tc = ta + tb;\n");
-		printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
-		printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
-		printf("\t\t\t" "data[x] = tc;\n");
-
-		printf("\t\t\t" "tc = ta - tb;\n");
-		printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
-		printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
-		printf("\t\t\t" "data[x+0x%x] = tc;\n", (max >> (n + 1)));
 
 		printf("\t\t" "}\n");
 		printf("\t\t" "data += 0x%x;\n", 1 << (power - n));
@@ -347,14 +360,14 @@ mbin_fet_32_generate(uint8_t power)
 
 	printf("}\n");
 
-	factor = (((uint64_t)mbin_power_mod_32(2, 2 * 60, mod)) *
+	factor = (((uint64_t)mbin_power_mod_32(2, 2 * 2 * 30, mod)) *
 	    ((uint64_t)mbin_power_mod_32(max, mod - 2, mod))) % mod;
 
-	factor = mbin_fet_32_fix_factor(factor, mod);
+	factor = mbin_fet_32_fix_factor(factor, 1, mod);
 
 	printf("\n"
 	    "void\n"
-	    "mbin_fet_conv_%d_32(const int64_t *a, const int64_t *b, int64_t *c)\n", max);
+	    "fet_conv_%d_32(const int64_t *a, const int64_t *b, int64_t *c)\n", max);
 
 	printf("{\n"
 	    "\t" "int64_t ta;\n"
