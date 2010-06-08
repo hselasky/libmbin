@@ -38,8 +38,13 @@
 
 #include "math_bin.h"
 
-#define	FET32_PRIME		0xC0000001U
-#define	FET32_RING_SIZE		0x30000000U
+/* parameters */
+
+#define	FET32_PRIME		0x42000001U
+#define	FET32_RING_SIZE		0x03000000U
+#define	FET32_MASK		0x01FFFFFFU
+#define	FET32_SHIFT		25
+#define	FET32_FACTOR		0x21U
 
 uint32_t
 mbin_fet_32_generate_power(uint64_t y)
@@ -108,13 +113,13 @@ mbin_fet_generate_bitrev(uint8_t power, const char *br_type)
 }
 
 static int32_t
-mbin_fet_32_fix_factor(uint32_t factor, uint32_t mul, uint32_t mod)
+mbin_fet_32_fix_factor(uint32_t factor, uint32_t mul)
 {
 	factor = (((uint64_t)factor) * ((uint64_t)mul)) % FET32_PRIME;
 
 	/* correctly handle negative values */
-	if (factor >= (mod / 2))
-		factor -= mod;
+	if (factor >= (FET32_PRIME / 2))
+		factor -= FET32_PRIME;
 
 	return (factor);
 }
@@ -134,9 +139,8 @@ mbin_fet_32_generate(uint8_t power)
 	uint32_t y;
 	uint32_t z;
 	uint32_t n;
-	uint32_t mod;
 
-	if (power >= 30 || power <= 0) {
+	if (power >= FET32_SHIFT || power <= 0) {
 		printf("#error \"Invalid power\"\n");
 		return;
 	}
@@ -181,9 +185,7 @@ mbin_fet_32_generate(uint8_t power)
 
 	max = 1 << power;
 
-	mod = FET32_PRIME;
-
-	prem = mbin_power_mod_32(2, 30, mod);
+	prem = mbin_power_mod_32(2, FET32_SHIFT, FET32_PRIME);
 
 #ifdef FET32_PROVE
 	for (freq = 0; freq != max; freq++) {
@@ -201,10 +203,10 @@ mbin_fet_32_generate(uint8_t power)
 				tb = ktemp[y + z + (1 << (power - 1 - n))];
 
 				factor = (((uint64_t)ta) *
-				    ((uint64_t)mbin_power_mod_32(tb, mod - 2, mod))) % mod;
+				    ((uint64_t)mbin_power_mod_32(tb, FET32_PRIME - 2, FET32_PRIME))) % FET32_PRIME;
 
 				if (freq & (1 << n)) {
-					factor = (mod - factor) % mod;
+					factor = (FET32_PRIME - factor) % FET32_PRIME;
 				}
 				size = (n << power) + y + z + (1 << (power - 1 - n));
 
@@ -224,9 +226,9 @@ mbin_fet_32_generate(uint8_t power)
 
 				if (freq & (1 << n)) {
 					ktemp[y + z] = 0;
-					ktemp[y + z + (1 << (power - 1 - n))] = ((uint64_t)ta * (uint64_t)2) % mod;
+					ktemp[y + z + (1 << (power - 1 - n))] = ((uint64_t)ta * (uint64_t)2) % FET32_PRIME;
 				} else {
-					ktemp[y + z] = ((uint64_t)ta * (uint64_t)2) % mod;
+					ktemp[y + z] = ((uint64_t)ta * (uint64_t)2) % FET32_PRIME;
 					ktemp[y + z + (1 << (power - 1 - n))] = 0;
 				}
 			}
@@ -259,7 +261,7 @@ mbin_fet_32_generate(uint8_t power)
 				}
 				factor = z;
 
-				printf("\t\t%d,\n", mbin_fet_32_fix_factor(factor, prem, mod));
+				printf("\t\t%d,\n", mbin_fet_32_fix_factor(factor, prem));
 			}
 		}
 	}
@@ -270,7 +272,7 @@ mbin_fet_32_generate(uint8_t power)
 	for (y = 0; y != (1 << (power - 1)); y++) {
 		z = mbin_bitrev32(y << (32 - (power - 1)));
 		factor = mbin_fet_32_generate_power(FET32_RING_SIZE - (freq * z));
-		printf("\t\t%d,\n", mbin_fet_32_fix_factor(factor, prem, mod));
+		printf("\t\t%d,\n", mbin_fet_32_fix_factor(factor, prem));
 	}
 #endif
 
@@ -289,9 +291,9 @@ mbin_fet_32_generate(uint8_t power)
 
 	printf("\n");
 
-	prem = mbin_power_mod_32(2, (30 * (power + 1)), mod);
+	prem = mbin_power_mod_32(2, (FET32_SHIFT * (power + 1)), FET32_PRIME);
 
-	prem = mbin_fet_32_fix_factor(prem, 1, mod);
+	prem = mbin_fet_32_fix_factor(prem, 1);
 
 	for (n = 0; n != power; n++) {
 
@@ -308,27 +310,34 @@ mbin_fet_32_generate(uint8_t power)
 		if (n != 0) {
 			printf("\t\t\t" "ta = data[x];\n");
 			printf("\t\t\t" "tb = data[x+0x%x] * (int64_t)(td);\n", (max >> (n + 1)));
-			printf("\t\t\t" "tb = (tb >> 30) - ((tb & 0x3fffffff) * 3);\n");
+			printf("\t\t\t" "tb = (tb >> %d) - ((tb & 0x%08x) * 0x%x);\n",
+			    FET32_SHIFT, FET32_MASK, FET32_FACTOR);
 
 			printf("\t\t\t" "tc = ta + tb;\n");
-			printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
+			printf("\t\t\t" "tc = (tc >> %d) - ((tc & 0x%08x) * 0x%x);\n",
+			    FET32_SHIFT, FET32_MASK, FET32_FACTOR);
 			printf("\t\t\t" "data[x] = tc;\n");
 
 			printf("\t\t\t" "tc = ta - tb;\n");
-			printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
+			printf("\t\t\t" "tc = (tc >> %d) - ((tc & 0x%08x) * 0x%x);\n",
+			    FET32_SHIFT, FET32_MASK, FET32_FACTOR);
 			printf("\t\t\t" "data[x+0x%x] = tc;\n", (max >> (n + 1)));
 		} else {
 			printf("\t\t\t" "ta = data[x] * %dLL;\n", (int32_t)prem);
 			printf("\t\t\t" "tb = data[x+0x%x] * %dLL;\n", (max >> (n + 1)), (int32_t)prem);
 
 			printf("\t\t\t" "tc = ta + tb;\n");
-			printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
-			printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
+			printf("\t\t\t" "tc = (tc >> %d) - ((tc & 0x%08x) * 0x%x);\n",
+			    FET32_SHIFT, FET32_MASK, FET32_FACTOR);
+			printf("\t\t\t" "tc = (tc >> %d) - ((tc & 0x%08x) * 0x%x);\n",
+			    FET32_SHIFT, FET32_MASK, FET32_FACTOR);
 			printf("\t\t\t" "data[x] = tc;\n");
 
 			printf("\t\t\t" "tc = ta - tb;\n");
-			printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
-			printf("\t\t\t" "tc = (tc >> 30) - ((tc & 0x3fffffff) * 3);\n");
+			printf("\t\t\t" "tc = (tc >> %d) - ((tc & 0x%08x) * 0x%x);\n",
+			    FET32_SHIFT, FET32_MASK, FET32_FACTOR);
+			printf("\t\t\t" "tc = (tc >> %d) - ((tc & 0x%08x) * 0x%x);\n",
+			    FET32_SHIFT, FET32_MASK, FET32_FACTOR);
 			printf("\t\t\t" "data[x+0x%x] = tc;\n", (max >> (n + 1)));
 		}
 
@@ -360,10 +369,10 @@ mbin_fet_32_generate(uint8_t power)
 
 	printf("}\n");
 
-	factor = (((uint64_t)mbin_power_mod_32(2, 2 * 2 * 30, mod)) *
-	    ((uint64_t)mbin_power_mod_32(max, mod - 2, mod))) % mod;
+	factor = (((uint64_t)mbin_power_mod_32(2, 2 * 2 * FET32_SHIFT, FET32_PRIME)) *
+	    ((uint64_t)mbin_power_mod_32(max, FET32_PRIME - 2, FET32_PRIME))) % FET32_PRIME;
 
-	factor = mbin_fet_32_fix_factor(factor, 1, mod);
+	factor = mbin_fet_32_fix_factor(factor, 1);
 
 	printf("\n"
 	    "void\n"
@@ -377,23 +386,32 @@ mbin_fet_32_generate(uint8_t power)
 	    "\t" "for (x = 0; x != 0x%x; x++) {\n"
 	    "\t\t" "ta = a[x];\n"
 	    "\t\t" "if (ta < 0)\n"
-	    "\t\t\t" "ta += 0xC0000001LL;\n"
+	    "\t\t\t" "ta += 0x%08xLL;\n"
 	    "\t\t" "if (ta < 0)\n"
-	    "\t\t\t" "ta += 0xC0000001LL;\n"
+	    "\t\t\t" "ta += 0x%08xLL;\n"
 	    "\t\t" "tb = b[x];\n"
 	    "\t\t" "if (tb < 0)\n"
-	    "\t\t\t" "tb += 0xC0000001LL;\n"
+	    "\t\t\t" "tb += 0x%08xLL;\n"
 	    "\t\t" "if (tb < 0)\n"
-	    "\t\t\t" "tb += 0xC0000001LL;\n"
+	    "\t\t\t" "tb += 0x%08xLL;\n"
 	    "\t\t" "ta = ((uint64_t)(uint32_t)ta) * ((uint64_t)(uint32_t)tb);\n"
-	    "\t\t" "ta = (((uint64_t)ta) >> 30) - ((ta & 0x3fffffff) * 3);\n"
-	    "\t\t" "ta = (ta >> 30) - ((ta & 0x3fffffff) * 3);\n"
+	    "\t\t" "ta = (((uint64_t)ta) >> %d) - ((ta & 0x%08x) * 0x%x);\n"
+	    "\t\t" "ta = (ta >> %d) - ((ta & 0x%08x) * 0x%x);\n"
 	    "\t\t" "ta = ta * (int64_t)%d;\n"
-	    "\t\t" "ta = (ta >> 30) - ((ta & 0x3fffffff) * 3);\n"
-	    "\t\t" "ta = (ta >> 30) - ((ta & 0x3fffffff) * 3);\n"
+	    "\t\t" "ta = (ta >> %d) - ((ta & 0x%08x) * 0x%x);\n"
+	    "\t\t" "ta = (ta >> %d) - ((ta & 0x%08x) * 0x%x);\n"
 	    "\t\t" "c[x] = ta;\n"
 	    "\t" "}\n",
-	    max, factor);
+	    max,
+	    FET32_PRIME,
+	    FET32_PRIME,
+	    FET32_PRIME,
+	    FET32_PRIME,
+	    FET32_SHIFT, FET32_MASK, FET32_FACTOR,
+	    FET32_SHIFT, FET32_MASK, FET32_FACTOR,
+	    factor,
+	    FET32_SHIFT, FET32_MASK, FET32_FACTOR,
+	    FET32_SHIFT, FET32_MASK, FET32_FACTOR);
 
 	printf("\n"
 	    "\t" "for (x = 1; x != 0x%x; x++) {\n"
@@ -405,6 +423,24 @@ mbin_fet_32_generate(uint8_t power)
 	    "\t" "}\n", max / 2, max, max);
 
 	printf("}\n");
+
+	printf("\n"
+	    "int64_t\n"
+	    "fet_to_lin(int64_t x)\n"
+	    "{\n"
+	    "\t" "if (x < 0)\n"
+	    "\t\t" "x += 0x%08xLL;\n"
+	    "\t" "if (x < 0)\n"
+	    "\t\t" "x += 0x%08xLL;\n"
+	    "\t" "if (x >= (0x%08xLL/2))\n"
+	    "\t\t" "x -= 0x%08xLL;\n"
+	    "\n"
+	    "\t" "return (x);\n"
+	    "}\n",
+	    FET32_PRIME,
+	    FET32_PRIME,
+	    FET32_PRIME,
+	    FET32_PRIME);
 
 	goto done;
 

@@ -295,8 +295,8 @@ struct mbin_fet_32_mod {
 	uint32_t conv;
 };
 
-void	mbin_fet_32_find_mod(struct mbin_fet_32_mod *pmod);
-void	mbin_fet_32_generate(uint8_t log_size);
-uint32_t mbin_fet_32_generate_power(uint64_t y);
+void	mbin_fet_32_find_mod(struct mbin_fet_32_mod *);
+void	mbin_fet_32_generate(uint8_t);
+uint32_t mbin_fet_32_generate_power(uint64_t);
 
 #endif					/* _MATH_BIN_H_ */
