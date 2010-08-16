@@ -300,4 +300,14 @@ void	mbin_fet_32_find_mod(struct mbin_fet_32_mod *);
 void	mbin_fet_32_generate(uint8_t);
 uint32_t mbin_fet_32_generate_power(uint64_t);
 
+/* Equation prototypes */
+
+uint32_t *mbin_compress_tab_32(const uint32_t *ptr, uint32_t last, uint32_t slice);
+void	mbin_expand_xor_tab_32(uint32_t *ptr, uint32_t *pcomp, uint32_t last, uint32_t slice);
+void	mbin_expand_add_tab_32(uint32_t *ptr, uint32_t *pcomp, uint32_t last, uint32_t slice);
+void	mbin_expand_sub_tab_32(uint32_t *ptr, uint32_t *pcomp, uint32_t last, uint32_t slice);
+uint32_t *mbin_foreach_tab_32(uint32_t *pcomp, uint32_t *ptr);
+void	mbin_free_tab_32(uint32_t *pcomp);
+uint32_t mbin_count_tab_32(uint32_t *pcomp);
+
 #endif					/* _MATH_BIN_H_ */

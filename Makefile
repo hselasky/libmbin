@@ -21,6 +21,7 @@ SRCS+=	mbin_correlate.c
 SRCS+=	mbin_dec.c
 SRCS+=	mbin_depolarise.c
 SRCS+=	mbin_div.c
+SRCS+=	mbin_equation.c
 SRCS+=	mbin_expand.c
 SRCS+=	mbin_express.c
 SRCS+=	mbin_fet.c
