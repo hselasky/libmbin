@@ -6,6 +6,7 @@ LIB=		mbin1
 SHLIB_MAJOR=	1
 SHLIB_MINOR=	0
 CFLAGS+=	-Wall -O2 -O3
+NO_PROFILE=
 
 SRCS=
 SRCS+=	mbin_baseG.c

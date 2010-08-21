@@ -112,49 +112,85 @@ mbin_print64(const char *fmt, uint64_t x)
 void
 mbin_print8_abc(uint8_t x)
 {
+	mbin_print8_abc_mask(x, 0);
+}
+
+void
+mbin_print8_abc_mask(uint8_t x, uint8_t m)
+{
 	const char *str = "abcdefgh";
 
-	if (x == 0)
+	if (x == 0) {
 		putchar('1');
-	else
+	} else {
 		while (x) {
-			if (x & 1)
-				putchar(*str);
+			if (x & 1) {
+				if (m & 1)
+					putchar(*str + ('A' - 'a'));
+				else
+					putchar(*str);
+			}
 			str++;
 			x /= 2;
+			m /= 2;
 		}
+	}
 }
 
 void
 mbin_print16_abc(uint16_t x)
 {
+	mbin_print16_abc_mask(x, 0);
+}
+
+void
+mbin_print16_abc_mask(uint16_t x, uint16_t m)
+{
 	const char *str = "abcdefghijklmnop";
 
-	if (x == 0)
+	if (x == 0) {
 		putchar('1');
-	else
+	} else {
 		while (x) {
-			if (x & 1)
-				putchar(*str);
+			if (x & 1) {
+				if (m & 1)
+					putchar(*str + ('A' - 'a'));
+				else
+					putchar(*str);
+			}
 			str++;
 			x /= 2;
+			m /= 2;
 		}
+	}
 }
 
 void
 mbin_print32_abc(uint32_t x)
 {
+	mbin_print32_abc_mask(x, 0);
+}
+
+void
+mbin_print32_abc_mask(uint32_t x, uint32_t m)
+{
 	const char *str = "abcdefghijklmnopqrstuvwxyz??????";
 
-	if (x == 0)
+	if (x == 0) {
 		putchar('1');
-	else
+	} else {
 		while (x) {
-			if (x & 1)
-				putchar(*str);
+			if (x & 1) {
+				if (m & 1)
+					putchar(*str + ('A' - 'a'));
+				else
+					putchar(*str);
+			}
 			str++;
 			x /= 2;
+			m /= 2;
 		}
+	}
 }
 
 void
