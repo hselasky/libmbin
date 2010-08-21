@@ -36,6 +36,7 @@ void	mbin_print32_abc_mask(uint32_t x, uint32_t m);
 void	mbin_print8_abc(uint8_t x);
 void	mbin_print16_abc(uint16_t x);
 void	mbin_print32_abc(uint32_t x);
+uint8_t	mbin_eval32_abc(uint32_t x, const char *str);
 void	mbin_print32_const(uint32_t x);
 uint32_t mbin_print_xor_analyse_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t fslice);
 uint32_t mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp, const char *remove, uint32_t mask, uint8_t do_xor);

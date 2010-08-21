@@ -193,6 +193,27 @@ mbin_print32_abc_mask(uint32_t x, uint32_t m)
 	}
 }
 
+uint8_t
+mbin_eval32_abc(uint32_t x, const char *str)
+{
+	char c;
+
+	while ((c = *str++) != 0) {
+		if ((c >= 'a') && (c <= 'z')) {
+			if (!(x & (1 << (c - 'a'))))
+				return (0);
+		} else if ((c >= 'A') && (c <= 'Z')) {
+			if (x & (1 << (c - 'A')))
+				return (0);
+		} else if ((c == '1') || (c == ' ') || (c == '\t')) {
+			/* skip */
+		} else {
+			return (0);
+		}
+	}
+	return (1);
+}
+
 void
 mbin_print32_const(uint32_t x)
 {
