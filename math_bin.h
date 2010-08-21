@@ -65,7 +65,7 @@ void	mbin_transform_gte_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
 void	mbin_transform_sos_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t *scratch, uint32_t mask);
 void	mbin_transform_sos_mod_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t *scratch, uint32_t mask, uint32_t mod);
 void	mbin_transform_poly_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t *scratch, uint32_t mask);
-
+void	mbin_transform_find_negative_32x1(uint32_t *ptr, uint32_t *neg, uint32_t mask, uint32_t slice);
 uint8_t	mbin_compute_value_32x32(uint32_t *ptr, const uint8_t *premap, uint32_t mask, uint32_t set_bits, uint32_t work_slice);
 
 uint8_t	mbin_sumbits32(uint32_t val);

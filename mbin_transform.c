@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008-2010 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -339,5 +339,36 @@ mbin_transform_poly_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t *scratch,
 		if (x == mask)
 			break;
 		x++;
+	}
+}
+
+void
+mbin_transform_find_negative_32x1(uint32_t *ptr, uint32_t *neg,
+    uint32_t mask, uint32_t slice)
+{
+	uint32_t x;
+	uint32_t m;
+
+	for (m = 1; (m & mask); m *= 2) {
+
+		for (x = 0;; x++) {
+
+			if (x & m) {
+				x += m - 1;
+				if (x == mask)
+					break;
+				continue;
+			}
+			if ((ptr[x] & slice) &&
+			    (ptr[x ^ m] & slice) &&
+			    (neg[x] == neg[x ^ m])) {
+
+				ptr[x ^ m] ^= 1;
+				neg[x] ^= m;
+			}
+		}
+
+		if (x == mask)
+			break;
 	}
 }
