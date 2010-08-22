@@ -371,3 +371,56 @@ mbin_transform_find_negative_32x1(uint32_t *ptr, uint32_t *neg,
 		}
 	}
 }
+
+void
+mbin_transform_find_gte_32x1(uint32_t *ptr, uint32_t *gte,
+    uint32_t mask, uint32_t slice)
+{
+	uint32_t x;
+	uint32_t y;
+	uint32_t msb;
+	uint32_t first;
+	uint32_t last;
+	uint32_t z;
+	uint32_t neg;
+
+	for (x = 0; x != mask; x++) {
+
+		if (ptr[x] & slice) {
+
+			neg = slice;
+
+			for (y = 1; (x + y) != mask; y++) {
+				z = x + y;
+
+				if ((neg ^ ptr[z]) & slice) {
+					if (((-z) & z) != z)
+						break;
+					else if (y == 1)
+						break;
+					else
+						neg ^= slice;
+				}
+			}
+
+			if (y == 1)
+				return;
+
+			gte[x] ^= slice;
+			gte[x + y] ^= slice;
+
+			first = x;
+			last = x + y - 1;
+
+			msb = mbin_msb32(last);
+
+			msb = (2 * msb) - 1;
+
+			for (y = 0; y != (mask + 1); y++) {
+				if (((y & msb) >= first) && ((y & msb) <= last))
+					ptr[y] ^= slice;
+			}
+			return;
+		}
+	}
+}
