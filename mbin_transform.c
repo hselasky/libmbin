@@ -366,9 +366,8 @@ mbin_transform_find_negative_32x1(uint32_t *ptr, uint32_t *neg,
 				ptr[x ^ m] ^= slice;
 				neg[x] ^= m;
 			}
+			if (x == mask)
+				break;
 		}
-
-		if (x == mask)
-			break;
 	}
 }
