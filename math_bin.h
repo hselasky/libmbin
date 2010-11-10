@@ -290,6 +290,8 @@ int32_t	mbin_correlate_32x32(uint32_t *pa, uint32_t *pb, uint32_t mask, uint32_t
 
 uint32_t mbin_sos_32(int32_t x, int32_t y);
 
+uint32_t mbin_swm32(uint32_t x, uint32_t m, int8_t count);
+
 uint32_t mbin_integrate_32(uint32_t *ptr, uint32_t max);
 void	mbin_derivate_32(uint32_t *ptr, uint32_t max);
 uint32_t mbin_sum_32(uint32_t *ptr, uint32_t max, uint8_t sstep);
