@@ -238,6 +238,20 @@ void	mbin_parse32_factor(const char *ptr, uint32_t *ptable, uint32_t mask, uint3
 
 uint32_t mbin_sqrt_64(uint64_t a);
 
+/* Base-3 */
+
+uint32_t mbin_xor3_32(uint32_t a, uint32_t b);
+uint32_t mbin_add3_32(uint32_t a, uint32_t b);
+uint32_t mbin_sub3_32(uint32_t a, uint32_t b);
+uint32_t mbin_inv3_32(uint32_t a);
+uint32_t mbin_mul3_32(uint32_t a, uint32_t b1);
+uint32_t mbin_div3_odd_32(uint32_t r, uint32_t d);
+uint32_t mbin_div3_32(uint32_t r, uint32_t d);
+void	mbin_expand_xor3_16x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, uint32_t slice);
+void	mbin_transform_multi_xor3_fwd_16x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
+uint32_t mbin_rebase_322_32(uint32_t x);
+uint32_t mbin_rebase_223_32(uint32_t x);
+
 /* Expression prototypes */
 
 struct mbin_expr_and;
