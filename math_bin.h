@@ -240,6 +240,7 @@ uint32_t mbin_sqrt_64(uint64_t a);
 
 /* Base-3 */
 
+uint32_t mbin_is_valid3_32(uint32_t x);
 uint32_t mbin_xor3_32(uint32_t a, uint32_t b);
 uint32_t mbin_add3_32(uint32_t a, uint32_t b);
 uint32_t mbin_sub3_32(uint32_t a, uint32_t b);
@@ -251,6 +252,39 @@ void	mbin_expand_xor3_16x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, uin
 void	mbin_transform_multi_xor3_fwd_16x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
 uint32_t mbin_rebase_322_32(uint32_t x);
 uint32_t mbin_rebase_223_32(uint32_t x);
+
+/* Base-5 */
+
+uint32_t mbin_is_valid5_32(uint32_t x);
+uint32_t mbin_add5_32(uint32_t a, uint32_t b);
+uint32_t mbin_sub5_32(uint32_t a, uint32_t b);
+uint32_t mbin_mul5_32(uint32_t a, uint32_t b1);
+uint32_t mbin_div5_odd_32(uint32_t r, uint32_t d);
+uint32_t mbin_div5_32(uint32_t r, uint32_t d);
+uint32_t mbin_rebase_522_32(uint32_t x);
+uint32_t mbin_rebase_225_32(uint32_t x);
+
+/* Base-6 */
+
+uint32_t mbin_is_valid6_32(uint32_t x);
+uint32_t mbin_add6_32(uint32_t a, uint32_t b);
+uint32_t mbin_sub6_32(uint32_t a, uint32_t b);
+uint32_t mbin_mul6_32(uint32_t a, uint32_t b1);
+uint32_t mbin_div6_odd_32(uint32_t r, uint32_t d);
+uint32_t mbin_div6_32(uint32_t r, uint32_t d);
+uint32_t mbin_rebase_622_32(uint32_t x);
+uint32_t mbin_rebase_226_32(uint32_t x);
+
+/* Base-7 */
+
+uint32_t mbin_is_valid7_32(uint32_t x);
+uint32_t mbin_add7_32(uint32_t a, uint32_t b);
+uint32_t mbin_sub7_32(uint32_t a, uint32_t b);
+uint32_t mbin_mul7_32(uint32_t a, uint32_t b1);
+uint32_t mbin_div7_odd_32(uint32_t r, uint32_t d);
+uint32_t mbin_div7_32(uint32_t r, uint32_t d);
+uint32_t mbin_rebase_722_32(uint32_t x);
+uint32_t mbin_rebase_227_32(uint32_t x);
 
 /* Expression prototypes */
 
