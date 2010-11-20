@@ -184,10 +184,7 @@ mbin_expand_xor3_16x32(uint32_t *ptr, uint32_t set_bits,
 	x = set_bits;
 
 	while (1) {
-		if (x & (x / 2) & k)
-			 /* skip */ ;
-		else
-			ptr[x & mask] ^= slice;
+		ptr[x & mask] = mbin_xor3_32(ptr[x & mask], slice);
 
 		if (x == (uint32_t)(0 - 1)) {
 			break;
@@ -215,10 +212,7 @@ mbin_transform_multi_xor3_fwd_16x32(uint32_t *ptr, uint32_t *temp,
 	/* transform "ptr" */
 	x = 0;
 	while (1) {
-		if (x & (x / 2) & k)
-			val = 0;
-		else
-			val = temp[x];
+		val = temp[x];
 
 		if (val) {
 			/* invert value */
