@@ -252,6 +252,8 @@ void	mbin_expand_xor3_16x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, uin
 void	mbin_transform_multi_xor3_fwd_16x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
 uint32_t mbin_rebase_322_32(uint32_t x);
 uint32_t mbin_rebase_223_32(uint32_t x);
+uint32_t mbin_split3_32(uint32_t x);
+uint32_t mbin_join3_32(uint32_t x);
 
 /* Base-5 */
 

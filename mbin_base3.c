@@ -268,3 +268,37 @@ mbin_rebase_223_32(uint32_t x)
 	}
 	return (t);
 }
+
+uint32_t
+mbin_split3_32(uint32_t x)
+{
+	uint32_t r;
+	uint8_t n;
+
+	r = 0;
+
+	for (n = 0; n != 32; n += 2) {
+		if (x & (1 << n))
+			r |= (1 << (n / 2));
+		if (x & (2 << n))
+			r |= (0x10000 << (n / 2));
+	}
+	return (r);
+}
+
+uint32_t
+mbin_join3_32(uint32_t x)
+{
+	uint32_t r;
+	uint8_t n;
+
+	r = 0;
+
+	for (n = 0; n != 32; n += 2) {
+		if (x & (1 << (n / 2)))
+			r |= (1 << n);
+		if (x & (0x10000 << (n / 2)))
+			r |= (2 << (n / 2));
+	}
+	return (r);
+}
