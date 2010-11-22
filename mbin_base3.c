@@ -36,9 +36,15 @@
 static const uint32_t k = 0x55555555;
 
 uint32_t
-mbin_is_valid3_32(uint32_t x)
+mbin_is3_valid_32(uint32_t x)
 {
 	return ((x & (x / 2) & k) ? 0 : 1);
+}
+
+uint8_t
+mbin_is3_div_by2_32(uint32_t x)
+{
+	return ((mbin_sumbits32(x & k) & 1) ? 0 : 1);
 }
 
 uint32_t
@@ -46,9 +52,30 @@ mbin_xor3_32(uint32_t a, uint32_t b)
 {
 	uint32_t r;
 	uint32_t t;
+	uint32_t b1;
+	uint32_t b2;
+
+	b1 = b & k;
+	b2 = (b & ~k) / 2;
+
+	r = a;
 
 	/* half-adder */
-	r = (a ^ b) ^ (2 * (a & b));
+	r = (r ^ b1) ^ (2 * (r & b1 & k));
+
+	/* mod-3 */
+	t = (r & (r / 2) & k);
+	r = r & ~(t | (2 * t));
+
+	/* half-adder */
+	r = (r ^ b2) ^ (2 * (r & b2 & k));
+
+	/* mod-3 */
+	t = (r & (r / 2) & k);
+	r = r & ~(t | (2 * t));
+
+	/* half-adder */
+	r = (r ^ b2) ^ (2 * (r & b2 & k));
 
 	/* mod-3 */
 	t = (r & (r / 2) & k);

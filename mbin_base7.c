@@ -36,7 +36,7 @@
 static const uint32_t k = 0x49249249;
 
 uint32_t
-mbin_is_valid7_32(uint32_t x)
+mbin_is7_valid_32(uint32_t x)
 {
 	return ((x & (x / 2) & (x / 4) & k) ? 0 : 1);
 }

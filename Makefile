@@ -9,6 +9,7 @@ CFLAGS+=	-Wall -O2 -O3
 NO_PROFILE=
 
 SRCS=
+SRCS+=	mbin_base_m3.c
 SRCS+=	mbin_base3.c
 SRCS+=	mbin_base5.c
 SRCS+=	mbin_base6.c

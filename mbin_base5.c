@@ -37,7 +37,7 @@ static const uint32_t k1 = 0x24924924;
 static const uint32_t k2 = 0x49249249;
 
 uint32_t
-mbin_is_valid5_32(uint32_t x)
+mbin_is5_valid_32(uint32_t x)
 {
 	return ((x & (x / 2) & k1) ? 0 :
 	    (x & (x / 4) & k2) ? 0 : 1);
