@@ -150,7 +150,7 @@ mbin_rebase_m3_22_32(uint32_t x)
 
 		x >>= 2;
 
-		d = d - (4*d);
+		d = d - (4 * d);
 	}
 	return (t);
 }
@@ -170,7 +170,6 @@ mbin_rebase_22_m3_32(uint32_t x)
 			x -= 3;
 			a = a + 3;
 		}
-
 		t |= a << n;
 
 		x = ((int32_t)x) / ((int32_t)-3);

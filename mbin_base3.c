@@ -47,41 +47,42 @@ mbin_is3_div_by2_32(uint32_t x)
 	return ((mbin_sumbits32(x & k) & 1) ? 0 : 1);
 }
 
+/* XOR digits without carry */
 uint32_t
 mbin_xor3_32(uint32_t a, uint32_t b)
 {
-	uint32_t r;
-	uint32_t t;
-	uint32_t b1;
-	uint32_t b2;
+	uint8_t and;
 
-	b1 = b & k;
-	b2 = (b & ~k) / 2;
+	and = (((a / 2) & b) ^ (a & (b / 2))) & k;
 
-	r = a;
+	return ((a ^ b) ^ (2 * ((a & b) & k)) ^
+	    (2 * and) ^
 
-	/* half-adder */
-	r = (r ^ b1) ^ (2 * (r & b1 & k));
+	    (1 * and) ^
 
-	/* mod-3 */
-	t = (r & (r / 2) & k);
-	r = r & ~(t | (2 * t));
+	    (((a & b) & ~k) / 2));
+}
 
-	/* half-adder */
-	r = (r ^ b2) ^ (2 * (r & b2 & k));
+/* AND digits without carry */
+uint32_t
+mbin_and3_32(uint32_t a, uint32_t b)
+{
+	uint32_t and;
+	uint32_t xor;
 
-	/* mod-3 */
-	t = (r & (r / 2) & k);
-	r = r & ~(t | (2 * t));
+	and = a & b;
+	xor = a ^ b;
 
-	/* half-adder */
-	r = (r ^ b2) ^ (2 * (r & b2 & k));
+	return (((and | (and / 2)) & k) |
+	    (xor & (2 * xor) & ~k));
+}
 
-	/* mod-3 */
-	t = (r & (r / 2) & k);
-	r = r & ~(t | (2 * t));
-
-	return (r);
+/* OR digits without carry */
+uint32_t
+mbin_or3_32(uint32_t a, uint32_t b)
+{
+	return ((((a | b) / 2) & k) |
+	    ((2 * ((a & ~(b / 2)) ^ (b & ~(a / 2))) & ~k)));
 }
 
 uint32_t
