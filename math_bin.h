@@ -255,8 +255,6 @@ void	mbin_expand_xor3_16x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, uin
 void	mbin_transform_multi_xor3_fwd_16x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
 uint32_t mbin_rebase_322_32(uint32_t x);
 uint32_t mbin_rebase_223_32(uint32_t x);
-uint32_t mbin_split3_32(uint32_t x);
-uint32_t mbin_join3_32(uint32_t x);
 
 /* Base-m3 */
 
@@ -269,6 +267,16 @@ void	mbin_expand_xor_m3_16x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, u
 void	mbin_transform_multi_xor_m3_fwd_16x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
 uint32_t mbin_rebase_m3_22_32(uint32_t x);
 uint32_t mbin_rebase_22_m3_32(uint32_t x);
+
+/* Base-4 */
+
+uint8_t	mbin_is2_div_by3_32(uint32_t x);
+uint32_t mbin_xor4_32(uint32_t a, uint32_t b);
+uint32_t mbin_inv4_32(uint32_t a);
+void	mbin_expand_xor4_16x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, uint32_t slice);
+void	mbin_transform_multi_xor4_fwd_16x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
+uint32_t mbin_split4_32(uint32_t x);
+uint32_t mbin_join4_32(uint32_t x);
 
 /* Base-5 */
 
