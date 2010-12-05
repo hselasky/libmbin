@@ -294,3 +294,55 @@ mbin_div_odd8(uint8_t r, uint8_t div)
 	}
 	return (r);
 }
+
+uint32_t
+mbin_div_by3_32(uint32_t x)
+{
+	uint32_t a = 0;
+	uint32_t n;
+	uint32_t r = 0;
+	uint32_t t = 3;
+
+	for (n = 0; n != 32; n += 2) {
+
+		/* sum and mod-3 */
+		t = t + (x & 3) + a;
+
+		/* get upper part */
+		a = (t / 4);
+
+		/* get lower part */
+		t = (t & 3);
+
+		/* store answer */
+		r |= t << n;
+
+		x >>= 2;
+	}
+	return (~r);
+}
+
+uint32_t
+mbin_div_by3_32_alt1(uint32_t x)
+{
+	uint32_t n;
+	uint32_t r;
+	uint32_t s;
+
+	r = 0;
+	s = 0;
+
+	for (n = 30; n != (uint32_t)-2; n -= 2) {
+		r |= (s << n);
+		s += (x >> n) & 3;
+		if (s >= 3) {
+			r += (1 << n);
+			s -= 3;
+		}
+	}
+	if (s & 1)
+		r -= 0x55555555;
+	if (s & 2)
+		r -= 0xAAAAAAAA;
+	return (r);
+}
