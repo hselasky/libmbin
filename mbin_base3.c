@@ -51,16 +51,25 @@ mbin_is3_div_by2_32(uint32_t x)
 uint32_t
 mbin_xor3_32(uint32_t a, uint32_t b)
 {
-	uint8_t and;
+	uint32_t d;
+	uint32_t e;
 
-	and = (((a / 2) & b) ^ (a & (b / 2))) & k;
+	d = b & k;
+	e = (b & ~k) / 2;
 
-	return ((a ^ b) ^ (2 * ((a & b) & k)) ^
-	    (2 * and) ^
+	a += d;
+	b = a & (a / 2) & k;
+	a ^= b | (2 * b);
 
-	    (1 * and) ^
+	a += e;
+	b = a & (a / 2) & k;
+	a ^= b | (2 * b);
 
-	    (((a & b) & ~k) / 2));
+	a += e;
+	b = a & (a / 2) & k;
+	a ^= b | (2 * b);
+
+	return (a);
 }
 
 /* AND digits without carry */
@@ -294,4 +303,14 @@ mbin_rebase_223_32(uint32_t x)
 		n += 2;
 	}
 	return (t);
+}
+
+uint32_t
+mbin_lt3_32(uint32_t a, uint32_t b)
+{
+	uint32_t xor;
+
+	xor = (a ^ b);
+
+	return (((xor & b & ~k) / 2) | (~(xor / 2) & xor & b & k));
 }

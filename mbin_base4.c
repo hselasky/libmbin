@@ -46,6 +46,16 @@ mbin_is2_div_by3_32(uint32_t x)
 }
 
 uint32_t
+mbin_lt4_32(uint32_t a, uint32_t b)
+{
+	uint32_t xor;
+
+	xor = (a ^ b);
+
+	return (((xor & b & ~k) / 2) | (~(xor / 2) & xor & b & k));
+}
+
+uint32_t
 mbin_xor4_32(uint32_t a, uint32_t b)
 {
 	uint32_t and;
