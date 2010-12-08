@@ -76,22 +76,36 @@ mbin_xor3_32(uint32_t a, uint32_t b)
 uint32_t
 mbin_and3_32(uint32_t a, uint32_t b)
 {
-	uint32_t and;
 	uint32_t xor;
 
-	and = a & b;
-	xor = a ^ b;
+	xor = mbin_xor3_32(a, b);
 
-	return (((and | (and / 2)) & k) |
-	    (xor & (2 * xor) & ~k));
+	return (mbin_lt3_32(xor, a));
 }
 
 /* OR digits without carry */
 uint32_t
 mbin_or3_32(uint32_t a, uint32_t b)
 {
-	return ((((a | b) / 2) & k) |
-	    ((2 * ((a & ~(b / 2)) ^ (b & ~(a / 2))) & ~k)));
+	uint32_t d;
+	uint32_t e;
+
+	d = b & k;
+	e = (b & ~k) / 2;
+
+	a += d;
+	b = a & (a / 2) & k;
+	a ^= (2 * b);
+
+	a += e;
+	b = a & (a / 2) & k;
+	a ^= (2 * b);
+
+	a += e;
+	b = a & (a / 2) & k;
+	a ^= (2 * b);
+
+	return (mbin_inv3_32(a));
 }
 
 uint32_t
