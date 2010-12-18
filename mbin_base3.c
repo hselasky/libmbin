@@ -251,6 +251,26 @@ mbin_expand_xor3_16x32(uint32_t *ptr, uint32_t set_bits,
 }
 
 void
+mbin_expand_add3_16x32(uint32_t *ptr, uint32_t set_bits,
+    uint32_t mask, uint32_t slice)
+{
+	uint32_t x;
+
+	set_bits |= (~mask);
+	x = set_bits;
+
+	while (1) {
+		ptr[x & mask] = mbin_add3_32(ptr[x & mask], slice);
+
+		if (x == (uint32_t)(0 - 1)) {
+			break;
+		}
+		x++;
+		x |= set_bits;
+	}
+}
+
+void
 mbin_transform_multi_xor3_fwd_16x32(uint32_t *ptr, uint32_t *temp,
     uint32_t mask)
 {
@@ -277,6 +297,42 @@ mbin_transform_multi_xor3_fwd_16x32(uint32_t *ptr, uint32_t *temp,
 			mbin_expand_xor3_16x32(temp, x, mask, val);
 			/* invert value */
 			val = mbin_inv3_32(val);
+			/* restore original value */
+			temp[x] = val;
+		}
+		if (x == mask)
+			break;
+		x++;
+	}
+}
+
+void
+mbin_transform_multi_add3_fwd_16x32(uint32_t *ptr, uint32_t *temp,
+    uint32_t mask)
+{
+	uint32_t x;
+	uint32_t val;
+
+	x = 0;
+	while (1) {
+		temp[x] = ptr[x];
+		if (x == mask)
+			break;
+		x++;
+	}
+
+	/* transform "ptr" */
+	x = 0;
+	while (1) {
+		val = temp[x];
+
+		if (val) {
+			/* invert value */
+			val = mbin_sub3_32(0, val);
+			/* expand logic expression */
+			mbin_expand_add3_16x32(temp, x, mask, val);
+			/* invert value */
+			val = mbin_sub3_32(0, val);
 			/* restore original value */
 			temp[x] = val;
 		}

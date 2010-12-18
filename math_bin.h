@@ -254,8 +254,10 @@ uint32_t mbin_inv3_32(uint32_t a);
 uint32_t mbin_mul3_32(uint32_t a, uint32_t b1);
 uint32_t mbin_div3_odd_32(uint32_t r, uint32_t d);
 uint32_t mbin_div3_32(uint32_t r, uint32_t d);
+void	mbin_expand_add3_16x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, uint32_t slice);
 void	mbin_expand_xor3_16x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, uint32_t slice);
 void	mbin_transform_multi_xor3_fwd_16x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
+void	mbin_transform_multi_add3_fwd_16x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
 uint32_t mbin_rebase_322_32(uint32_t x);
 uint32_t mbin_rebase_223_32(uint32_t x);
 
