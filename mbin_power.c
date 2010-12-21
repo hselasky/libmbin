@@ -192,3 +192,112 @@ mbin_power_odd_32(uint32_t rem, uint32_t base, uint32_t exp)
 	}
 	return (mbin_exp_32(rem, mbin_log_32(0, base) * exp));
 }
+
+uint64_t
+mbin_log_non_linear_64(uint64_t a)
+{
+	uint64_t b;
+	uint64_t c;
+	uint64_t an;
+	uint64_t cn;
+	uint64_t r;
+	uint8_t n;
+
+	if (!(a & 1))
+		return (0);		/* number must be odd */
+
+	c = 0;
+	r = 0;
+
+	/* cascade style implementation */
+
+	for (n = 1; n != 64; n++) {
+		if (a & (1ULL << n)) {
+			b = c & ~a;
+
+			/* try to move carry into "a" */
+
+			c ^= b;
+			a ^= b;
+
+			/* half-adder, no carry out! */
+
+			c = (c ^ (c << n)) ^ (2 * (c & (c << n)));
+
+			b = a << n;
+
+			/* we found a factor, store result */
+
+			r |= 1ULL << n;
+
+			/* half-adder, 3-var-in */
+
+			an = a ^ b ^ c;
+			cn = 2 * ((a & b) | (b & c) | (a & c));
+
+			a = an;
+			c = cn;
+		}
+		/* half-adder */
+
+		an = a ^ c;
+		cn = 2 * (a & c);
+
+		a = an;
+		c = cn;
+	}
+	return (r);
+}
+
+uint64_t
+mbin_exp_non_linear_64(uint64_t a, uint64_t d)
+{
+	uint64_t b;
+	uint64_t c;
+	uint64_t an;
+	uint64_t cn;
+	uint8_t n;
+
+	c = 0;
+
+	/* cascade style implementation */
+
+	for (n = 1; n != 64; n++) {
+		if (d & (1ULL << n)) {
+			b = c & ~a;
+
+			/* try to move carry into "a" */
+
+			c ^= b;
+			a ^= b;
+
+			/* half-adder, no carry out! */
+
+			c = (c ^ (c << n)) ^ (2 * (c & (c << n)));
+
+			b = a << n;
+
+			/* half-adder, 3-var-in */
+
+			an = a ^ b ^ c;
+			cn = 2 * ((a & b) | (b & c) | (a & c));
+
+			a = an;
+			c = cn;
+		}
+		/* half-adder */
+
+		an = a ^ c;
+		cn = 2 * (a & c);
+
+		a = an;
+		c = cn;
+	}
+	return (a);
+}
+
+uint64_t
+mbin_div_odd64_alt1(uint64_t r, uint64_t div)
+{
+	return (mbin_exp_non_linear_64(r, mbin_log_non_linear_64(div)));
+}

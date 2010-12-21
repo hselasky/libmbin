@@ -113,6 +113,7 @@ void	mbin_xor_common8(uint8_t *pa, uint8_t *pb);
 
 uint32_t mbin_div_odd32(uint32_t r, uint32_t div);
 uint64_t mbin_div_odd64(uint64_t r, uint64_t div);
+uint64_t mbin_div_odd64_alt1(uint64_t r, uint64_t div);
 uint32_t mbin_div_odd32_alt1(uint32_t r, uint32_t div);
 uint32_t mbin_div_odd32_alt2(uint32_t r, uint32_t div);
 uint32_t mbin_div_odd32_alt3(uint32_t r, uint32_t div);
@@ -232,6 +233,8 @@ void	mbin_log_table_gen_32(uint32_t *pt);
 uint32_t mbin_log_32(uint32_t r, uint32_t x);
 uint32_t mbin_exp_32(uint32_t r, uint32_t x);
 uint32_t mbin_power_odd_32(uint32_t rem, uint32_t base, uint32_t exp);
+uint64_t mbin_log_non_linear_64(uint64_t a);
+uint64_t mbin_exp_non_linear_64(uint64_t a, uint64_t d);
 
 uint32_t mbin_parse32_abc(const char *ptr, const char *end);
 void	mbin_parse32_add(const char *ptr, uint32_t *ptable, uint32_t mask);
