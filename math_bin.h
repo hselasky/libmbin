@@ -403,4 +403,6 @@ uint32_t *mbin_foreach_tab_32(uint32_t *pcomp, uint32_t *ptr);
 void	mbin_free_tab_32(uint32_t *pcomp);
 uint32_t mbin_count_tab_32(uint32_t *pcomp);
 
+uint32_t mbin_coeff_32(int32_t n, int32_t x);
+
 #endif					/* _MATH_BIN_H_ */
