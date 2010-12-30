@@ -138,6 +138,7 @@ uint32_t mbin_base_T_add_32(uint32_t tm, uint32_t tp, uint32_t a, uint32_t b);
 uint32_t mbin_base_T_sub_32(uint32_t tm, uint32_t tp, uint32_t a, uint32_t b);
 uint32_t mbin_base_T_div_odd_32(uint32_t tm, uint32_t tp, uint32_t rem, uint32_t div);
 
+uint64_t mbin_bitrev64(uint64_t a);
 uint32_t mbin_bitrev32(uint32_t a);
 uint16_t mbin_bitrev16(uint16_t a);
 uint8_t	mbin_bitrev8(uint8_t a);

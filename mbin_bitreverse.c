@@ -29,6 +29,18 @@
 
 /* Functions for CPU optimised bitreverse */
 
+uint64_t
+mbin_bitrev64(uint64_t a)
+{
+	a = ((a & 0x5555555555555555ULL) << 1) | ((a & 0xAAAAAAAAAAAAAAAAULL) >> 1);
+	a = ((a & 0x3333333333333333ULL) << 2) | ((a & 0xCCCCCCCCCCCCCCCCULL) >> 2);
+	a = ((a & 0x0F0F0F0F0F0F0F0FULL) << 4) | ((a & 0xF0F0F0F0F0F0F0F0ULL) >> 4);
+	a = ((a & 0x00FF00FF00FF00FFULL) << 8) | ((a & 0xFF00FF00FF00FF00ULL) >> 8);
+	a = ((a & 0x0000FFFF0000FFFFULL) << 16) | ((a & 0xFFFF0000FFFF0000ULL) >> 16);
+	a = ((a & 0x00000000FFFFFFFFULL) << 32) | ((a & 0xFFFFFFFF00000000ULL) >> 32);
+	return (a);
+}
+
 uint32_t
 mbin_bitrev32(uint32_t a)
 {
