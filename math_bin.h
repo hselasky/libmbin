@@ -229,6 +229,9 @@ void	mbin_fp_print_mat(mbin_fp_t *table, uint32_t size, uint8_t print_invert);
 uint32_t mbin_power_32(uint32_t x, uint32_t y);
 uint64_t mbin_power_64(uint64_t x, uint64_t y);
 uint32_t mbin_power_mod_32(uint32_t x, uint32_t y, uint32_t mod);
+uint32_t mbin_power3_32(uint32_t x);
+uint32_t mbin_power3_32_alt1(uint32_t x);
+uint32_t mbin_power3_32_alt2(uint32_t x);
 
 void	mbin_log_table_gen_32(uint32_t *pt);
 uint32_t mbin_log_32(uint32_t r, uint32_t x);

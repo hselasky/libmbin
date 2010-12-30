@@ -301,3 +301,27 @@ mbin_div_odd64_alt1(uint64_t r, uint64_t div)
 {
 	return (mbin_exp_non_linear_64(r, mbin_log_non_linear_64(div)));
 }
+
+uint32_t
+mbin_power3_32(uint32_t x)
+{
+	return (mbin_power_32(3, x));
+}
+
+uint32_t
+mbin_power3_32_alt1(uint32_t x)
+{
+	return (mbin_power_odd_32(1, 3, x));
+}
+
+uint32_t
+mbin_power3_32_alt2(uint32_t x)
+{
+	uint32_t y;
+	uint32_t z;
+
+	for (y = z = 0; z != 32; z++) {
+		y += mbin_sos_32(x - z + 1, z) << z;
+	}
+	return (y);
+}
