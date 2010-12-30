@@ -320,8 +320,24 @@ mbin_power3_32_alt2(uint32_t x)
 	uint32_t y;
 	uint32_t z;
 
-	for (y = z = 0; z != 32; z++) {
+	/* compute power of 3 */
+
+	for (y = z = 0; z != 32; z++)
 		y += mbin_sos_32(x - z + 1, z) << z;
-	}
+
+	return (y);
+}
+
+uint32_t
+mbin_power3_32_alt3(uint32_t x)
+{
+	uint32_t y;
+	uint32_t z;
+
+	/* compute power of 3 */
+
+	for (y = z = 0; z != 32; z++)
+		y += mbin_coeff_32(x, z) << z;
+
 	return (y);
 }
