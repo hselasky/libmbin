@@ -341,3 +341,21 @@ mbin_power3_32_alt3(uint32_t x)
 
 	return (y);
 }
+
+uint32_t
+mbin_power3_32_alt4(uint32_t x)
+{
+	uint32_t s;
+	uint32_t r = 1;
+	uint32_t f = 1;
+
+	x += x & -2;
+
+	for (s = 0; s != 32; s++) {
+		if (s >= 3)
+			f = f + ((f * f) << (s - 1));
+		if (x & (1U << s))
+			r = r + ((r * f) << (s + 1));
+	}
+	return (r);
+}

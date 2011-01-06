@@ -233,6 +233,7 @@ uint32_t mbin_power3_32(uint32_t x);
 uint32_t mbin_power3_32_alt1(uint32_t x);
 uint32_t mbin_power3_32_alt2(uint32_t x);
 uint32_t mbin_power3_32_alt3(uint32_t x);
+uint32_t mbin_power3_32_alt4(uint32_t x);
 
 void	mbin_log_table_gen_32(uint32_t *pt);
 uint32_t mbin_log_32(uint32_t r, uint32_t x);
