@@ -257,6 +257,24 @@ mbin_div_odd32_alt6(uint32_t rem, uint32_t div)
 	return (rem);
 }
 
+uint32_t
+mbin_div_odd32_alt7(uint32_t rem, uint32_t div)
+{
+	uint32_t f;
+	uint32_t m;
+	uint32_t y;
+
+	for (y = 0; y != 5; y++) {
+		m = ((1 << (1 << y)) - 1) << (1 << y);
+
+		f = (-(div & m)) & m;
+
+		rem *= (f + 1);
+		div *= (f + 1);
+	}
+	return (rem);
+}
+
 uint16_t
 mbin_div_odd16(uint16_t r, uint16_t div)
 {
