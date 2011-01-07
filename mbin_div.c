@@ -262,15 +262,18 @@ mbin_div_odd32_alt7(uint32_t rem, uint32_t div)
 {
 	uint32_t f;
 	uint32_t m;
-	uint32_t y;
+	uint8_t y;
+
+	if (!(div & 1))
+		return (0);
 
 	for (y = 0; y != 5; y++) {
 		m = ((1 << (1 << y)) - 1) << (1 << y);
 
-		f = (-(div & m)) & m;
+		f = ((-(div & m)) & m) | 1;
 
-		rem *= (f + 1);
-		div *= (f + 1);
+		rem *= f;
+		div *= f;
 	}
 	return (rem);
 }
