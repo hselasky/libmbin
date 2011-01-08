@@ -249,6 +249,48 @@ mbin_log_non_linear_64(uint64_t a)
 	return (r);
 }
 
+uint32_t
+mbin_exp_non_linear_32(uint32_t f, uint32_t x)
+{
+	uint32_t a;
+	uint32_t b;
+	uint32_t c;
+	uint32_t d;
+	uint32_t e;
+	uint32_t m;
+
+	x /= 2;
+
+	/*
+	 * Resource usage:
+	 * 32-bit multiplications: 8
+	 * Single bit additions: 16 * 8
+	 */
+
+	for (m = 0; m != 32; m += 4) {
+		e = 0;
+
+		/* "e" value can be pre-computed based on "m" and "a" */
+
+		for (a = 0; a != 16; a++) {
+			b = a << m;
+
+			if ((b & x) == b) {
+				c = 0;
+				for (d = m; d != (m + 4); d++) {
+					if (b & (1 << d))
+						c += d + 1;
+				}
+
+				if (c < 32)
+					e += 1U << c;
+			}
+		}
+		f *= e;
+	}
+	return (f);
+}
+
 uint64_t
 mbin_exp_non_linear_64(uint64_t a, uint64_t d)
 {

@@ -240,6 +240,7 @@ void	mbin_log_table_gen_32(uint32_t *pt);
 uint32_t mbin_log_32(uint32_t r, uint32_t x);
 uint32_t mbin_exp_32(uint32_t r, uint32_t x);
 uint32_t mbin_power_odd_32(uint32_t rem, uint32_t base, uint32_t exp);
+uint32_t mbin_exp_non_linear_32(uint32_t f, uint32_t x);
 uint64_t mbin_log_non_linear_64(uint64_t a);
 uint64_t mbin_exp_non_linear_64(uint64_t a, uint64_t d);
 
