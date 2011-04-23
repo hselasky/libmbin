@@ -150,12 +150,8 @@ mbin_log_32(uint32_t r, uint32_t x)
 		}
 	}
 
-	for (; n != 32; n++) {
-		if (x & (1 << n)) {
-			x = x + (x << n);
-			r += (1 << n);
-		}
-	}
+	r -= (x & 0xFFFF0000);
+
 	return (r);
 }
 
@@ -171,12 +167,8 @@ mbin_exp_32(uint32_t r, uint32_t x)
 		}
 	}
 
-	for (; n != 32; n++) {
-		if (x & (1 << n)) {
-			r = r + (r << n);
-			x += (1 << n);
-		}
-	}
+	r *= 1 - (x & 0xFFFF0000);
+
 	return (r);
 }
 
