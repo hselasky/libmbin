@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008-2011 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -408,5 +408,13 @@ void	mbin_free_tab_32(uint32_t *pcomp);
 uint32_t mbin_count_tab_32(uint32_t *pcomp);
 
 uint32_t mbin_coeff_32(int32_t n, int32_t x);
+
+/* Fast version of transforms */
+
+void	mbin_multiply_xform_32(const uint32_t *, const uint32_t *, uint32_t *, uint8_t);
+void	mbin_inverse_add_xform_32(uint32_t *, uint8_t);
+void	mbin_forward_add_xform_32(uint32_t *, uint8_t);
+void	mbin_xor_xform_32(uint32_t *, uint8_t);
+void	mbin_sumbits_and_xform_32(uint32_t *, uint8_t);
 
 #endif					/* _MATH_BIN_H_ */

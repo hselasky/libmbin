@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008-2010 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008-2011 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -422,6 +422,121 @@ mbin_transform_find_gte_32x1(uint32_t *ptr, uint32_t *gte,
 					ptr[y] ^= slice;
 			}
 			return;
+		}
+	}
+}
+
+void
+mbin_multiply_xform_32(const uint32_t *a, const uint32_t *b, uint32_t *c, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+
+	for (x = 0; x != max; x++)
+		c[x] = a[x] * b[x];
+}
+
+/*
+ * Inverse additive transform.
+ *
+ * f(x,y) = ((x & y) == y) ? 1 : 0;
+ */
+void
+mbin_inverse_add_xform_32(uint32_t *ptr, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	int32_t a;
+	int32_t b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z + (x / 2)] = b - a;
+			}
+		}
+	}
+}
+
+/*
+ * Forward additive transform.
+ *
+ * f(x,y) = ((x & y) == y) ? 1 : 0;
+ */
+void
+mbin_forward_add_xform_32(uint32_t *ptr, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	int32_t a;
+	int32_t b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z + (x / 2)] = a + b;
+			}
+		}
+	}
+}
+
+/*
+ * Exclusive-or transform.
+ *
+ * f(x,y) = ((x & y) == y) ? 1 : 0;
+ */
+void
+mbin_xor_xform_32(uint32_t *ptr, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	int32_t a;
+	int32_t b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z + (x / 2)] = a ^ b;
+			}
+		}
+	}
+}
+
+/*
+ * Sumbits-and transform
+ *
+ * f(x,y) = (mbin_sumbits32(x & y) & 1) ? -1 : 1;
+ */
+void
+mbin_sumbits_and_xform_32(uint32_t *ptr, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	int32_t a;
+	int32_t b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z] = a + b;
+				ptr[y + z + (x / 2)] = a - b;
+			}
 		}
 	}
 }
