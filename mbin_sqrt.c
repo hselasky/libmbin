@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2001-2009 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2001-2011 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -294,4 +294,29 @@ mbin_sqrt_64(uint64_t a)
 		b >>= 1;
 	}
 	return (b);
+}
+
+uint32_t
+mbin_sqrt_odd_32(uint32_t x)
+{
+	uint32_t m;
+	uint8_t s;
+
+	/* All input numbers are assumed to be (x & 7) = 1. */
+
+	x = -(x & ~7);
+
+	for (s = 3; s != 32; s++) {
+
+		m = (1 << s);
+
+		if (x & m)
+			x -= (~x & (m - 8)) << (s - 2);
+		else
+			x -= (x & (m - 8)) << (s - 2);
+	}
+
+	x = (((int32_t)x) >> 1) | 1;
+
+	return (x);
 }

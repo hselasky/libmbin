@@ -250,6 +250,7 @@ void	mbin_parse32_xor(const char *ptr, uint32_t *ptable, uint32_t mask);
 void	mbin_parse32_factor(const char *ptr, uint32_t *ptable, uint32_t mask, uint32_t var, uint8_t level, uint8_t is_xor);
 
 uint32_t mbin_sqrt_64(uint64_t a);
+uint32_t mbin_sqrt_odd_32(uint32_t x);
 
 /* Base-3 */
 
