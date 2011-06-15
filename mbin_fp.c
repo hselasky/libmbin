@@ -303,6 +303,7 @@ mbin_fp_inv_mat(mbin_fp_t *table, uint32_t size)
 	uint32_t y;
 	uint32_t z;
 	uint32_t u;
+	uint8_t retval = 0;
 
 	/* invert matrix */
 
@@ -316,7 +317,8 @@ mbin_fp_inv_mat(mbin_fp_t *table, uint32_t size)
 			}
 		}
 
-		return (1);		/* failure */
+		retval = 1;		/* failure */
+		continue;
 
 found_non_zero:
 
@@ -363,9 +365,9 @@ found_non_zero:
 			}
 		}
 		if (x == size)
-			return (3);
+			retval = 3;	/* failure */
 	}
-	return (0);			/* success */
+	return (retval);		/* success */
 }
 
 void
