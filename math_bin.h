@@ -418,4 +418,8 @@ void	mbin_forward_add_xform_32(uint32_t *, uint8_t);
 void	mbin_xor_xform_32(uint32_t *, uint8_t);
 void	mbin_sumbits_and_xform_32(uint32_t *, uint8_t);
 
+/* Noise functions */
+
+int32_t	mbin_noise_24(void);
+
 #endif					/* _MATH_BIN_H_ */
