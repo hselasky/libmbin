@@ -416,6 +416,7 @@ void	mbin_multiply_xform_32(const uint32_t *, const uint32_t *, uint32_t *, uint
 void	mbin_inverse_add_xform_32(uint32_t *, uint8_t);
 void	mbin_forward_add_xform_32(uint32_t *, uint8_t);
 void	mbin_xor_xform_32(uint32_t *, uint8_t);
+void	mbin_sumbits_and_xform_64(uint64_t *, uint8_t);
 void	mbin_sumbits_and_xform_32(uint32_t *, uint8_t);
 
 /* Noise functions */

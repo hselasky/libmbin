@@ -540,3 +540,30 @@ mbin_sumbits_and_xform_32(uint32_t *ptr, uint8_t log2_max)
 		}
 	}
 }
+
+/*
+ * Sumbits-and transform
+ *
+ * f(x,y) = (mbin_sumbits64(x & y) & 1) ? -1 : 1;
+ */
+void
+mbin_sumbits_and_xform_64(uint64_t *ptr, uint8_t log2_max)
+{
+	const uint64_t max = 1ULL << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	int64_t a;
+	int64_t b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z] = a + b;
+				ptr[y + z + (x / 2)] = a - b;
+			}
+		}
+	}
+}
