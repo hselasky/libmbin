@@ -320,3 +320,26 @@ mbin_sqrt_odd_32(uint32_t x)
 
 	return (x);
 }
+
+uint32_t
+mbin_sqrt_inv_odd32(uint32_t rem, uint32_t div)
+{
+	uint8_t n;
+
+	div |= 7;
+	div ^= 6;
+
+	for (n = 1; n != 16; n++) {
+		if (div & (1 << (n + 1))) {
+			div = div + (div << (2 * n)) + (div << (n + 1));
+			rem = rem + (rem << n);
+		}
+	}
+	for (; n != 31; n++) {
+		if (div & (1 << (n + 1))) {
+			div = div + (div << (n + 1));
+			rem = rem + (rem << n);
+		}
+	}
+	return (rem & 0x7FFFFFFF);
+}
