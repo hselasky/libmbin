@@ -343,3 +343,47 @@ mbin_sqrt_inv_odd32(uint32_t rem, uint32_t div)
 	}
 	return (rem & 0x7FFFFFFF);
 }
+
+/* Prescaling factor is (1ULL << BITS) */
+uint64_t
+mbin_sqrt_inv_64(uint64_t rem, uint64_t div)
+{
+	enum {
+		BITS = 62,
+	};
+
+	uint64_t t;
+
+	uint8_t x;
+	uint8_t y;
+
+	/* division by zero check */
+	if (div < 4)
+		return (1ULL << BITS);
+
+	/* scale */
+	div = div >> 2;
+
+	/* scale */
+	for (x = 0; !(div & (3ULL << (BITS - 2))); div <<= 2, x++);
+
+	/* set result */
+	rem <<= ((BITS - 2) / 2);
+
+	/* compute */
+	for (y = 0; y != (BITS / 2); y++) {
+		t = div;
+
+		div = div + (div >> y);
+		div = div + (div >> y);
+
+		if (div < (1ULL << BITS)) {
+			rem = rem + (rem >> y);
+		} else {
+			div = t;
+		}
+	}
+
+	/* return square root inverse */
+	return (rem << x);
+}

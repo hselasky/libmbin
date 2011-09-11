@@ -252,6 +252,7 @@ void	mbin_parse32_factor(const char *ptr, uint32_t *ptable, uint32_t mask, uint3
 uint32_t mbin_sqrt_64(uint64_t a);
 uint32_t mbin_sqrt_odd_32(uint32_t x);
 uint32_t mbin_sqrt_inv_odd32(uint32_t rem, uint32_t div);
+uint64_t mbin_sqrt_inv_64(uint64_t rem, uint64_t div);
 
 /* Base-3 */
 
