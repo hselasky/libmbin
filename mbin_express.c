@@ -927,15 +927,19 @@ mbin_expr_optimise(struct mbin_expr *pexpr, uint32_t mask)
 		paa = NULL;
 		while ((paa = mbin_expr_foreach_and(pxa, paa))) {
 			if (paa->shift > 0) {
-				if (paa->shift > 31)
+				if (paa->shift > 31) {
 					pxa->value = 0;
-				else
-					pxa->value &= (2 << (31 - paa->shift)) - 1;
+				} else {
+					pxa->value <<= paa->shift;
+					pxa->value >>= paa->shift;
+				}
 			} else if (paa->shift < 0) {
-				if (paa->shift < -31)
+				if (paa->shift < -31) {
 					pxa->value = 0;
-				else
-					pxa->value &= -(1 << paa->shift);
+				} else {
+					pxa->value >>= -paa->shift;
+					pxa->value <<= -paa->shift;
+				}
 			}
 			alen++;
 		}
