@@ -930,15 +930,15 @@ mbin_expr_optimise(struct mbin_expr *pexpr, uint32_t mask)
 				if (paa->shift > 31) {
 					pxa->value = 0;
 				} else {
-					pxa->value <<= paa->shift;
 					pxa->value >>= paa->shift;
+					pxa->value <<= paa->shift;
 				}
 			} else if (paa->shift < 0) {
 				if (paa->shift < -31) {
 					pxa->value = 0;
 				} else {
-					pxa->value >>= -paa->shift;
 					pxa->value <<= -paa->shift;
+					pxa->value >>= -paa->shift;
 				}
 			}
 			alen++;
