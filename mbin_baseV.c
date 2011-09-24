@@ -131,3 +131,73 @@ mbin_baseV_decipher_state32(struct mbin_baseV_state32 *ps)
 	}
 	return (t);
 }
+
+uint32_t
+mbin_baseV_2toVA_32(uint32_t value)
+{
+	uint32_t t;
+	uint8_t n;
+
+	value -= 0x66666666;
+
+	t = 0;
+	for (n = 0; n != 32; n++) {
+		if (value & (1 << n)) {
+			t |= (1 << n);
+			value += mbin_power_32(-3, -1 - n) << n;
+		}
+	}
+	return (t);
+}
+
+uint32_t
+mbin_baseV_VAto2_32(uint32_t value)
+{
+	uint32_t t;
+	uint8_t n;
+
+	t = 0;
+	for (n = 0; n != 32; n++) {
+		if (value & (1 << n))
+			t -= mbin_power_32(-3, -1 - n) << n;
+	}
+
+	t += 0x66666666;
+
+	return (t);
+}
+
+uint32_t
+mbin_baseV_2toVC_32(uint32_t value)
+{
+	uint32_t t;
+	uint8_t n;
+
+	value -= 0x66666666;
+
+	t = 0;
+	for (n = 0; n != 32; n++) {
+		if (value & (1 << n)) {
+			t |= (1 << n);
+			value -= mbin_power_32(-3, -n) << n;
+		}
+	}
+	return (t);
+}
+
+uint32_t
+mbin_baseV_VCto2_32(uint32_t value)
+{
+	uint32_t t;
+	uint8_t n;
+
+	t = 0;
+	for (n = 0; n != 32; n++) {
+		if (value & (1 << n))
+			t -= mbin_power_32(-3, -n) << n;
+	}
+
+	t += 0x66666666;
+
+	return (t);
+}

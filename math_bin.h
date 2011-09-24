@@ -199,11 +199,15 @@ struct mbin_baseV_state32 {
 	uint32_t c;
 };
 
-uint32_t mbin_base_2toV_32(uint32_t b2);
-uint32_t mbin_base_Vto2_32(uint32_t bv);
-void	mbin_baseV_get_state32(struct mbin_baseV_state32 *ps, uint32_t index);
-void	mbin_baseV_inc_state32(struct mbin_baseV_state32 *ps);
-uint32_t mbin_baseV_decipher_state32(struct mbin_baseV_state32 *ps);
+uint32_t mbin_base_2toV_32(uint32_t);
+uint32_t mbin_base_Vto2_32(uint32_t);
+void	mbin_baseV_get_state32(struct mbin_baseV_state32 *, uint32_t);
+void	mbin_baseV_inc_state32(struct mbin_baseV_state32 *);
+uint32_t mbin_baseV_decipher_state32(struct mbin_baseV_state32 *);
+uint32_t mbin_baseV_2toVA_32(uint32_t value);
+uint32_t mbin_baseV_2toVC_32(uint32_t value);
+uint32_t mbin_baseV_VCto2_32(uint32_t value);
+uint32_t mbin_baseV_VAto2_32(uint32_t value);
 
 struct mbin_fp {
 	uint64_t remainder;		/* odd number, if not zero */
