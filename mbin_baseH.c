@@ -38,7 +38,7 @@
 
 #include "math_bin.h"
 
-static uint32_t
+uint32_t
 mbin_baseH_gen_div(uint8_t shift)
 {
 	;				/* indent fix */
@@ -243,5 +243,89 @@ mbin_baseH_decipher_state32(struct mbin_baseH_state32 *ps)
 		t |= psc.a & (1 << n);
 		mbin_baseH_inc_state32(&psc);
 	}
+	return (t);
+}
+
+static const uint32_t
+	mbin_baseH_VX_data[32][2] =
+{
+	[2] = {0x2acdfb69, 0xf0423765,},
+	[3] = {0xe60d1bd9, 0x36dc08c9,},
+	[4] = {0x1429dc41, 0xa91d6411,},
+	[5] = {0x03b434a1, 0x95e19421,},
+	[6] = {0x0ec42181, 0x3acc6041,},
+	[7] = {0x5656c381, 0x38c1c081,},
+	[8] = {0xe8780801, 0x5c080101,},
+	[9] = {0x6a641201, 0xa8240201,},
+	[10] = {0x0be02801, 0x40a00401,},
+	[11] = {0x39c05801, 0x02c00801,},
+	[12] = {0x1400c001, 0x0c001001,},
+	[13] = {0x1401a001, 0x34002001,},
+	[14] = {0xa0038001, 0xe0004001,},
+	[15] = {0xc0078001, 0xc0008001,},
+	[16] = {0x00100001, 0x00010001,},
+	[17] = {0x00220001, 0x00020001,},
+	[18] = {0x00480001, 0x00040001,},
+	[19] = {0x00980001, 0x00080001,},
+	[20] = {0x01400001, 0x00100001,},
+	[21] = {0x02a00001, 0x00200001,},
+	[22] = {0x05800001, 0x00400001,},
+	[23] = {0x0b800001, 0x00800001,},
+	[24] = {0x18000001, 0x01000001,},
+	[25] = {0x32000001, 0x02000001,},
+	[26] = {0x68000001, 0x04000001,},
+	[27] = {0xd8000001, 0x08000001,},
+	[28] = {0xc0000001, 0x10000001,},
+	[29] = {0xa0000001, 0x20000001,},
+	[30] = {0x80000001, 0x40000001,},
+	[31] = {0x80000001, 0x80000001,},
+};
+
+uint32_t
+mbin_baseH_2toVX_32(uint32_t value, uint8_t shift)
+{
+	uint32_t t;
+	uint32_t k;
+	uint8_t n;
+
+	if (shift < 2 || shift > 31)
+		return (0);
+
+	value = -value;
+
+	k = mbin_baseH_VX_data[shift][0];
+
+	t = 0;
+	for (n = 0; n != 32; n++) {
+		if (value & (1 << n)) {
+			t |= (1 << n);
+			value += k << n;
+		}
+		k *= mbin_baseH_VX_data[shift][1];
+	}
+	return (t);
+}
+
+uint32_t
+mbin_baseH_VXto2_32(uint32_t value, uint8_t shift)
+{
+	uint32_t t;
+	uint32_t k;
+	uint8_t n;
+
+	if (shift < 2 || shift > 31)
+		return (0);
+
+	k = mbin_baseH_VX_data[shift][0];
+
+	t = 0;
+	for (n = 0; n != 32; n++) {
+		if (value & (1 << n))
+			t -= k << n;
+		k *= mbin_baseH_VX_data[shift][1];
+	}
+
+	t = -t;
+
 	return (t);
 }

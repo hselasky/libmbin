@@ -177,11 +177,14 @@ struct mbin_baseH_state32 {
 	uint8_t	s;
 };
 
-uint32_t mbin_base_2toH_32(uint32_t b2, uint8_t shift);
-uint32_t mbin_base_Hto2_32(uint32_t bh, uint8_t shift);
-void	mbin_baseH_get_state32(struct mbin_baseH_state32 *ps, uint32_t index, uint8_t shift);
-void	mbin_baseH_inc_state32(struct mbin_baseH_state32 *ps);
-uint32_t mbin_baseH_decipher_state32(struct mbin_baseH_state32 *ps);
+uint32_t mbin_baseH_gen_div(uint8_t);
+uint32_t mbin_base_2toH_32(uint32_t, uint8_t);
+uint32_t mbin_base_Hto2_32(uint32_t, uint8_t);
+void	mbin_baseH_get_state32(struct mbin_baseH_state32 *, uint32_t, uint8_t);
+void	mbin_baseH_inc_state32(struct mbin_baseH_state32 *);
+uint32_t mbin_baseH_decipher_state32(struct mbin_baseH_state32 *);
+uint32_t mbin_baseH_2toVX_32(uint32_t, uint8_t);
+uint32_t mbin_baseH_VXto2_32(uint32_t, uint8_t);
 
 struct mbin_baseU_state32 {
 	uint32_t a;
@@ -204,10 +207,8 @@ uint32_t mbin_base_Vto2_32(uint32_t);
 void	mbin_baseV_get_state32(struct mbin_baseV_state32 *, uint32_t);
 void	mbin_baseV_inc_state32(struct mbin_baseV_state32 *);
 uint32_t mbin_baseV_decipher_state32(struct mbin_baseV_state32 *);
-uint32_t mbin_baseV_2toVA_32(uint32_t value);
-uint32_t mbin_baseV_2toVC_32(uint32_t value);
-uint32_t mbin_baseV_VCto2_32(uint32_t value);
-uint32_t mbin_baseV_VAto2_32(uint32_t value);
+uint32_t mbin_baseV_2toVX_32(uint32_t value);
+uint32_t mbin_baseV_VXto2_32(uint32_t value);
 
 struct mbin_fp {
 	uint64_t remainder;		/* odd number, if not zero */
