@@ -185,6 +185,7 @@ void	mbin_baseH_inc_state32(struct mbin_baseH_state32 *);
 uint32_t mbin_baseH_decipher_state32(struct mbin_baseH_state32 *);
 uint32_t mbin_baseH_2toVX_32(uint32_t, uint8_t);
 uint32_t mbin_baseH_VXto2_32(uint32_t, uint8_t);
+uint32_t mbin_baseH_to_linear(struct mbin_baseH_state32 *);
 
 struct mbin_baseU_state32 {
 	uint32_t a;
