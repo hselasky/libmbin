@@ -309,3 +309,67 @@ mbin_baseH_to_linear(struct mbin_baseH_state32 *st)
 	return (mbin_baseH_VXto2_32(st->a, st->s) +
 	    (2 * mbin_baseH_VXto2_32(st->c / 2, st->s)));
 }
+
+/*-----------------------------------------------------------------------*
+ * Base of Minus Two:
+ * ==================
+ *
+ *
+ * Some substitution rules:
+ * ========================
+ *
+ * mbin_baseHM2_fwd32(y, x) ^ mbin_baseHM2_fwd32(y, z) =
+ *    mbin_baseHM2_fwd32(y, x ^ z);
+ *
+ * mbin_baseHM2_fwd32(2 * x, ~x) = ~x;
+ *
+ * mbin_baseHM2_fwd32((2 * a) ^ (4 * a), ((2 * a) & ~(4 * a)) ^ a) = a;
+ *
+ *-----------------------------------------------------------------------*/
+
+uint32_t
+mbin_baseHM2_rev32(uint32_t mask, uint32_t xor)
+{
+	return (xor ^ (mask & (2 * xor)));
+}
+
+/*
+ * If the mask is the binary complement of zero
+ * then the following function performs an ungrey
+ * of the given xor value.
+ */
+uint32_t
+mbin_baseHM2_fwd32(uint32_t mask, uint32_t xor)
+{
+	uint32_t m;
+
+	for (m = 1; m; m *= 2) {
+		if (xor & (mask / 2) & m)
+			xor ^= 2 * m;
+	}
+	return (xor);
+}
+
+/* result = a + b */
+
+uint32_t
+mbin_baseHM2_add32(uint32_t a, uint32_t b)
+{
+	return (~b ^ mbin_baseHM2_fwd32((2 * a) ^ (2 * b), (2 * a) ^ ~a));
+}
+
+/* result = a - b - (1 / 3) */
+
+uint32_t
+mbin_baseHM2_sub32(uint32_t a, uint32_t b)
+{
+	return (b ^ mbin_baseHM2_fwd32((2 * a) ^ (2 * ~b), (2 * a) ^ ~a));
+}
+
+/* result = (3 * a) - (1 / 3) */
+
+uint32_t
+mbin_baseHM2_mul3_32(uint32_t a, uint32_t b)
+{
+	return (a ^ mbin_baseHM2_fwd32(2 * (~a ^ (2*a)), -1));
+}
