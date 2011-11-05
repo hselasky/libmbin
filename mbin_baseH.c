@@ -371,5 +371,5 @@ mbin_baseHM2_sub32(uint32_t a, uint32_t b)
 uint32_t
 mbin_baseHM2_mul3_32(uint32_t a, uint32_t b)
 {
-	return (a ^ mbin_baseHM2_fwd32(2 * (~a ^ (2*a)), -1));
+	return (a ^ mbin_baseHM2_fwd32(2 * (~a ^ (2 * a)), -1));
 }

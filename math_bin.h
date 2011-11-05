@@ -342,6 +342,21 @@ uint32_t mbin_div7_32(uint32_t r, uint32_t d);
 uint32_t mbin_rebase_722_32(uint32_t x);
 uint32_t mbin_rebase_227_32(uint32_t x);
 
+/* Base-2/3 */
+
+struct mbin_base23_state32 {
+	uint32_t a[3];
+};
+
+uint32_t mbin_base_2to23_32(uint32_t);
+uint32_t mbin_base_23to2_32(uint32_t);
+
+void	mbin_base23_add_32(struct mbin_base23_state32 *, uint32_t);
+void	mbin_base23_mul_32(uint32_t, uint32_t, struct mbin_base23_state32 *);
+
+uint32_t mbin_base23_to_linear(struct mbin_base23_state32 *);
+void	mbin_base23_from_linear(struct mbin_base23_state32 *, uint32_t);
+
 /* Expression prototypes */
 
 struct mbin_expr_and;

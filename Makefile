@@ -10,6 +10,7 @@ NO_PROFILE=
 
 SRCS=
 SRCS+=	mbin_base_m3.c
+SRCS+=	mbin_base23.c
 SRCS+=	mbin_base3.c
 SRCS+=	mbin_base4.c
 SRCS+=	mbin_base5.c
