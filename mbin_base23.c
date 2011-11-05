@@ -99,6 +99,35 @@ mbin_base23_add_32(struct mbin_base23_state32 *st, uint32_t b23)
 	st->a[2] = g / 2;
 }
 
+static void
+mbin_base23_reduce_sub_32(struct mbin_base23_state32 *st)
+{
+	uint32_t g;
+	uint32_t h;
+
+	/* reset carry out */
+	g = st->a[0] & st->a[1];
+
+	/* add carry in */
+	g |= st->a[1] & st->a[2];
+	st->a[1] ^= st->a[2];
+
+	/* add "g" */
+	h = (st->a[0] & g);
+	st->a[0] ^= g;
+	st->a[1] ^= h;
+
+	/* carry down */
+	st->a[2] = g / 2;
+}
+
+void
+mbin_base23_reduce_32(struct mbin_base23_state32 *st)
+{
+	while ((st->a[0] & st->a[1]) || st->a[2])
+		mbin_base23_reduce_sub_32(st);
+}
+
 void
 mbin_base23_clean_carry_32(struct mbin_base23_state32 *st)
 {

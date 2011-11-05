@@ -351,6 +351,7 @@ struct mbin_base23_state32 {
 uint32_t mbin_base_2to23_32(uint32_t);
 uint32_t mbin_base_23to2_32(uint32_t);
 
+void	mbin_base23_reduce_32(struct mbin_base23_state32 *);
 void	mbin_base23_clean_carry_32(struct mbin_base23_state32 *);
 void	mbin_base23_add_32(struct mbin_base23_state32 *, uint32_t);
 void	mbin_base23_mul_32(uint32_t, uint32_t, struct mbin_base23_state32 *);
