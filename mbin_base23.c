@@ -100,6 +100,13 @@ mbin_base23_add_32(struct mbin_base23_state32 *st, uint32_t b23)
 }
 
 void
+mbin_base23_clean_carry_32(struct mbin_base23_state32 *st)
+{
+	while (st->a[2])
+		mbin_base23_add_32(st, 0);
+}
+
+void
 mbin_base23_mul_32(uint32_t a, uint32_t b, struct mbin_base23_state32 *st)
 {
 	uint8_t x;
