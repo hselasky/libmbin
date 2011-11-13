@@ -436,6 +436,26 @@ mbin_multiply_xform_32(const uint32_t *a, const uint32_t *b, uint32_t *c, uint8_
 		c[x] = a[x] * b[x];
 }
 
+void
+mbin_multiply_xform_64(const uint64_t *a, const uint64_t *b, uint64_t *c, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+
+	for (x = 0; x != max; x++)
+		c[x] = a[x] * b[x];
+}
+
+void
+mbin_multiply_xform_double(const double *a, const double *b, double *c, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+
+	for (x = 0; x != max; x++)
+		c[x] = a[x] * b[x];
+}
+
 /*
  * Inverse additive transform.
  *
