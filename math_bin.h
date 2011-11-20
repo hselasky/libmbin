@@ -448,6 +448,8 @@ void	mbin_multiply_xform_double(const double *, const double *, double *, uint8_
 
 void	mbin_inverse_add_xform_32(uint32_t *, uint8_t);
 void	mbin_forward_add_xform_32(uint32_t *, uint8_t);
+void	mbin_inverse_add_xform_double(double *, uint8_t);
+void	mbin_forward_add_xform_double(double *, uint8_t);
 void	mbin_xor_xform_32(uint32_t *, uint8_t);
 void	mbin_sumbits_and_xform_64(uint64_t *, uint8_t);
 void	mbin_sumbits_and_xform_32(uint32_t *, uint8_t);
