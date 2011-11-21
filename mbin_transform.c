@@ -551,6 +551,100 @@ mbin_forward_add_xform_double(double *ptr, uint8_t log2_max)
 }
 
 /*
+ * Inverse reversed additive transform.
+ *
+ * f(x,y) = ((x | y) == y) ? 1 : 0;
+ */
+void
+mbin_inverse_rev_add_xform_32(uint32_t *ptr, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	int32_t a;
+	int32_t b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z] = b - a;
+			}
+		}
+	}
+}
+
+/*
+ * Forward reversed additive transform.
+ *
+ * f(x,y) = ((x | y) == y) ? 1 : 0;
+ */
+void
+mbin_forward_rev_add_xform_32(uint32_t *ptr, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	int32_t a;
+	int32_t b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z] = a + b;
+			}
+		}
+	}
+}
+
+void
+mbin_inverse_rev_add_xform_double(double *ptr, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	double a;
+	double b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z] = b - a;
+			}
+		}
+	}
+}
+
+void
+mbin_forward_rev_add_xform_double(double *ptr, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	double a;
+	double b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z] = a + b;
+			}
+		}
+	}
+}
+
+/*
  * Exclusive-or transform.
  *
  * f(x,y) = ((x & y) == y) ? 1 : 0;
