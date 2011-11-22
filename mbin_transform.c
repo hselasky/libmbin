@@ -570,7 +570,7 @@ mbin_inverse_rev_add_xform_32(uint32_t *ptr, uint8_t log2_max)
 			for (z = 0; z != (x / 2); z++) {
 				a = ptr[y + z];
 				b = ptr[y + z + (x / 2)];
-				ptr[y + z] = b - a;
+				ptr[y + z] = a - b;
 			}
 		}
 	}
@@ -617,7 +617,7 @@ mbin_inverse_rev_add_xform_double(double *ptr, uint8_t log2_max)
 			for (z = 0; z != (x / 2); z++) {
 				a = ptr[y + z];
 				b = ptr[y + z + (x / 2)];
-				ptr[y + z] = b - a;
+				ptr[y + z] = a - b;
 			}
 		}
 	}
