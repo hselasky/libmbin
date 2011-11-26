@@ -550,6 +550,50 @@ mbin_forward_add_xform_double(double *ptr, uint8_t log2_max)
 	}
 }
 
+void
+mbin_inverse_add_xform_complex_double(struct mbin_complex_double *ptr, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	struct mbin_complex_double a;
+	struct mbin_complex_double b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z + (x / 2)].x = b.x - a.x;
+				ptr[y + z + (x / 2)].y = b.y - a.y;
+			}
+		}
+	}
+}
+
+void
+mbin_forward_add_xform_complex_double(struct mbin_complex_double *ptr, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	struct mbin_complex_double a;
+	struct mbin_complex_double b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z + (x / 2)].x = a.x + b.x;
+				ptr[y + z + (x / 2)].y = a.y + b.y;
+			}
+		}
+	}
+}
+
 /*
  * Inverse reversed additive transform.
  *
@@ -639,6 +683,50 @@ mbin_forward_rev_add_xform_double(double *ptr, uint8_t log2_max)
 				a = ptr[y + z];
 				b = ptr[y + z + (x / 2)];
 				ptr[y + z] = a + b;
+			}
+		}
+	}
+}
+
+void
+mbin_inverse_rev_add_xform_complex_double(struct mbin_complex_double *ptr, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	struct mbin_complex_double a;
+	struct mbin_complex_double b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z].x = a.x - b.x;
+				ptr[y + z].y = a.y - b.y;
+			}
+		}
+	}
+}
+
+void
+mbin_forward_rev_add_xform_complex_double(struct mbin_complex_double *ptr, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	struct mbin_complex_double a;
+	struct mbin_complex_double b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z].x = a.x + b.x;
+				ptr[y + z].y = a.y + b.y;
 			}
 		}
 	}
@@ -746,6 +834,30 @@ mbin_sumbits_and_xform_double(double *ptr, uint8_t log2_max)
 				b = ptr[y + z + (x / 2)];
 				ptr[y + z] = a + b;
 				ptr[y + z + (x / 2)] = a - b;
+			}
+		}
+	}
+}
+
+void
+mbin_sumbits_and_xform_complex_double(struct mbin_complex_double *ptr, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	struct mbin_complex_double a;
+	struct mbin_complex_double b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z].x = a.x + b.x;
+				ptr[y + z].y = a.y + b.y;
+				ptr[y + z + (x / 2)].x = a.x - b.x;
+				ptr[y + z + (x / 2)].y = a.y - b.y;
 			}
 		}
 	}

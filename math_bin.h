@@ -440,6 +440,16 @@ uint32_t mbin_count_tab_32(uint32_t *pcomp);
 
 uint32_t mbin_coeff_32(int32_t n, int32_t x);
 
+struct mbin_complex_32 {
+	int32_t	x;
+	int32_t	y;
+};
+
+struct mbin_complex_double {
+	double	x;
+	double	y;
+};
+
 /* Fast version of transforms */
 
 void	mbin_multiply_xform_32(const uint32_t *, const uint32_t *, uint32_t *, uint8_t);
@@ -450,14 +460,28 @@ void	mbin_inverse_rev_add_xform_32(uint32_t *, uint8_t);
 void	mbin_forward_rev_add_xform_32(uint32_t *, uint8_t);
 void	mbin_inverse_rev_add_xform_double(double *, uint8_t);
 void	mbin_forward_rev_add_xform_double(double *, uint8_t);
+void	mbin_inverse_rev_add_xform_complex_double(struct mbin_complex_double *, uint8_t);
+void	mbin_forward_rev_add_xform_complex_double(struct mbin_complex_double *, uint8_t);
 void	mbin_inverse_add_xform_32(uint32_t *, uint8_t);
 void	mbin_forward_add_xform_32(uint32_t *, uint8_t);
 void	mbin_inverse_add_xform_double(double *, uint8_t);
 void	mbin_forward_add_xform_double(double *, uint8_t);
+void	mbin_inverse_add_xform_complex_double(struct mbin_complex_double *, uint8_t);
+void	mbin_forward_add_xform_complex_double(struct mbin_complex_double *, uint8_t);
 void	mbin_xor_xform_32(uint32_t *, uint8_t);
 void	mbin_sumbits_and_xform_64(uint64_t *, uint8_t);
 void	mbin_sumbits_and_xform_32(uint32_t *, uint8_t);
 void	mbin_sumbits_and_xform_double(double *, uint8_t);
+void	mbin_sumbits_and_xform_complex_double(struct mbin_complex_double *, uint8_t);
+
+/* Fast vector operations */
+
+void	mbin_vector_or_double(double *, double *, double *, uint8_t);
+void	mbin_vector_or_32(uint32_t *, uint32_t *, uint32_t *, uint8_t);
+void	mbin_vector_and_double(double *, double *, double *, uint8_t);
+void	mbin_vector_and_32(uint32_t *, uint32_t *, uint32_t *, uint8_t);
+void	mbin_vector_xor_double(double *, double *, double *, uint8_t);
+void	mbin_vector_xor_32(uint32_t *, uint32_t *, uint32_t *, uint8_t);
 
 /* Noise functions */
 
