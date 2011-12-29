@@ -40,7 +40,7 @@ mbin_sumdigit_32(uint32_t x, uint32_t y, uint32_t mod)
 		yt = y % mod;
 		y /= mod;
 
-		sum += x * y;
+		sum += xt * yt;
 		sum %= mod;
 	}
 	return (sum);
