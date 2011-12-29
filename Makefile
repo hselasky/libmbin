@@ -54,6 +54,7 @@ SRCS+=  mbin_sqrt.c
 SRCS+=  mbin_sos.c
 SRCS+=  mbin_diff.c
 SRCS+=  mbin_vector.c
+SRCS+=  mbin_sumdigit.c
 
 INCS=	math_bin.h
 
@@ -64,4 +65,3 @@ NOGCCERROR=
 MAN=	# no manual pages at the moment
 
 .include <bsd.lib.mk>
-

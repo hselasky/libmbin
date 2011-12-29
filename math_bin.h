@@ -487,4 +487,8 @@ void	mbin_vector_xor_32(uint32_t *, uint32_t *, uint32_t *, uint8_t);
 
 int32_t	mbin_noise_24(void);
 
+/* Sumdigit functions */
+
+uint32_t mbin_sumdigit_32(uint32_t, uint32_t, uint32_t);
+
 #endif					/* _MATH_BIN_H_ */
