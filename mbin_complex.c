@@ -33,7 +33,7 @@ mbin_mul_complex_double(struct mbin_complex_double a,
 {
 	struct mbin_complex_double temp;
 
-	temp.x = a.x * b.x - b.y * b.y;
+	temp.x = a.x * b.x - a.y * b.y;
 	temp.y = a.x * b.y + a.y * b.x;
 
 	return (temp);
