@@ -39,6 +39,18 @@ mbin_mul_complex_double(struct mbin_complex_double a,
 	return (temp);
 }
 
+struct mbin_complex_double
+mbin_add_complex_double(struct mbin_complex_double a,
+    struct mbin_complex_double b)
+{
+	struct mbin_complex_double temp;
+
+	temp.x = a.x + b.x;
+	temp.y = a.y + b.y;
+
+	return (temp);
+}
+
 double
 mbin_square_len_complex_double(struct mbin_complex_double t)
 {

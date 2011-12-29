@@ -493,10 +493,8 @@ uint32_t mbin_sumdigit_32(uint32_t, uint32_t, uint32_t);
 
 /* Complex functions */
 
-struct mbin_complex_double
-mbin_mul_complex_double(struct mbin_complex_double,
-    struct mbin_complex_double);
-double
-	mbin_square_len_complex_double(struct mbin_complex_double);
+struct mbin_complex_double mbin_mul_complex_double(struct mbin_complex_double, struct mbin_complex_double);
+struct mbin_complex_double mbin_add_complex_double(struct mbin_complex_double, struct mbin_complex_double);
+double	mbin_square_len_complex_double(struct mbin_complex_double);
 
 #endif					/* _MATH_BIN_H_ */
