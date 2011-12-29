@@ -40,6 +40,26 @@ mbin_mul_complex_double(struct mbin_complex_double a,
 }
 
 struct mbin_complex_double
+mbin_div_complex_double(struct mbin_complex_double a,
+    struct mbin_complex_double b)
+{
+	struct mbin_complex_double temp;
+	struct mbin_complex_double c;
+	double div;
+
+	c = b;
+	c.y = -c.y;
+
+	div = c.x * c.x + c.y * c.y;
+
+	temp = mbin_mul_complex_double(a, c);
+	temp.x /= div;
+	temp.y /= div;
+
+	return (temp);
+}
+
+struct mbin_complex_double
 mbin_add_complex_double(struct mbin_complex_double a,
     struct mbin_complex_double b)
 {
@@ -47,6 +67,18 @@ mbin_add_complex_double(struct mbin_complex_double a,
 
 	temp.x = a.x + b.x;
 	temp.y = a.y + b.y;
+
+	return (temp);
+}
+
+struct mbin_complex_double
+mbin_sub_complex_double(struct mbin_complex_double a,
+    struct mbin_complex_double b)
+{
+	struct mbin_complex_double temp;
+
+	temp.x = a.x - b.x;
+	temp.y = a.y - b.y;
 
 	return (temp);
 }
