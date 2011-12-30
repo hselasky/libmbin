@@ -455,6 +455,10 @@ struct mbin_complex_double {
 void	mbin_multiply_xform_32(const uint32_t *, const uint32_t *, uint32_t *, uint8_t);
 void	mbin_multiply_xform_64(const uint64_t *, const uint64_t *, uint64_t *, uint8_t);
 void	mbin_multiply_xform_double(const double *, const double *, double *, uint8_t);
+void
+mbin_multiply_xform_complex_double(const struct mbin_complex_double *,
+    const struct mbin_complex_double *,
+    struct mbin_complex_double *, uint8_t log2_max);
 
 void	mbin_inverse_rev_add_xform_32(uint32_t *, uint8_t);
 void	mbin_forward_rev_add_xform_32(uint32_t *, uint8_t);
@@ -473,6 +477,7 @@ void	mbin_sumbits_and_xform_64(uint64_t *, uint8_t);
 void	mbin_sumbits_and_xform_32(uint32_t *, uint8_t);
 void	mbin_sumbits_and_xform_double(double *, uint8_t);
 void	mbin_sumbits_and_xform_complex_double(struct mbin_complex_double *, uint8_t);
+void	mbin_sumdigits_r4_xform_complex_double(struct mbin_complex_double *, uint8_t);
 
 /* Fast vector operations */
 

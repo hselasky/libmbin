@@ -456,6 +456,18 @@ mbin_multiply_xform_double(const double *a, const double *b, double *c, uint8_t 
 		c[x] = a[x] * b[x];
 }
 
+void
+mbin_multiply_xform_complex_double(const struct mbin_complex_double *a,
+    const struct mbin_complex_double *b,
+    struct mbin_complex_double *c, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+
+	for (x = 0; x != max; x++)
+		c[x] = mbin_mul_complex_double(a[x], b[x]);
+}
+
 /*
  * Inverse additive transform.
  *
@@ -858,6 +870,47 @@ mbin_sumbits_and_xform_complex_double(struct mbin_complex_double *ptr, uint8_t l
 				ptr[y + z].y = a.y + b.y;
 				ptr[y + z + (x / 2)].x = a.x - b.x;
 				ptr[y + z + (x / 2)].y = a.y - b.y;
+			}
+		}
+	}
+}
+
+/* Sumdigits transform radix 4 */
+
+void
+mbin_sumdigits_r4_xform_complex_double(struct mbin_complex_double *ptr, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+
+	for (x = 4; x <= max; x *= 4) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 4); z++) {
+				struct mbin_complex_double temp[4];
+
+				temp[0] = ptr[y + z + (0 * (x / 4))];
+				temp[1] = ptr[y + z + (1 * (x / 4))];
+				temp[2] = ptr[y + z + (2 * (x / 4))];
+				temp[3] = ptr[y + z + (3 * (x / 4))];
+
+				ptr[y + z + (0 * (x / 4))].x =
+				    temp[0].x + temp[1].x + temp[2].x + temp[3].x;
+				ptr[y + z + (0 * (x / 4))].y =
+				    temp[0].y + temp[1].y + temp[2].y + temp[3].y;
+				ptr[y + z + (1 * (x / 4))].x =
+				    temp[0].x - temp[1].y - temp[2].x + temp[3].y;
+				ptr[y + z + (1 * (x / 4))].y =
+				    temp[0].y + temp[1].x - temp[2].y - temp[3].x;
+				ptr[y + z + (2 * (x / 4))].x =
+				    temp[0].x - temp[1].x + temp[2].x - temp[3].x;
+				ptr[y + z + (2 * (x / 4))].y =
+				    temp[0].y - temp[1].y + temp[2].y - temp[3].y;
+				ptr[y + z + (3 * (x / 4))].x =
+				    temp[0].x + temp[1].y - temp[2].x - temp[3].y;
+				ptr[y + z + (3 * (x / 4))].y =
+				    temp[0].y - temp[1].x - temp[2].y + temp[3].x;
 			}
 		}
 	}
