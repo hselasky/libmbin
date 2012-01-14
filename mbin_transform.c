@@ -776,7 +776,7 @@ mbin_xor_xform_32(uint32_t *ptr, uint8_t log2_max)
  * f(x,y) = (mbin_sumbits32(x & y) & 1) ? -1 : 1;
  */
 void
-mbin_sumbits_and_xform_32(uint32_t *ptr, uint8_t log2_max)
+mbin_sumdigits_r2_xform_32(uint32_t *ptr, uint8_t log2_max)
 {
 	const uint32_t max = 1U << log2_max;
 	uint32_t x;
@@ -798,12 +798,12 @@ mbin_sumbits_and_xform_32(uint32_t *ptr, uint8_t log2_max)
 }
 
 /*
- * Sumbits-and transform
+ * Sumbits-and transform (radix-2)
  *
  * f(x,y) = (mbin_sumbits32(x & y) & 1) ? -1 : 1;
  */
 void
-mbin_sumbits_and_xform_64(uint64_t *ptr, uint8_t log2_max)
+mbin_sumdigits_r2_xform_64(uint64_t *ptr, uint8_t log2_max)
 {
 	const uint32_t max = 1U << log2_max;
 	uint32_t x;
@@ -825,12 +825,12 @@ mbin_sumbits_and_xform_64(uint64_t *ptr, uint8_t log2_max)
 }
 
 /*
- * Sumbits-and transform
+ * Sumbits-and transform (radix-2)
  *
  * f(x,y) = (mbin_sumbits32(x & y) & 1) ? -1 : 1;
  */
 void
-mbin_sumbits_and_xform_double(double *ptr, uint8_t log2_max)
+mbin_sumdigits_r2_xform_double(double *ptr, uint8_t log2_max)
 {
 	const uint32_t max = 1U << log2_max;
 	uint32_t x;
@@ -851,8 +851,10 @@ mbin_sumbits_and_xform_double(double *ptr, uint8_t log2_max)
 	}
 }
 
+/* Sumbits-and transform (radix-2) */
+
 void
-mbin_sumbits_and_xform_complex_double(struct mbin_complex_double *ptr, uint8_t log2_max)
+mbin_sumdigits_r2_xform_complex_double(struct mbin_complex_double *ptr, uint8_t log2_max)
 {
 	const uint32_t max = 1U << log2_max;
 	uint32_t x;
@@ -927,9 +929,9 @@ mbin_sumdigits_r3_xform_complex_double(struct mbin_complex_double *ptr, uint8_t 
 /* Sumdigits transform radix 4 */
 
 void
-mbin_sumdigits_r4_xform_complex_double(struct mbin_complex_double *ptr, uint8_t log2_max)
+mbin_sumdigits_r4_xform_complex_double(struct mbin_complex_double *ptr, uint8_t log4_max)
 {
-	const uint32_t max = 1U << log2_max;
+	const uint32_t max = 1U << (2 * log4_max);
 	uint32_t xp;
 	uint32_t x;
 	uint32_t y;
@@ -964,4 +966,45 @@ mbin_sumdigits_r4_xform_complex_double(struct mbin_complex_double *ptr, uint8_t 
 			}
 		}
 	}
+}
+
+/* Sumdigits input reorder by index and radix */
+
+uint32_t
+mbin_sumdigits_reorder_32(uint32_t x, uint32_t radix, uint32_t max)
+{
+	uint32_t r = 0;
+	uint32_t k = 1;
+
+	if (radix == 2)
+		return (x % max);
+	if (radix == 4)
+		return ((x ^ (2 * (x & 0x55555555))) % max);
+
+	while (x) {
+		r += k * ((radix - (x % radix)) % radix);
+		x /= radix;
+		k *= radix;
+	}
+	return (r % max);
+
+}
+
+/* Sumdigits predict maximum by added offset and radix */
+
+uint32_t
+mbin_sumdigits_predmax_32(uint32_t x, uint32_t radix, uint32_t max)
+{
+	uint32_t k1 = 0;
+	uint32_t k2 = 1;
+	uint32_t r = 0;
+
+	while (k1 < max) {
+
+		r += (((x + max - k1) / k2) % radix) * k2;
+
+		k1 = (k1 * radix) + 1;
+		k2 = (k2 * radix);
+	}
+	return (r % max);
 }

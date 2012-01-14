@@ -124,13 +124,13 @@ mbin_vector_xor_double(double *a, double *b, double *c, uint8_t bits)
 	memcpy(at, a, sizeof(at));
 	memcpy(bt, b, sizeof(bt));
 
-	mbin_sumbits_and_xform_double(at, bits);
-	mbin_sumbits_and_xform_double(bt, bits);
+	mbin_sumdigits_r2_xform_double(at, bits);
+	mbin_sumdigits_r2_xform_double(bt, bits);
 
 	for (x = 0; x != max; x++)
 		c[x] = at[x] * bt[x];
 
-	mbin_sumbits_and_xform_double(c, bits);
+	mbin_sumdigits_r2_xform_double(c, bits);
 }
 
 void
@@ -145,11 +145,11 @@ mbin_vector_xor_32(uint32_t *a, uint32_t *b, uint32_t *c, uint8_t bits)
 	memcpy(at, a, sizeof(at));
 	memcpy(bt, b, sizeof(bt));
 
-	mbin_sumbits_and_xform_32(at, bits);
-	mbin_sumbits_and_xform_32(bt, bits);
+	mbin_sumdigits_r2_xform_32(at, bits);
+	mbin_sumdigits_r2_xform_32(bt, bits);
 
 	for (x = 0; x != max; x++)
 		c[x] = at[x] * bt[x];
 
-	mbin_sumbits_and_xform_32(c, bits);
+	mbin_sumdigits_r2_xform_32(c, bits);
 }

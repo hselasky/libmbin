@@ -473,12 +473,14 @@ void	mbin_forward_add_xform_double(double *, uint8_t);
 void	mbin_inverse_add_xform_complex_double(struct mbin_complex_double *, uint8_t);
 void	mbin_forward_add_xform_complex_double(struct mbin_complex_double *, uint8_t);
 void	mbin_xor_xform_32(uint32_t *, uint8_t);
-void	mbin_sumbits_and_xform_64(uint64_t *, uint8_t);
-void	mbin_sumbits_and_xform_32(uint32_t *, uint8_t);
-void	mbin_sumbits_and_xform_double(double *, uint8_t);
-void	mbin_sumbits_and_xform_complex_double(struct mbin_complex_double *, uint8_t);
+void	mbin_sumdigits_r2_xform_64(uint64_t *, uint8_t);
+void	mbin_sumdigits_r2_xform_32(uint32_t *, uint8_t);
+void	mbin_sumdigits_r2_xform_double(double *, uint8_t);
+void	mbin_sumdigits_r2_xform_complex_double(struct mbin_complex_double *, uint8_t);
 void	mbin_sumdigits_r3_xform_complex_double(struct mbin_complex_double *, uint8_t);
 void	mbin_sumdigits_r4_xform_complex_double(struct mbin_complex_double *, uint8_t);
+uint32_t mbin_sumdigits_reorder_32(uint32_t, uint32_t, uint32_t);
+uint32_t mbin_sumdigits_predmax_32(uint32_t, uint32_t, uint32_t);
 
 /* Fast vector operations */
 
