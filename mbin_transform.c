@@ -875,41 +875,91 @@ mbin_sumbits_and_xform_complex_double(struct mbin_complex_double *ptr, uint8_t l
 	}
 }
 
+/* Sumdigits transform radix 3 */
+
+void
+mbin_sumdigits_r3_xform_complex_double(struct mbin_complex_double *ptr, uint8_t log3_max)
+{
+	static const union {
+		double	k;
+		uint64_t l;
+	}     m = {
+		.l = 0x3febb67ae8584caa
+	};
+	uint32_t max = 1;
+	uint32_t xp;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	uint8_t n;
+
+	for (n = 0; n != log3_max; n++)
+		max *= 3;
+
+	for (xp = 1, x = 3; x <= max; xp = x, x *= 3) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != xp; z++) {
+				struct mbin_complex_double temp[3];
+
+				temp[0] = ptr[y + z];
+				temp[1] = ptr[y + z + (1 * xp)];
+				temp[2] = ptr[y + z + (2 * xp)];
+
+				ptr[y + z].x = temp[0].x + temp[1].x + temp[2].x;
+				ptr[y + z].y = temp[0].y + temp[1].y + temp[2].y;
+				ptr[y + z + (1 * xp)].x =
+				    temp[0].x - (temp[1].x / 2.0) - (temp[1].y * m.k) -
+				    (temp[2].x / 2.0) + (temp[2].y * m.k);
+				ptr[y + z + (1 * xp)].y =
+				    temp[0].y - (temp[1].y / 2.0) + (temp[1].x * m.k) -
+				    (temp[2].y / 2.0) - (temp[2].x * m.k);
+				ptr[y + z + (2 * xp)].x =
+				    temp[0].x - (temp[1].x / 2.0) + (temp[1].y * m.k) -
+				    (temp[2].x / 2.0) - (temp[2].y * m.k);
+				ptr[y + z + (2 * xp)].y =
+				    temp[0].y - (temp[1].y / 2.0) - (temp[1].x * m.k) -
+				    (temp[2].y / 2.0) + (temp[2].x * m.k);
+			}
+		}
+	}
+}
+
 /* Sumdigits transform radix 4 */
 
 void
 mbin_sumdigits_r4_xform_complex_double(struct mbin_complex_double *ptr, uint8_t log2_max)
 {
 	const uint32_t max = 1U << log2_max;
+	uint32_t xp;
 	uint32_t x;
 	uint32_t y;
 	uint32_t z;
 
-	for (x = 4; x <= max; x *= 4) {
+	for (xp = 1, x = 4; x <= max; xp = x, x *= 4) {
 		for (y = 0; y != max; y += x) {
-			for (z = 0; z != (x / 4); z++) {
+			for (z = 0; z != xp; z++) {
 				struct mbin_complex_double temp[4];
 
-				temp[0] = ptr[y + z + (0 * (x / 4))];
-				temp[1] = ptr[y + z + (1 * (x / 4))];
-				temp[2] = ptr[y + z + (2 * (x / 4))];
-				temp[3] = ptr[y + z + (3 * (x / 4))];
+				temp[0] = ptr[y + z];
+				temp[1] = ptr[y + z + (1 * xp)];
+				temp[2] = ptr[y + z + (2 * xp)];
+				temp[3] = ptr[y + z + (3 * xp)];
 
-				ptr[y + z + (0 * (x / 4))].x =
+				ptr[y + z].x =
 				    temp[0].x + temp[1].x + temp[2].x + temp[3].x;
-				ptr[y + z + (0 * (x / 4))].y =
+				ptr[y + z].y =
 				    temp[0].y + temp[1].y + temp[2].y + temp[3].y;
-				ptr[y + z + (1 * (x / 4))].x =
+				ptr[y + z + (1 * xp)].x =
 				    temp[0].x - temp[1].y - temp[2].x + temp[3].y;
-				ptr[y + z + (1 * (x / 4))].y =
+				ptr[y + z + (1 * xp)].y =
 				    temp[0].y + temp[1].x - temp[2].y - temp[3].x;
-				ptr[y + z + (2 * (x / 4))].x =
+				ptr[y + z + (2 * xp)].x =
 				    temp[0].x - temp[1].x + temp[2].x - temp[3].x;
-				ptr[y + z + (2 * (x / 4))].y =
+				ptr[y + z + (2 * xp)].y =
 				    temp[0].y - temp[1].y + temp[2].y - temp[3].y;
-				ptr[y + z + (3 * (x / 4))].x =
+				ptr[y + z + (3 * xp)].x =
 				    temp[0].x + temp[1].y - temp[2].x - temp[3].y;
-				ptr[y + z + (3 * (x / 4))].y =
+				ptr[y + z + (3 * xp)].y =
 				    temp[0].y - temp[1].x - temp[2].y + temp[3].x;
 			}
 		}
