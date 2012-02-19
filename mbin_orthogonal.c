@@ -101,6 +101,12 @@ mbin_find_orthogonal_key_32(const uint32_t *ptr, uint32_t max,
 			y += (y & ~mask);
 		if (y > mask)
 			break;
+		STAILQ_FOREACH(pkey, &head, entry) {
+			if ((pkey->key & y) == pkey->key)
+				break;
+		}
+		if (pkey != NULL)
+			continue;
 
 		for (x = 0; x != max; x++) {
 
@@ -117,16 +123,11 @@ mbin_find_orthogonal_key_32(const uint32_t *ptr, uint32_t max,
 		}
 
 		if (x == max) {
-			STAILQ_FOREACH(pkey, &head, entry) {
-				if ((pkey->key & y) == pkey->key)
-					break;
-			}
-			if (pkey == NULL) {
-				pkey = alloca(sizeof(*pkey));
-				pkey->key = y;
-				STAILQ_INSERT_TAIL(&head, pkey, entry);
-			}
+			pkey = alloca(sizeof(*pkey));
+			pkey->key = y;
+			STAILQ_INSERT_TAIL(&head, pkey, entry);
 		}
+
 		/* cleanup */
 		while (x--) {
 			ptmp[y & ptr[x]] = 0;
