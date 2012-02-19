@@ -118,7 +118,7 @@ mbin_find_orthogonal_key_32(const uint32_t *ptr, uint32_t max,
 
 		if (x == max) {
 			STAILQ_FOREACH(pkey, &head, entry) {
-				if ((pkey->key & y) == y)
+				if ((pkey->key & y) == pkey->key)
 					break;
 			}
 			if (pkey == NULL) {
