@@ -507,4 +507,8 @@ struct mbin_complex_double mbin_add_complex_double(struct mbin_complex_double, s
 struct mbin_complex_double mbin_sub_complex_double(struct mbin_complex_double, struct mbin_complex_double);
 double	mbin_square_len_complex_double(struct mbin_complex_double);
 
+/* Orthogonal functions */
+
+void mbin_find_orthogonal_key_32(const uint32_t *, uint32_t, uint32_t, uint32_t **);
+
 #endif					/* _MATH_BIN_H_ */
