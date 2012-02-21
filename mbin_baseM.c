@@ -48,7 +48,7 @@ mbin_base_2toM_32(uint32_t b2)
 	uint32_t m = 1;
 	uint32_t t = 0;
 	uint32_t x;
-	uint32_t xl = 1;
+	uint32_t xl = 3;
 	uint32_t xp = 3;
 	uint32_t y = 0;
 
@@ -84,8 +84,8 @@ mbin_base_2toM_32(uint32_t b2)
 
 		m *= 2;
 
-		xp = (4 * xp) - (3 * xl);
-		xl = xl + 2;
+		xp = (4 * xp) - xl;
+		xl = xl + 6;
 	}
 	t ^= b2;
 	return (t);
@@ -101,7 +101,7 @@ mbin_base_Mto2_32(uint32_t bm)
 	uint32_t m = 1;
 	uint32_t t = 0;
 	uint32_t x;
-	uint32_t xl = 1;
+	uint32_t xl = 3;
 	uint32_t xp = 3;
 	uint32_t y = 0;
 
@@ -137,30 +137,11 @@ mbin_base_Mto2_32(uint32_t bm)
 			t |= t2[y] ? (2 * m) : 0;
 		m *= 2;
 
-		xp = (4 * xp) - (3 * xl);
-		xl = xl + 2;
+		xp = (4 * xp) - xl;
+		xl = xl + 6;
 	}
 	return (b2);
 }
-
-#if 0
-uint32_t
-mbin_base_Mto2_32(uint32_t bm)
-{
-	uint32_t b2 = 0;
-	uint32_t m = 1;
-
-	while (m) {
-
-		if ((mbin_base_2toM_32(b2) ^ bm) & m) {
-			b2 ^= m;
-		}
-		m *= 2;
-	}
-	return (b2);
-}
-
-#endif
 
 /*
  * The following function will restore the state
