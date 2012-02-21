@@ -127,7 +127,6 @@ mbin_find_orthogonal_key_32(const uint32_t *ptr, uint32_t max,
 			pkey->key = y;
 			STAILQ_INSERT_TAIL(&head, pkey, entry);
 		}
-
 		/* cleanup */
 		while (x--) {
 			ptmp[y & ptr[x]] = 0;

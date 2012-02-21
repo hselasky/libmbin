@@ -509,6 +509,10 @@ double	mbin_square_len_complex_double(struct mbin_complex_double);
 
 /* Orthogonal functions */
 
-void mbin_find_orthogonal_key_32(const uint32_t *, uint32_t, uint32_t, uint32_t **);
+void	mbin_find_orthogonal_key_32(const uint32_t *, uint32_t, uint32_t, uint32_t **);
+
+/* Multiplication functions */
+
+uint32_t mbin_mul3_grey_32(uint32_t x);
 
 #endif					/* _MATH_BIN_H_ */
