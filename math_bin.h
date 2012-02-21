@@ -125,6 +125,7 @@ uint16_t mbin_div_odd16(uint16_t r, uint16_t div);
 uint8_t	mbin_div_odd8(uint8_t r, uint8_t div);
 uint32_t mbin_div_by3_32(uint32_t x);
 uint32_t mbin_div_by3_32_alt1(uint32_t x);
+uint32_t mbin_div3_grey_32(uint32_t r);
 
 uint32_t mbin_mul_baseN_32(uint32_t a, uint32_t b, uint32_t n);
 uint32_t mbin_add_baseN_32(uint32_t a, uint32_t b, uint32_t f, uint32_t n);
