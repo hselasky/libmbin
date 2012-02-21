@@ -377,8 +377,7 @@ mbin_div3_grey_32(uint32_t r)
 	uint32_t m;
 	uint32_t c = 0;
 
-	m = 1;
-	while (m) {
+	for (m = 1; m != 0; m *= 2) {
 
 		if (r & m) {
 			c ^= 1;
@@ -387,7 +386,6 @@ mbin_div3_grey_32(uint32_t r)
 		} else {
 			c = 0;
 		}
-		m *= 2;
 	}
 	return (r);
 }

@@ -37,8 +37,7 @@ mbin_mul3_grey_32(uint32_t x)
 	uint32_t r = 0;
 	uint32_t c = 0;
 
-	m = 1;
-	while (m) {
+	for (m = 1; m != 0; m *= 2) {
 		if (x & m) {
 			c ^= 1;
 			if (c)
@@ -46,7 +45,6 @@ mbin_mul3_grey_32(uint32_t x)
 		} else {
 			c = 0;
 		}
-		m *= 2;
 	}
 	return ((4 * r) ^ (2 * r) ^ x);
 }
