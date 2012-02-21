@@ -27,6 +27,18 @@
 
 #include "math_bin.h"
 
+uint32_t
+mbin_baseM_next_32(uint32_t a1, uint32_t a0)
+{
+	uint32_t a, b, c;
+
+	a = (1 * a1);
+	b = (2 * a1);
+	c = (2 * a0);
+
+	return (~a ^ b ^ (b & c));
+}
+
 /*
  * Number base conversion from base2 to baseM.
  */
