@@ -375,16 +375,14 @@ uint32_t
 mbin_div3_grey_32(uint32_t r)
 {
 	uint32_t m;
-	uint32_t c = 0;
 
-	for (m = 1; m != 0; m *= 2) {
+	for (m = 1; m != 0;) {
 
 		if (r & m) {
-			c ^= 1;
-			if (c)
-				r ^= (2 * m) ^ (4 * m);
+			r ^= (2 * m) ^ (4 * m);
+			m *= 4;
 		} else {
-			c = 0;
+			m *= 2;
 		}
 	}
 	return (r);
