@@ -53,6 +53,21 @@
 #include "math_bin.h"
 
 uint32_t
+mbin_baseU_next_32(uint32_t a1, uint32_t a0)
+{
+	uint32_t a, b, c, d;
+
+	a = (1 * a1);
+	b = (2 * a1);
+	c = (2 * a0);
+	d = (4 * a0);
+
+	/* similar to half-adder */
+
+	return ((b & c) ^ (b & d) ^ (c & d) ^ a ^ d);
+}
+
+uint32_t
 mbin_base_2toU_32(uint32_t b2)
 {
 	uint32_t f;

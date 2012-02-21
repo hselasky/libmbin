@@ -198,6 +198,7 @@ struct mbin_baseU_state32 {
 	uint32_t c;
 };
 
+uint32_t mbin_baseU_next_32(uint32_t a1, uint32_t a0);
 uint32_t mbin_base_2toU_32(uint32_t b2);
 uint32_t mbin_base_Uto2_32(uint32_t bu);
 void	mbin_baseU_get_state32(struct mbin_baseU_state32 *ps, uint32_t index);
