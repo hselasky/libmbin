@@ -52,10 +52,6 @@ mbin_base_2toM_32(uint32_t b2)
 	uint32_t xp = 3;
 	uint32_t y = 0;
 
-	static const uint8_t t0[3] = {0, 1, 1};
-	static const uint8_t t1[3] = {0, 0, 1};
-	static const uint8_t t2[3] = {0, 1, 0};
-
 	while (m) {
 
 		if (b2 & m) {
@@ -64,10 +60,14 @@ mbin_base_2toM_32(uint32_t b2)
 				y -= 3;
 		}
 		x = (b2 & ((2 * m) - 1));
-		if (x < xp)
-			t |= t0[y] ? (2 * m) : 0;
-		else
-			t |= t1[y] ? (2 * m) : 0;
+
+		if (x < xp) {
+			if (y != 0)
+				t |= (2 * m);
+		} else {
+			if (y == 2)
+				t |= (2 * m);
+		}
 
 		m *= 2;
 
@@ -77,11 +77,13 @@ mbin_base_2toM_32(uint32_t b2)
 				y -= 3;
 		}
 		x = (b2 & ((2 * m) - 1));
-		if (x < xp)
-			t |= t0[y] ? (2 * m) : 0;
-		else
-			t |= t2[y] ? (2 * m) : 0;
-
+		if (x < xp) {
+			if (y != 0)
+				t |= (2 * m);
+		} else {
+			if (y == 1)
+				t |= (2 * m);
+		}
 		m *= 2;
 
 		xp = (4 * xp) - xl;
@@ -105,10 +107,6 @@ mbin_base_Mto2_32(uint32_t bm)
 	uint32_t xp = 3;
 	uint32_t y = 0;
 
-	static const uint8_t t0[3] = {0, 1, 1};
-	static const uint8_t t1[3] = {0, 0, 1};
-	static const uint8_t t2[3] = {0, 1, 0};
-
 	while (m) {
 
 		if ((t ^ bm) & m) {
@@ -118,10 +116,13 @@ mbin_base_Mto2_32(uint32_t bm)
 				y -= 3;
 		}
 		x = (b2 & ((2 * m) - 1));
-		if (x < xp)
-			t |= t0[y] ? (2 * m) : 0;
-		else
-			t |= t1[y] ? (2 * m) : 0;
+		if (x < xp) {
+			if (y != 0)
+				t |= (2 * m);
+		} else {
+			if (y == 2)
+				t |= (2 * m);
+		}
 		m *= 2;
 
 		if ((t ^ bm) & m) {
@@ -131,10 +132,13 @@ mbin_base_Mto2_32(uint32_t bm)
 				y -= 3;
 		}
 		x = (b2 & ((2 * m) - 1));
-		if (x < xp)
-			t |= t0[y] ? (2 * m) : 0;
-		else
-			t |= t2[y] ? (2 * m) : 0;
+		if (x < xp) {
+			if (y != 0)
+				t |= (2 * m);
+		} else {
+			if (y == 1)
+				t |= (2 * m);
+		}
 		m *= 2;
 
 		xp = (4 * xp) - xl;
