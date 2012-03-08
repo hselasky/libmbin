@@ -60,6 +60,33 @@ mbin_expand_gte_32x32(uint32_t *ptr, uint32_t set_bits,
 }
 
 void
+mbin_expand_xor_gte_32x32(uint32_t *ptr, uint32_t set_bits,
+    uint32_t mask, uint32_t val)
+{
+	uint32_t x;
+	uint32_t xmask;
+
+	xmask = mbin_msb32(set_bits);
+	xmask = xmask | (xmask - 1);
+
+	x = set_bits | (~mask);
+
+	while (1) {
+		ptr[x & mask] ^= val;
+
+		if (x == (uint32_t)(0 - 1)) {
+			break;
+		}
+		x++;
+		if ((x & xmask) < set_bits) {
+			/* jump to next area */
+			x &= ~xmask;
+			x |= set_bits;
+		}
+	}
+}
+
+void
 mbin_expand_add_32x32(uint32_t *ptr, uint32_t set_bits,
     uint32_t mask, uint32_t val)
 {

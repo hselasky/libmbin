@@ -191,6 +191,38 @@ mbin_transform_gte_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 	}
 }
 
+void
+mbin_transform_xor_gte_fwd_32x32(uint32_t *ptr, uint32_t *temp,
+    uint32_t mask)
+{
+	uint32_t x;
+	uint32_t val;
+
+	/* cleanup "t_slice" */
+	x = 0;
+	while (1) {
+		temp[x] = ptr[x];
+		if (x == mask)
+			break;
+		x++;
+	}
+
+	/* transform "f" */
+	x = 0;
+	while (1) {
+		val = temp[x];
+		if (val) {
+			/* expand logic expression */
+			mbin_expand_xor_gte_32x32(temp, x, mask, val);
+			/* restore original value */
+			temp[x] = val;
+		}
+		if (x == mask)
+			break;
+		x++;
+	}
+}
+
 /* Sum Of Sums, SOS - transform */
 
 void
