@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008,2012 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,12 +23,16 @@
  * SUCH DAMAGE.
  */
 
+/*
+ * baseM implements a standard integer multiplier
+ */
+
 #include <stdint.h>
 
 #include "math_bin.h"
 
 uint32_t
-mbin_baseM_next_32(uint32_t a1, uint32_t a0)
+mbin_baseM_next_32(uint32_t a1, uint32_t a0, uint32_t xor)
 {
 	uint32_t a, b, c;
 
@@ -36,115 +40,58 @@ mbin_baseM_next_32(uint32_t a1, uint32_t a0)
 	b = (2 * a1);
 	c = (2 * a0);
 
-	return (~a ^ b ^ (b & c));
+	return (xor ^ a ^ b ^ (b & c));
 }
 
 /*
  * Number base conversion from base2 to baseM.
  */
 uint32_t
-mbin_base_2toM_32(uint32_t b2)
+mbin_base_2toM_32(uint32_t b2, uint32_t xor)
 {
-	uint32_t m = 1;
-	uint32_t t = 0;
+	uint32_t f = mbin_greyB_inv32(xor);
+	uint32_t r = 0;
 	uint32_t x;
-	uint32_t xl = 3;
-	uint32_t xp = 3;
-	uint32_t y = 0;
 
-	while (m) {
+	b2 *= f;
 
-		if (b2 & m) {
-			y = y + 1;
-			if (y >= 3)
-				y -= 3;
-		}
-		x = (b2 & ((2 * m) - 1));
-
-		if (x < xp) {
-			if (y != 0)
-				t |= (2 * m);
-		} else {
-			if (y == 2)
-				t |= (2 * m);
-		}
-
-		m *= 2;
-
-		if (b2 & m) {
-			y = y + 2;
-			if (y >= 3)
-				y -= 3;
-		}
-		x = (b2 & ((2 * m) - 1));
-		if (x < xp) {
-			if (y != 0)
-				t |= (2 * m);
-		} else {
-			if (y == 1)
-				t |= (2 * m);
-		}
-		m *= 2;
-
-		xp = (4 * xp) - xl;
-		xl = xl + 6;
+	for (x = 0; x != 32; x++) {
+		r |= (b2 & (1 << x));
+		b2 -= f;
 	}
-	t ^= b2;
-	return (t);
+
+	r ^= ~f;
+
+	return (r);
 }
 
 /*
  * Number base conversion from baseM to base2.
  */
 uint32_t
-mbin_base_Mto2_32(uint32_t bm)
+mbin_base_Mto2_32(uint32_t bm, uint32_t xor)
 {
+	uint32_t f = mbin_greyB_inv32(xor);
 	uint32_t b2 = 0;
-	uint32_t m = 1;
-	uint32_t t = 0;
+	uint32_t r = 0;
 	uint32_t x;
-	uint32_t xl = 3;
-	uint32_t xp = 3;
-	uint32_t y = 0;
 
-	while (m) {
+	/* xor must be odd */
+	if (!(f & 1))
+		return (0);
 
-		if ((t ^ bm) & m) {
-			b2 |= m;
-			y = y + 1;
-			if (y >= 3)
-				y -= 3;
-		}
-		x = (b2 & ((2 * m) - 1));
-		if (x < xp) {
-			if (y != 0)
-				t |= (2 * m);
-		} else {
-			if (y == 2)
-				t |= (2 * m);
-		}
-		m *= 2;
+	bm ^= ~f;
 
-		if ((t ^ bm) & m) {
-			b2 |= m;
-			y = y + 2;
-			if (y >= 3)
-				y -= 3;
-		}
-		x = (b2 & ((2 * m) - 1));
-		if (x < xp) {
-			if (y != 0)
-				t |= (2 * m);
-		} else {
-			if (y == 1)
-				t |= (2 * m);
-		}
-		m *= 2;
+	for (x = 0; x != 32; x++) {
 
-		xp = (4 * xp) - xl;
-		xl = xl + 6;
+		if ((bm ^ b2) & (1 << x)) {
+			b2 += f << x;
+			r |= 1 << x;
+		}
+		b2 -= f;
 	}
-	return (b2);
+
+	return (r);
 }
 
 /*
@@ -158,13 +105,12 @@ mbin_baseM_get_state32(struct mbin_baseM_state32 *ps, uint32_t x)
 	uint32_t k;
 	uint32_t d2;
 
-	kp = mbin_base_2toM_32(x - 1);
-	k = mbin_base_2toM_32(x);
+	kp = mbin_base_2toM_32(x - 1, -1);
+	k = mbin_base_2toM_32(x, -1);
 	ps->k = k;
 	d2 = (k ^ ~kp);
 	/* the MSB of "d" is not used! */
 	ps->d = ((d2 & ~(d2 / 2)) ^ ~kp) & 0x7FFFFFFF;
-	return;
 }
 
 /*
@@ -182,8 +128,6 @@ mbin_baseM_inc_state32(struct mbin_baseM_state32 *ps)
 
 	ps->k = ((2 * d) ^ ~k);
 	ps->d = (((2 * d) & ~d) ^ ~k) & 0x7FFFFFFF;
-
-	return;
 }
 
 /*

@@ -155,9 +155,9 @@ struct mbin_baseM_state32 {
 	uint32_t d;
 };
 
-uint32_t mbin_baseM_next_32(uint32_t a1, uint32_t a0);
-uint32_t mbin_base_2toM_32(uint32_t bm);
-uint32_t mbin_base_Mto2_32(uint32_t bm);
+uint32_t mbin_baseM_next_32(uint32_t a1, uint32_t a0, uint32_t xor);
+uint32_t mbin_base_2toM_32(uint32_t bm, uint32_t xor);
+uint32_t mbin_base_Mto2_32(uint32_t bm, uint32_t xor);
 void	mbin_baseM_get_state32(struct mbin_baseM_state32 *ps, uint32_t x);
 void	mbin_baseM_inc_state32(struct mbin_baseM_state32 *ps);
 
