@@ -28,6 +28,7 @@
  */
 
 #include <stdint.h>
+#include <string.h>
 
 #include "math_bin.h"
 
@@ -130,6 +131,73 @@ mbin_baseM_inc_state32(struct mbin_baseM_state32 *ps)
 
 	ps->a = a ^ xor ^ c;
 	ps->c = 2 * ((xor ^ c) & (pol ^ a));
+}
+
+/* This function is optimised for "pol" = 0 */
+
+void
+mbin_baseM_bits_init_32(struct mbin_baseM_bits32 *st, uint32_t x, uint32_t xor)
+{
+	uint32_t m;
+	uint32_t n;
+	uint32_t t;
+
+	t = -1U;
+
+	memset(st, 0, sizeof(*st));
+
+	st->f = mbin_greyB_inv32(xor);
+	st->am1 = mbin_base_2toM_32(x - 1, xor, 0);
+
+	for (m = 0; m != 32; m++) {
+
+		t &= mbin_base_2toM_32(x - 2 - m, xor, 0) << (m + 1);
+
+		for (n = 0; n != 32; n++) {
+			if (t & (1 << n))
+				st->set[n]++;
+		}
+	}
+}
+
+/*
+ * This function computes the next value in the sequence like
+ * "mbin_baseM_next_32()", except it uses a different statemachine.
+ */
+uint32_t
+mbin_baseM_bits_step_32(struct mbin_baseM_bits32 *st)
+{
+	uint32_t a0 = st->am1;
+	uint32_t n;
+
+	a0 ^= st->f;
+
+	/* check bits */
+
+	for (n = 0; n != 32; n++) {
+		if ((2 * st->f) & (1 << (n - st->set[n])))
+			a0 ^= 1 << n;
+	}
+
+	/* shift all bit counters up */
+
+	for (n = 31; n != 0; n--)
+		st->set[n] = st->set[n - 1];
+
+	st->set[0] = 0;
+
+	/* update bit counters using previous value */
+
+	for (n = 1; n != 32; n++) {
+		if (st->am1 & (1 << (n - 1)))
+			st->set[n]++;
+		else
+			st->set[n] = 0;
+	}
+
+	st->am1 = a0;
+
+	return (a0);
 }
 
 /*
