@@ -34,13 +34,7 @@
 uint32_t
 mbin_baseM_next_32(uint32_t a1, uint32_t a0, uint32_t xor, uint32_t pol)
 {
-	uint32_t a, b, c;
-
-	a = (1 * a1);
-	b = (2 * a1);
-	c = (2 * a0);
-
-	return (xor ^ a ^ (b & (pol ^ c)));
+	return (xor ^ a1 ^ (2 * ((a1 ^ a0) & (pol ^ a0))));
 }
 
 /*
