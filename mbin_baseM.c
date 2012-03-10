@@ -147,7 +147,7 @@ mbin_baseM_bits_init_32(struct mbin_baseM_bits32 *st, uint32_t x, uint32_t xor)
 	memset(st, 0, sizeof(*st));
 
 	st->f = mbin_greyB_inv32(xor);
-	st->am1 = mbin_base_2toM_32(x - 1, xor, 0);
+	st->a = mbin_base_2toM_32(x - 1, xor, 0);
 
 	for (m = 0; m != 32; m++) {
 
@@ -158,6 +158,13 @@ mbin_baseM_bits_init_32(struct mbin_baseM_bits32 *st, uint32_t x, uint32_t xor)
 				st->set[n]++;
 		}
 	}
+
+	/* check bits */
+
+	for (n = 0; n != 32; n++) {
+		if ((2 * st->f) & (1 << (n - st->set[n])))
+			st->c |= 1 << n;
+	}
 }
 
 /*
@@ -167,7 +174,7 @@ mbin_baseM_bits_init_32(struct mbin_baseM_bits32 *st, uint32_t x, uint32_t xor)
 uint32_t
 mbin_baseM_bits_step_32(struct mbin_baseM_bits32 *st)
 {
-	uint32_t a0 = st->am1;
+	uint32_t a0 = st->a;
 	uint32_t n;
 
 	a0 ^= st->f;
@@ -189,15 +196,31 @@ mbin_baseM_bits_step_32(struct mbin_baseM_bits32 *st)
 	/* update bit counters using previous value */
 
 	for (n = 1; n != 32; n++) {
-		if (st->am1 & (1 << (n - 1)))
+		if (st->a & (1 << (n - 1)))
 			st->set[n]++;
 		else
 			st->set[n] = 0;
 	}
 
-	st->am1 = a0;
+	st->a = a0;
 
 	return (a0);
+}
+
+uint32_t
+mbin_baseM_bits_step_alt_32(struct mbin_baseM_bits32 *st)
+{
+	uint32_t a;
+	uint32_t c;
+
+	a = st->a ^ st->f ^ st->c;
+
+	c = 2 * ((st->c & st->a) | (st->f & ~st->a));
+
+	st->a = a;
+	st->c = c;
+
+	return (a);
 }
 
 /*

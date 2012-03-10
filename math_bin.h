@@ -159,8 +159,9 @@ struct mbin_baseM_state32 {
 
 struct mbin_baseM_bits32 {
 	uint32_t set[32];
-	uint32_t am1;
+	uint32_t a;
 	uint32_t f;
+	uint32_t c;
 };
 
 uint32_t mbin_baseM_next_32(uint32_t a1, uint32_t a0, uint32_t xor, uint32_t pol);
@@ -170,6 +171,7 @@ void	mbin_baseM_get_state32(struct mbin_baseM_state32 *ps, uint32_t x, uint32_t 
 void	mbin_baseM_inc_state32(struct mbin_baseM_state32 *ps);
 void	mbin_baseM_bits_init_32(struct mbin_baseM_bits32 *st, uint32_t x, uint32_t xor);
 uint32_t mbin_baseM_bits_step_32(struct mbin_baseM_bits32 *st);
+uint32_t mbin_baseM_bits_step_alt_32(struct mbin_baseM_bits32 *st);
 
 struct mbin_baseG_state32 {
 	uint32_t a;			/* result: a+b */
