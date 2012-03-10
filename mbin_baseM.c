@@ -40,7 +40,7 @@ mbin_baseM_next_32(uint32_t a1, uint32_t a0, uint32_t xor)
 	b = (2 * a1);
 	c = (2 * a0);
 
-	return (xor ^ a ^ b ^ (b & c));
+	return (xor ^ a ^ (b & ~c));
 }
 
 /*
@@ -99,18 +99,20 @@ mbin_base_Mto2_32(uint32_t bm, uint32_t xor)
  * variables at index "x":
  */
 void
-mbin_baseM_get_state32(struct mbin_baseM_state32 *ps, uint32_t x)
+mbin_baseM_get_state32(struct mbin_baseM_state32 *ps, uint32_t x, uint32_t xor)
 {
-	uint32_t kp;
-	uint32_t k;
-	uint32_t d2;
+	uint32_t a;
+	uint32_t an;
+	uint32_t c;
+	uint32_t cn;
 
-	kp = mbin_base_2toM_32(x - 1, -1);
-	k = mbin_base_2toM_32(x, -1);
-	ps->k = k;
-	d2 = (k ^ ~kp);
-	/* the MSB of "d" is not used! */
-	ps->d = ((d2 & ~(d2 / 2)) ^ ~kp) & 0x7FFFFFFF;
+	a = mbin_base_2toM_32(x, xor);
+	an = mbin_base_2toM_32(x + 1, xor);
+	c = a ^ an ^ xor;
+	cn = 2 * ((xor ^ c) & ~a);
+
+	ps->a = a;
+	ps->c = c;
 }
 
 /*
@@ -118,16 +120,16 @@ mbin_baseM_get_state32(struct mbin_baseM_state32 *ps, uint32_t x)
  * variables by one.
  */
 void
-mbin_baseM_inc_state32(struct mbin_baseM_state32 *ps)
+mbin_baseM_inc_state32(struct mbin_baseM_state32 *ps, uint32_t xor)
 {
-	uint32_t k;
-	uint32_t d;
+	uint32_t a;
+	uint32_t c;
 
-	k = ps->k;
-	d = ps->d;
+	a = ps->a;
+	c = ps->c;
 
-	ps->k = ((2 * d) ^ ~k);
-	ps->d = (((2 * d) & ~d) ^ ~k) & 0x7FFFFFFF;
+	ps->a = a ^ xor ^ c;
+	ps->c = 2 * ((xor ^ c) & ~a);
 }
 
 /*
