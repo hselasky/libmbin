@@ -32,7 +32,7 @@
 #include "math_bin.h"
 
 uint32_t
-mbin_baseM_next_32(uint32_t a1, uint32_t a0, uint32_t xor)
+mbin_baseM_next_32(uint32_t a1, uint32_t a0, uint32_t xor, uint32_t pol)
 {
 	uint32_t a, b, c;
 
@@ -40,14 +40,14 @@ mbin_baseM_next_32(uint32_t a1, uint32_t a0, uint32_t xor)
 	b = (2 * a1);
 	c = (2 * a0);
 
-	return (xor ^ a ^ (b & ~c));
+	return (xor ^ a ^ (b & (pol ^ c)));
 }
 
 /*
  * Number base conversion from base2 to baseM.
  */
 uint32_t
-mbin_base_2toM_32(uint32_t b2, uint32_t xor)
+mbin_base_2toM_32(uint32_t b2, uint32_t xor, uint32_t pol)
 {
 	uint32_t f = mbin_greyB_inv32(xor);
 	uint32_t r = 0;
@@ -60,7 +60,8 @@ mbin_base_2toM_32(uint32_t b2, uint32_t xor)
 		b2 -= f;
 	}
 
-	r ^= ~f;
+	r ^= pol;
+	r ^= f;
 
 	return (r);
 }
@@ -69,7 +70,7 @@ mbin_base_2toM_32(uint32_t b2, uint32_t xor)
  * Number base conversion from baseM to base2.
  */
 uint32_t
-mbin_base_Mto2_32(uint32_t bm, uint32_t xor)
+mbin_base_Mto2_32(uint32_t bm, uint32_t xor, uint32_t pol)
 {
 	uint32_t f = mbin_greyB_inv32(xor);
 	uint32_t b2 = 0;
@@ -80,7 +81,8 @@ mbin_base_Mto2_32(uint32_t bm, uint32_t xor)
 	if (!(f & 1))
 		return (0);
 
-	bm ^= ~f;
+	bm ^= pol;
+	bm ^= f;
 
 	for (x = 0; x != 32; x++) {
 
@@ -99,59 +101,40 @@ mbin_base_Mto2_32(uint32_t bm, uint32_t xor)
  * "x" using the given "xor":
  */
 void
-mbin_baseM_get_state32(struct mbin_baseM_state32 *ps, uint32_t x, uint32_t xor)
+mbin_baseM_get_state32(struct mbin_baseM_state32 *ps, uint32_t x, uint32_t xor, uint32_t pol)
 {
 	uint32_t a;
 	uint32_t an;
 	uint32_t c;
-	uint32_t cn;
 
-	a = mbin_base_2toM_32(x, xor);
-	an = mbin_base_2toM_32(x + 1, xor);
+	a = mbin_base_2toM_32(x, xor, pol);
+	an = mbin_base_2toM_32(x + 1, xor, pol);
 	c = a ^ an ^ xor;
-	cn = 2 * ((xor ^ c) & ~a);
 
 	ps->a = a;
 	ps->c = c;
+	ps->xor = xor;
+	ps->pol = pol;
 }
 
 /*
- * The following function will increment the state variables by "xor":
+ * The following function will increment the state variables by "xor" and pol:
  */
 void
-mbin_baseM_inc_state32(struct mbin_baseM_state32 *ps, uint32_t xor)
+mbin_baseM_inc_state32(struct mbin_baseM_state32 *ps)
 {
 	uint32_t a;
 	uint32_t c;
+	uint32_t xor;
+	uint32_t pol;
 
 	a = ps->a;
 	c = ps->c;
+	xor = ps->xor;
+	pol = ps->pol;
 
 	ps->a = a ^ xor ^ c;
-	ps->c = 2 * ((xor ^ c) & ~a);
-}
-
-/*
- * The following function converts the state into a linear value:
- */
-uint32_t
-mbin_baseM_lin_state32(struct mbin_baseM_state32 *ps)
-{
-	uint32_t a;
-	uint32_t c;
-	uint32_t an;
-	uint32_t cn;
-
-	a = ps->a;
-	c = ps->c;
-
-	while (c != 0) {
-		an = a ^ c;
-		cn = 2 * (c & ~a);
-		a = an;
-		c = cn;
-	}
-	return (a);
+	ps->c = 2 * ((xor ^ c) & (pol ^ a));
 }
 
 /*
