@@ -95,8 +95,8 @@ mbin_base_Mto2_32(uint32_t bm, uint32_t xor)
 }
 
 /*
- * The following function will restore the state
- * variables at index "x":
+ * The following function will restore the state variables at index
+ * "x" using the given "xor":
  */
 void
 mbin_baseM_get_state32(struct mbin_baseM_state32 *ps, uint32_t x, uint32_t xor)
@@ -116,8 +116,7 @@ mbin_baseM_get_state32(struct mbin_baseM_state32 *ps, uint32_t x, uint32_t xor)
 }
 
 /*
- * The following function will increment the state
- * variables by one.
+ * The following function will increment the state variables by "xor":
  */
 void
 mbin_baseM_inc_state32(struct mbin_baseM_state32 *ps, uint32_t xor)
@@ -130,6 +129,29 @@ mbin_baseM_inc_state32(struct mbin_baseM_state32 *ps, uint32_t xor)
 
 	ps->a = a ^ xor ^ c;
 	ps->c = 2 * ((xor ^ c) & ~a);
+}
+
+/*
+ * The following function converts the state into a linear value:
+ */
+uint32_t
+mbin_baseM_lin_state32(struct mbin_baseM_state32 *ps)
+{
+	uint32_t a;
+	uint32_t c;
+	uint32_t an;
+	uint32_t cn;
+
+	a = ps->a;
+	c = ps->c;
+
+	while (c != 0) {
+		an = a ^ c;
+		cn = 2 * (c & ~a);
+		a = an;
+		c = cn;
+	}
+	return (a);
 }
 
 /*
