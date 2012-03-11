@@ -135,6 +135,24 @@ mbin_baseM_inc_state32(struct mbin_baseM_state32 *ps)
 
 /* This function is optimised for "pol" = 0 */
 
+uint32_t
+mbin_baseM_bits_slow_32(uint32_t x, uint32_t xor)
+{
+	uint32_t r = mbin_base_2toM_32(x - 1, xor, 0);
+	uint32_t t;
+	uint32_t n;
+	uint32_t m;
+
+	for (n = 0; n != 32; n++) {
+		t = xor << n;
+		for (m = 0; m < n; m++) {
+			t &= mbin_base_2toM_32(x - 2 - m, xor, 0) << (m + 1);
+		}
+		r ^= t;
+	}
+	return (r);
+}
+
 void
 mbin_baseM_bits_init_32(struct mbin_baseM_bits32 *st, uint32_t x, uint32_t xor)
 {
@@ -212,6 +230,11 @@ mbin_baseM_bits_step_alt_32(struct mbin_baseM_bits32 *st)
 {
 	uint32_t a;
 	uint32_t c;
+
+	/*
+	 * NOTE: By using "a = a ^ f", we get a full half adder here,
+	 * where "a" and "f" and "c" is summed:
+	 */
 
 	a = st->a ^ st->f ^ st->c;
 
