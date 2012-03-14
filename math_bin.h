@@ -534,4 +534,20 @@ void	mbin_find_orthogonal_key_32(const uint32_t *, uint32_t, uint32_t, uint32_t 
 
 uint32_t mbin_mul3_grey_32(uint32_t x);
 
+/* Factor functions */
+
+struct mbin_xor_factor_state {
+	uint32_t *ptr;
+	uint32_t max;
+	uint32_t ka;
+	uint32_t kb;
+	uint32_t na;
+	uint32_t nb;
+	uint32_t nc;
+	uint8_t	lmax;
+};
+
+void	mbin_xor_factor_init(struct mbin_xor_factor_state *st, uint32_t *ptr, uint8_t lmax);
+uint8_t	mbin_xor_factor(struct mbin_xor_factor_state *st, uint32_t *pa, uint32_t *pb, uint32_t *pc);
+
 #endif					/* _MATH_BIN_H_ */
