@@ -160,7 +160,7 @@ mbin_xor_factor_find(uint32_t *ptr, uint32_t *pa,
 				if (pc[x])
 					c++;
 			}
-			if (pc[x])
+			if (pc[x] ^ ptr[x])
 				e++;
 		}
 
