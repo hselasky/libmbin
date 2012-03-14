@@ -278,6 +278,8 @@ uint32_t mbin_parse32_abc(const char *ptr, const char *end);
 void	mbin_parse32_add(const char *ptr, uint32_t *ptable, uint32_t mask);
 void	mbin_parse32_xor(const char *ptr, uint32_t *ptable, uint32_t mask);
 void	mbin_parse32_factor(const char *ptr, uint32_t *ptable, uint32_t mask, uint32_t var, uint8_t level, uint8_t is_xor);
+uint8_t	mbin_xor_factor_find(uint32_t *ptr, uint32_t *pa, uint32_t *pb, uint32_t *pc, uint8_t lmax);
+void	mbin_xor_factor_dump(const char *name, uint32_t *ptr, uint8_t lmax);
 
 uint32_t mbin_sqrt_64(uint64_t a);
 uint32_t mbin_sqrt_odd_32(uint32_t x);

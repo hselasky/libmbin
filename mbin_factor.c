@@ -25,6 +25,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "math_bin.h"
 
@@ -127,4 +128,158 @@ repeat:
 done:
 	st->ka = st->kb = 0;
 	return (0);
+}
+
+uint8_t
+mbin_xor_factor_find(uint32_t *ptr, uint32_t *pa,
+    uint32_t *pb, uint32_t *pc, uint8_t lmax)
+{
+	struct mbin_xor_factor_state fs;
+	uint32_t score;
+	uint32_t keys;
+	uint32_t temp;
+	uint32_t mka;
+	uint32_t mkb;
+	uint32_t c;
+	uint32_t d;
+	uint32_t e;
+	uint32_t x;
+	uint8_t any = 0;
+
+	score = 0;
+	keys = -1U;
+	mka = 0;
+	mkb = 0;
+
+	mbin_xor_factor_init(&fs, ptr, lmax);
+
+	while (mbin_xor_factor(&fs, pa, pb, pc)) {
+		for (c = d = e = x = 0; x != fs.max; x++) {
+			if (ptr[x]) {
+				d++;
+				if (pc[x])
+					c++;
+			}
+			if (pc[x])
+				e++;
+		}
+
+		temp = (c << lmax) / d;
+		if (temp >= score) {
+			if (temp > score)
+				keys = e;
+
+			score = temp;
+
+			if (e <= keys) {
+				keys = e;
+				mka = fs.ka;
+				mkb = fs.kb - 1;
+				any = 1;
+			}
+		}
+	}
+
+	if (any == 0)
+		return (0);
+
+	fs.ka = mka;
+	fs.kb = mkb;
+
+	return (mbin_xor_factor(&fs, pa, pb, pc));
+}
+
+void
+mbin_xor_factor_dump(const char *name, uint32_t *ptr, uint8_t lmax)
+{
+	uint32_t max = 1U << lmax;
+	uint32_t table[max];
+	uint32_t fa[max];
+	uint32_t fb[max];
+	uint32_t fc[max];
+	uint32_t x;
+	uint32_t y;
+	uint8_t n;
+
+	memcpy(table, ptr, sizeof(table));
+
+	printf("static const struct "
+	    "mbin_factor_stage_32 %s[%d] = {\n",
+	    name, lmax);
+
+	for (n = 0; n != lmax; n++) {
+
+		if (mbin_xor_factor_find(table, fa, fb, fc, lmax)) {
+			y = 0;
+			for (x = 0; x != max; x++) {
+				if (fa[x] != 0)
+					y++;
+			}
+
+			for (x = 0; x != max; x++) {
+				if (fb[x] != 0)
+					y--;
+			}
+
+			if (y > max) {
+				/* "fa[]" is smallest */
+
+				printf("\t[%d].factlist = ((const uint32_t []){", lmax - 1 - n);
+				y = 0;
+				for (x = 0; x != max; x++) {
+					if (fa[x] != 0) {
+						printf("0x%08x, ", x);
+						y++;
+					}
+				}
+				printf("}),\n");
+				printf("\t[%d].factlen = %d,\n", lmax - 1 - n, y);
+			} else {
+				/* "fb[]" is smallest */
+
+				printf("\t[%d].factlist = ((const uint32_t []){", lmax - 1 - n);
+				y = 0;
+				for (x = 0; x != max; x++) {
+					if (fb[x] != 0) {
+						printf("0x%08x, ", x);
+						y++;
+					}
+				}
+				printf("}),\n");
+				printf("\t[%d].factlen = %d,\n", lmax - 1 - n, y);
+			}
+
+			for (x = 0; x != max; x++) {
+				fc[x] ^= table[x];
+			}
+
+			printf("\t[%d].remlist = ((const uint32_t []){", lmax - 1 - n);
+			y = 0;
+			for (x = 0; x != max; x++) {
+				if (fc[x] != 0) {
+					printf("0x%08x, ", x);
+					y++;
+				}
+			}
+			printf("}),\n");
+			printf("\t[%d].remlen = %d,\n", lmax - 1 - n, y);
+		} else {
+
+
+			printf("\t[%d].remlist = ((const uint32_t []){", lmax - 1 - n);
+			y = 0;
+			for (x = 0; x != max; x++) {
+				if (table[x] != 0) {
+					printf("0x%08x, ", x);
+					y++;
+				}
+			}
+			printf("}),\n");
+			printf("\t[%d].remlen = %d,\n", lmax - 1 - n, y);
+			break;
+		}
+		for (x = 0; x != max; x++)
+			table[x] = fa[x] ^ fb[x];
+	}
+	printf("};\n");
 }
