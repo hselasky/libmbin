@@ -72,23 +72,21 @@ mbin_base_Mto2_32(uint32_t bm, uint32_t xor, uint32_t pol)
 	uint32_t r = 0;
 	uint32_t x;
 
-	/* xor must be odd */
-	if (!(f & 1))
-		return (0);
-
 	bm ^= pol;
 	bm ^= f;
 
 	for (x = 0; x != 32; x++) {
 
-		if ((bm ^ b2) & (1 << x)) {
-			b2 += f << x;
-			r |= 1 << x;
+		if ((r ^ bm) & (1 << x)) {
+			b2 |= (1 << x);
+			r += (1 << x);
 		}
-		b2 -= f;
+		r -= f;
 	}
 
-	return (r);
+	b2 /= f;
+
+	return (b2);
 }
 
 /*
@@ -104,7 +102,7 @@ mbin_baseM_get_state32(struct mbin_baseM_state32 *ps, uint32_t x, uint32_t xor, 
 
 	a = mbin_base_2toM_32(x, xor, pol);
 	an = mbin_base_2toM_32(x + 1, xor, pol);
-	c = a ^ an ^ xor;
+	c = a ^ an;
 
 	ps->a = a;
 	ps->c = c;
@@ -129,8 +127,8 @@ mbin_baseM_inc_state32(struct mbin_baseM_state32 *ps)
 	xor = ps->xor;
 	pol = ps->pol;
 
-	ps->a = a ^ xor ^ c;
-	ps->c = 2 * ((xor ^ c) & (pol ^ a));
+	ps->a = a ^ c;
+	ps->c = (2 * (c & (pol ^ a))) ^ xor;
 }
 
 /* This function is optimised for "pol" = 0 */
