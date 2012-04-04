@@ -184,7 +184,6 @@ mbin_factor8_build_factor(uint8_t *input, uint32_t mask,
 	uint32_t x;
 	uint32_t y;
 	uint32_t z;
-	uint32_t m;
 	int8_t var;
 
 	for (x = y = 0; x != 32; x++) {
