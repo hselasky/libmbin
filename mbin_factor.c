@@ -220,6 +220,7 @@ mbin_factor8_build_factor(uint8_t *input, uint32_t mask,
 					child->var = 0;
 					child->desc = mbin_xor_factor8_var2char(0);
 					mbin_xor_factor8_leaf_insert(parent, child);
+					src[0] = 0;
 				}
 				break;
 			}
@@ -230,6 +231,7 @@ mbin_factor8_build_factor(uint8_t *input, uint32_t mask,
 					child->var = conv[x] + 1;
 					child->desc = mbin_xor_factor8_var2char(child->var);
 					mbin_xor_factor8_leaf_insert(parent, child);
+					src[m] = 0;
 					break;
 				}
 			}
@@ -243,9 +245,13 @@ mbin_factor8_build_factor(uint8_t *input, uint32_t mask,
 					child->var = -conv[x] - 1;
 					child->desc = mbin_xor_factor8_var2char(child->var);
 					mbin_xor_factor8_leaf_insert(parent, child);
+					src[m] = 0;
+					src[0] = 0;
 					break;
 				}
 			}
+			if (x != 32)
+				break;
 		}
 		/* find maximum */
 		for (x = y = 1; x != (64 + 1); x++) {
