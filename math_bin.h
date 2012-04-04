@@ -26,6 +26,8 @@
 #ifndef _MATH_BIN_H_
 #define	_MATH_BIN_H_
 
+#include <sys/queue.h>
+
 void	mbin_print8(const char *fmt, uint8_t x);
 void	mbin_print16(const char *fmt, uint16_t x);
 void	mbin_print32(const char *fmt, uint32_t x);
@@ -278,8 +280,6 @@ uint32_t mbin_parse32_abc(const char *ptr, const char *end);
 void	mbin_parse32_add(const char *ptr, uint32_t *ptable, uint32_t mask);
 void	mbin_parse32_xor(const char *ptr, uint32_t *ptable, uint32_t mask);
 void	mbin_parse32_factor(const char *ptr, uint32_t *ptable, uint32_t mask, uint32_t var, uint8_t level, uint8_t is_xor);
-uint8_t	mbin_xor_factor_find(uint32_t *ptr, uint32_t *pa, uint32_t *pb, uint32_t *pc, uint8_t lmax);
-void	mbin_xor_factor_dump(const char *name, uint32_t *ptr, uint8_t lmax);
 
 uint32_t mbin_sqrt_64(uint64_t a);
 uint32_t mbin_sqrt_odd_32(uint32_t x);
@@ -494,6 +494,7 @@ void	mbin_forward_add_xform_double(double *, uint8_t);
 void	mbin_inverse_add_xform_complex_double(struct mbin_complex_double *, uint8_t);
 void	mbin_forward_add_xform_complex_double(struct mbin_complex_double *, uint8_t);
 void	mbin_xor_xform_32(uint32_t *, uint8_t);
+void	mbin_xor_xform_8(uint8_t *, uint8_t);
 void	mbin_sumdigits_r2_xform_64(uint64_t *, uint8_t);
 void	mbin_sumdigits_r2_xform_32(uint32_t *, uint8_t);
 void	mbin_sumdigits_r2_xform_double(double *, uint8_t);
@@ -538,18 +539,18 @@ uint32_t mbin_mul3_grey_32(uint32_t x);
 
 /* Factor functions */
 
-struct mbin_xor_factor_state {
-	uint32_t *ptr;
-	uint32_t max;
-	uint32_t ka;
-	uint32_t kb;
-	uint32_t na;
-	uint32_t nb;
-	uint32_t nc;
-	uint8_t	lmax;
+struct mbin_xor_factor_leaf {
+	TAILQ_ENTRY(mbin_xor_factor_leaf) entry;
+	TAILQ_HEAD(, mbin_xor_factor_leaf) children;
+	int8_t	nchildren;
+	int8_t	var;
+	int8_t	desc;
 };
 
-void	mbin_xor_factor_init(struct mbin_xor_factor_state *st, uint32_t *ptr, uint8_t lmax);
-uint8_t	mbin_xor_factor(struct mbin_xor_factor_state *st, uint32_t *pa, uint32_t *pb, uint32_t *pc);
+uint32_t mbin_xor_factor8_var2mask(int8_t var);
+char	mbin_xor_factor8_var2char(int8_t var);
+void	mbin_xor_factor8_leaf_free(struct mbin_xor_factor_leaf *ptr);
+struct mbin_xor_factor_leaf *mbin_factor8_build_tree(uint8_t *src, uint8_t lmax);
+void	mbin_factor8_print_tree(struct mbin_xor_factor_leaf *ptr, uint8_t level);
 
 #endif					/* _MATH_BIN_H_ */

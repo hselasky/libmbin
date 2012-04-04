@@ -26,260 +26,321 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "math_bin.h"
 
-void
-mbin_xor_factor_init(struct mbin_xor_factor_state *st,
-    uint32_t *ptr, uint8_t lmax)
+uint32_t
+mbin_xor_factor8_var2mask(int8_t var)
 {
-	memset(st, 0, sizeof(*st));
-
-	st->ptr = ptr;
-	st->max = 1U << lmax;
-	st->lmax = lmax;
-}
-
-uint8_t
-mbin_xor_factor(struct mbin_xor_factor_state *st,
-    uint32_t *pa, uint32_t *pb, uint32_t *pc)
-{
-	uint32_t a = st->ka;
-	uint32_t b = st->kb;
-	uint32_t max = st->max;
-	uint32_t *ptr = st->ptr;
-	uint32_t x;
-	uint32_t na;
-	uint32_t nb;
-	uint32_t ns;
-
-repeat:
-
-	if (b >= max) {
-		b = 0;
-		a++;
-	}
-	if (b <= a) {
-		b = a + 1;
-		if (b >= max)
-			goto done;
-	}
-	if (a & b) {
-		b++;
-		goto repeat;
-	}
-	na = 0;
-	nb = 0;
-	ns = 0;
-
-	memset(pa, 0, sizeof(pa[0]) * max);
-	memset(pb, 0, sizeof(pb[0]) * max);
-
-	for (x = 0; x != max; x++) {
-
-		if (ptr[x])
-			ns++;
-
-		if ((x & a) == a && ptr[x]) {
-			na++;
-			pa[x & ~a] = ptr[x];
-		}
-		if ((x & b) == b && ptr[x]) {
-			nb++;
-			pb[x & ~b] = ptr[x];
-		}
-	}
-
-	pa[a | b] = 0;
-	pb[a | b] = 0;
-
-	if (na < 2 || na == ns) {
-		a++;
-		goto repeat;
-	}
-	if (nb < 2 || nb == ns) {
-		b++;
-		goto repeat;
-	}
-	mbin_xor_xform_32(pa, st->lmax);
-	mbin_xor_xform_32(pb, st->lmax);
-
-	for (x = 0; x != max; x++) {
-		pc[x] = pa[x] & pb[x];
-	}
-
-	mbin_xor_xform_32(pa, st->lmax);
-	mbin_xor_xform_32(pb, st->lmax);
-	mbin_xor_xform_32(pc, st->lmax);
-
-	for (x = ns = 0; x != max; x++) {
-		if (pc[x])
-			ns++;
-	}
-
-	b++;
-	st->ka = a;
-	st->kb = b;
-	st->na = na;
-	st->nb = nb;
-	st->nc = ns;
-	return (1);
-
-done:
-	st->ka = st->kb = 0;
-	return (0);
-}
-
-uint8_t
-mbin_xor_factor_find(uint32_t *ptr, uint32_t *pa,
-    uint32_t *pb, uint32_t *pc, uint8_t lmax)
-{
-	struct mbin_xor_factor_state fs;
-	uint32_t score;
-	uint32_t keys;
-	uint32_t temp;
-	uint32_t mka;
-	uint32_t mkb;
-	uint32_t c;
-	uint32_t d;
-	uint32_t e;
-	uint32_t x;
-	uint8_t any = 0;
-
-	score = 0;
-	keys = -1U;
-	mka = 0;
-	mkb = 0;
-
-	mbin_xor_factor_init(&fs, ptr, lmax);
-
-	while (mbin_xor_factor(&fs, pa, pb, pc)) {
-		for (c = d = e = x = 0; x != fs.max; x++) {
-			if (ptr[x]) {
-				d++;
-				if (pc[x])
-					c++;
-			}
-			if (pc[x] ^ ptr[x])
-				e++;
-		}
-
-		temp = (c << lmax) / d;
-		if (temp >= score) {
-			if (temp > score)
-				keys = e;
-
-			score = temp;
-
-			if (e <= keys) {
-				keys = e;
-				mka = fs.ka;
-				mkb = fs.kb - 1;
-				any = 1;
-			}
-		}
-	}
-
-	if (any == 0)
+	if (var < 0)
+		return (1U << (-var - 1));
+	else if (var > 0)
+		return (1U << (var - 1));
+	else
 		return (0);
+}
 
-	fs.ka = mka;
-	fs.kb = mkb;
+char
+mbin_xor_factor8_var2char(int8_t var)
+{
+	if (var < 0) {
+		return ('A' + (-var - 1));
+	} else if (var > 0) {
+		return ('a' + var - 1);
+	} else {
+		return ('1');
+	}
+}
 
-	return (mbin_xor_factor(&fs, pa, pb, pc));
+static struct mbin_xor_factor_leaf *
+mbin_xor_factor8_leaf_new(void)
+{
+	struct mbin_xor_factor_leaf *ptr;
+
+	ptr = malloc(sizeof(struct mbin_xor_factor_leaf));
+	if (ptr != NULL) {
+		memset(ptr, 0, sizeof(*ptr));
+		TAILQ_INIT(&ptr->children);
+	}
+	return (ptr);
 }
 
 void
-mbin_xor_factor_dump(const char *name, uint32_t *ptr, uint8_t lmax)
+mbin_xor_factor8_leaf_free(struct mbin_xor_factor_leaf *ptr)
 {
-	uint32_t max = 1U << lmax;
-	uint32_t table[max];
-	uint32_t fa[max];
-	uint32_t fb[max];
-	uint32_t fc[max];
+	struct mbin_xor_factor_leaf *child;
+
+	while ((child = TAILQ_FIRST(&ptr->children)) != NULL) {
+		TAILQ_REMOVE(&ptr->children, child, entry);
+		mbin_xor_factor8_leaf_free(child);
+	}
+	free(ptr);
+}
+
+static void
+mbin_xor_factor8_leaf_insert(struct mbin_xor_factor_leaf *parent,
+    struct mbin_xor_factor_leaf *child)
+{
+	TAILQ_INSERT_TAIL(&parent->children, child, entry);
+	parent->nchildren++;
+}
+
+static void
+mbin_xor_factor8_move_expr(uint8_t *src, uint8_t *dst, uint32_t mask, uint32_t xm, int8_t var)
+{
+	uint32_t x;
+
+	mask &= ~xm;
+
+	x = ~mask;
+
+	do {
+
+		if (src[(x & mask) | xm]) {
+			if (src[(x & mask)]) {
+				if (var < 1) {
+					src[(x & mask) | xm] = 0;
+					src[(x & mask)] = 0;
+					dst[(x & mask)] = 1;
+				} else {
+					dst[(x & mask)] = 0;
+				}
+			} else {
+				if (var > 0) {
+					src[(x & mask) | xm] = 0;
+					dst[(x & mask)] = 1;
+				} else {
+					dst[(x & mask)] = 0;
+				}
+			}
+		} else {
+			dst[(x & mask)] = 0;
+		}
+
+		x |= ~mask;
+		x++;
+
+	} while (x & mask);
+}
+
+static void
+mbin_xor_factor8_build_hist(const uint8_t *src, uint32_t *dst, uint32_t mask)
+{
+	uint32_t x;
+	uint32_t m;
+	uint32_t n;
+
+	x = ~mask;
+	do {
+		if (src[x & mask])
+			dst[0]++;
+
+		x |= ~mask;
+		x++;
+
+	} while (x & mask);
+
+	for (n = 0; n != 32; n++) {
+
+		if (!(mask & (1U << n)))
+			continue;
+
+		m = 1U << n;
+
+		mask &= ~m;
+
+		x = ~mask;
+		do {
+			if (src[(x & mask) | m]) {
+				if (src[(x & mask)]) {
+					dst[1 + 32 + n] += 2;
+				} else {
+					dst[1 + n] += 1;
+				}
+			}
+			x |= ~mask;
+			x++;
+
+		} while (x & mask);
+
+		mask |= m;
+	}
+}
+
+static void
+mbin_factor8_build_factor(uint8_t *input, uint32_t mask,
+    struct mbin_xor_factor_leaf *parent, uint8_t *pc)
+{
+	struct mbin_xor_factor_leaf *child;
+	uint32_t max = 1 << mbin_sumbits32(mask);
+	uint32_t hist[64 + 1];
+	uint8_t conv[32];
+	uint8_t *factor = malloc(max);
+	uint8_t *src = malloc(max);
 	uint32_t x;
 	uint32_t y;
-	uint8_t n;
+	uint32_t z;
+	uint32_t m;
+	int8_t var;
 
-	memcpy(table, ptr, sizeof(table));
-
-	printf("static const struct "
-	    "mbin_factor_stage_32 %s[%d] = {\n",
-	    name, lmax);
-
-	for (n = 0; n != lmax; n++) {
-
-		if (mbin_xor_factor_find(table, fa, fb, fc, lmax)) {
-			y = 0;
-			for (x = 0; x != max; x++) {
-				if (fa[x] != 0)
-					y++;
-			}
-
-			for (x = 0; x != max; x++) {
-				if (fb[x] != 0)
-					y--;
-			}
-
-			if (y > max) {
-				/* "fa[]" is smallest */
-
-				printf("\t[%d].factlist = ((const uint32_t []){", lmax - 1 - n);
-				y = 0;
-				for (x = 0; x != max; x++) {
-					if (fa[x] != 0) {
-						printf("0x%08x, ", x);
-						y++;
-					}
-				}
-				printf("}),\n");
-				printf("\t[%d].factlen = %d,\n", lmax - 1 - n, y);
-			} else {
-				/* "fb[]" is smallest */
-
-				printf("\t[%d].factlist = ((const uint32_t []){", lmax - 1 - n);
-				y = 0;
-				for (x = 0; x != max; x++) {
-					if (fb[x] != 0) {
-						printf("0x%08x, ", x);
-						y++;
-					}
-				}
-				printf("}),\n");
-				printf("\t[%d].factlen = %d,\n", lmax - 1 - n, y);
-			}
-
-			for (x = 0; x != max; x++) {
-				fc[x] ^= table[x];
-			}
-
-			printf("\t[%d].remlist = ((const uint32_t []){", lmax - 1 - n);
-			y = 0;
-			for (x = 0; x != max; x++) {
-				if (fc[x] != 0) {
-					printf("0x%08x, ", x);
-					y++;
-				}
-			}
-			printf("}),\n");
-			printf("\t[%d].remlen = %d,\n", lmax - 1 - n, y);
-		} else {
-
-
-			printf("\t[%d].remlist = ((const uint32_t []){", lmax - 1 - n);
-			y = 0;
-			for (x = 0; x != max; x++) {
-				if (table[x] != 0) {
-					printf("0x%08x, ", x);
-					y++;
-				}
-			}
-			printf("}),\n");
-			printf("\t[%d].remlen = %d,\n", lmax - 1 - n, y);
-			break;
+	for (x = y = 0; x != 32; x++) {
+		if (mask & (1 << x)) {
+			conv[y] = pc[x];
+			y++;
 		}
-		for (x = 0; x != max; x++)
-			table[x] = fa[x] ^ fb[x];
 	}
-	printf("};\n");
+	for (; y != 32; y++)
+		conv[y] = 255;
+
+	x = ~mask;
+	y = 0;
+	do {
+		src[y] = input[x & mask];
+		y++;
+
+		x |= ~mask;
+		x++;
+	} while (x & mask);
+
+	mask = y - 1;
+
+	while (1) {
+
+		memset(hist, 0, sizeof(hist));
+
+		mbin_xor_factor8_build_hist(src, hist, mask);
+
+		if (hist[0] == 0) {
+			break;
+		} else if (hist[0] == 1) {
+			if (src[0] != 0) {
+				if (TAILQ_FIRST(&parent->children)) {
+					child = mbin_xor_factor8_leaf_new();
+					child->var = 0;
+					child->desc = mbin_xor_factor8_var2char(0);
+					mbin_xor_factor8_leaf_insert(parent, child);
+				}
+				break;
+			}
+			for (x = 0; x != 32; x++) {
+				m = (1U << x);
+				if ((m & mask) && (src[m] != 0)) {
+					child = mbin_xor_factor8_leaf_new();
+					child->var = conv[x] + 1;
+					child->desc = mbin_xor_factor8_var2char(child->var);
+					mbin_xor_factor8_leaf_insert(parent, child);
+					break;
+				}
+			}
+			if (x != 32)
+				break;
+		} else if (hist[0] == 2 && src[0] != 0) {
+			for (x = 0; x != 32; x++) {
+				m = (1U << x);
+				if ((m & mask) && (src[m] != 0)) {
+					child = mbin_xor_factor8_leaf_new();
+					child->var = -conv[x] - 1;
+					child->desc = mbin_xor_factor8_var2char(child->var);
+					mbin_xor_factor8_leaf_insert(parent, child);
+					break;
+				}
+			}
+		}
+		/* find maximum */
+		for (x = y = 1; x != (64 + 1); x++) {
+			if (hist[y] <= hist[x])
+				y = x;
+		}
+
+		if (y >= (32 + 1))
+			var = 32 - y;
+		else
+			var = y;
+
+		hist[y] = 0;
+
+		z = mbin_xor_factor8_var2mask(var);
+
+		mbin_xor_factor8_move_expr(src, factor, mask, z, var);
+
+		/* optimise */
+		for (x = 0; x != 32; x++) {
+			if (hist[x + 1] == 0 && hist[x + 1 + 32] == 0) {
+				mask &= ~(1U << x);
+			}
+		}
+
+		child = mbin_xor_factor8_leaf_new();
+		if (var == 0) {
+			child->var = 0;
+		} else if (var < 0) {
+			child->var = -conv[-var - 1] - 1;
+		} else {
+			child->var = conv[var - 1] + 1;
+		}
+		child->desc = mbin_xor_factor8_var2char(child->var);
+		mbin_xor_factor8_leaf_insert(parent, child);
+
+		if ((mask & ~z) == 0)
+			break;
+
+		mbin_factor8_build_factor(factor, mask & ~z, child, conv);
+	}
+
+	free(factor);
+	free(src);
+}
+
+struct mbin_xor_factor_leaf *
+mbin_factor8_build_tree(uint8_t *src, uint8_t lmax)
+{
+	struct mbin_xor_factor_leaf *ptr = mbin_xor_factor8_leaf_new();
+	uint32_t mask = (1 << lmax) - 1;
+	uint8_t conv[32];
+	uint8_t x;
+
+	for (x = 0; x != 32; x++)
+		conv[x] = x;
+
+	mbin_factor8_build_factor(src, mask, ptr, conv);
+
+	return (ptr);
+}
+
+void
+mbin_factor8_print_tree(struct mbin_xor_factor_leaf *ptr, uint8_t level)
+{
+	struct mbin_xor_factor_leaf *child;
+	uint8_t first;
+
+	if (level != 0) {
+		if (TAILQ_FIRST(&ptr->children))
+			printf("(");
+		printf("%c", ptr->desc);
+		first = 1;
+	} else {
+		first = 2;
+	}
+
+	TAILQ_FOREACH(child, &ptr->children, entry) {
+		if (first == 1) {
+			printf("&");
+			if (TAILQ_NEXT(child, entry)) {
+				printf("(");
+				first = 0;
+			}
+		}
+		mbin_factor8_print_tree(child, level + 1);
+		if (TAILQ_NEXT(child, entry))
+			printf("^");
+	}
+
+	if (first == 0)
+		printf(")");
+
+	if (level != 0) {
+		if (TAILQ_FIRST(&ptr->children))
+			printf(")");
+	}
 }
