@@ -71,6 +71,9 @@ mbin_xor_factor8_leaf_free(struct mbin_xor_factor_leaf *ptr)
 {
 	struct mbin_xor_factor_leaf *child;
 
+	if (ptr == NULL)
+		return;
+
 	while ((child = TAILQ_FIRST(&ptr->children)) != NULL) {
 		TAILQ_REMOVE(&ptr->children, child, entry);
 		mbin_xor_factor8_leaf_free(child);

@@ -106,8 +106,8 @@ mbin_baseM_get_state32(struct mbin_baseM_state32 *ps, uint32_t x, uint32_t xor, 
 
 	ps->a = a;
 	ps->c = c;
-	ps->xor = xor;
-	ps->pol = pol;
+	ps->xor_val = xor;
+	ps->pol_val = pol;
 }
 
 /*
@@ -124,8 +124,8 @@ mbin_baseM_inc_state32(struct mbin_baseM_state32 *ps)
 
 	a = ps->a;
 	c = ps->c;
-	xor = ps->xor;
-	pol = ps->pol;
+	xor = ps->xor_val;
+	pol = ps->pol_val;
 
 	ps->a = a ^ c;
 	ps->c = (2 * (c & (pol ^ a))) ^ xor;
