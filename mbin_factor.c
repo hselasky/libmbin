@@ -218,14 +218,12 @@ mbin_factor8_build_factor(uint8_t *input, uint32_t mask,
 		} else if (hist[0] == 1 && src[0] != 0) {
 
 			/* remove inverse */
+			child = mbin_xor_factor8_leaf_new();
+			child->var = 0;
+			child->desc = mbin_xor_factor8_var2char(0);
+			mbin_xor_factor8_leaf_insert(parent, child);
+			src[0] = 0;
 
-			if (TAILQ_FIRST(&parent->children)) {
-				child = mbin_xor_factor8_leaf_new();
-				child->var = 0;
-				child->desc = mbin_xor_factor8_var2char(0);
-				mbin_xor_factor8_leaf_insert(parent, child);
-				src[0] = 0;
-			}
 			break;
 		}
 		/* find most frequently occurring variable */
