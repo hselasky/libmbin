@@ -216,47 +216,21 @@ mbin_factor8_build_factor(uint8_t *input, uint32_t mask,
 
 		if (hist[0] == 0) {
 			break;
-		} else if (hist[0] == 1) {
-			if (src[0] != 0) {
-				if (TAILQ_FIRST(&parent->children)) {
-					child = mbin_xor_factor8_leaf_new();
-					child->var = 0;
-					child->desc = mbin_xor_factor8_var2char(0);
-					mbin_xor_factor8_leaf_insert(parent, child);
-					src[0] = 0;
-				}
-				break;
+		} else if (hist[0] == 1 && src[0] != 0) {
+
+			/* remove inverse */
+
+			if (TAILQ_FIRST(&parent->children)) {
+				child = mbin_xor_factor8_leaf_new();
+				child->var = 0;
+				child->desc = mbin_xor_factor8_var2char(0);
+				mbin_xor_factor8_leaf_insert(parent, child);
+				src[0] = 0;
 			}
-			for (x = 0; x != 32; x++) {
-				m = (1U << x);
-				if ((m & mask) && (src[m] != 0)) {
-					child = mbin_xor_factor8_leaf_new();
-					child->var = conv[x] + 1;
-					child->desc = mbin_xor_factor8_var2char(child->var);
-					mbin_xor_factor8_leaf_insert(parent, child);
-					src[m] = 0;
-					break;
-				}
-			}
-			if (x != 32)
-				break;
-		} else if (hist[0] == 2 && src[0] != 0) {
-			for (x = 0; x != 32; x++) {
-				m = (1U << x);
-				if ((m & mask) && (src[m] != 0)) {
-					child = mbin_xor_factor8_leaf_new();
-					child->var = -conv[x] - 1;
-					child->desc = mbin_xor_factor8_var2char(child->var);
-					mbin_xor_factor8_leaf_insert(parent, child);
-					src[m] = 0;
-					src[0] = 0;
-					break;
-				}
-			}
-			if (x != 32)
-				break;
+			break;
 		}
-		/* find maximum */
+		/* find most frequently occurring variable */
+
 		for (x = y = 1; x != (64 + 1); x++) {
 			if ((hist[y] < hist[x]) ||
 			    ((hist[y] == hist[x]) &&
@@ -274,14 +248,32 @@ mbin_factor8_build_factor(uint8_t *input, uint32_t mask,
 
 		z = mbin_xor_factor8_var2mask(var);
 
+		/* remove single bit variables */
+
+		if (src[z] != 0) {
+			x = (y - 1) % 32;
+			child = mbin_xor_factor8_leaf_new();
+			if (src[0] != 0) {
+				child->var = -conv[x] - 1;
+				src[0] = 0;
+			} else {
+				child->var = conv[x] + 1;
+			}
+			child->desc = mbin_xor_factor8_var2char(child->var);
+			mbin_xor_factor8_leaf_insert(parent, child);
+			src[z] = 0;
+		}
 		mbin_xor_factor8_move_expr(src, factor, mask, z, var);
 
 		/* optimise */
+
 		for (x = 0; x != 32; x++) {
 			if (hist[x + 1] == 0 && hist[x + 1 + 32] == 0) {
 				mask &= ~(1U << x);
 			}
 		}
+
+		/* collect factor */
 
 		child = mbin_xor_factor8_leaf_new();
 		if (var == 0) {
@@ -292,12 +284,15 @@ mbin_factor8_build_factor(uint8_t *input, uint32_t mask,
 			child->var = conv[var - 1] + 1;
 		}
 		child->desc = mbin_xor_factor8_var2char(child->var);
-		mbin_xor_factor8_leaf_insert(parent, child);
-
-		if ((mask & ~z) == 0)
-			break;
 
 		mbin_factor8_build_factor(factor, mask & ~z, child, conv);
+
+		/* check if anything was left */
+
+		if (TAILQ_FIRST(&child->children))
+			mbin_xor_factor8_leaf_insert(parent, child);
+		else
+			mbin_xor_factor8_leaf_free(child);
 	}
 
 	free(factor);
