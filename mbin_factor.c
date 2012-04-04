@@ -258,8 +258,11 @@ mbin_factor8_build_factor(uint8_t *input, uint32_t mask,
 		}
 		/* find maximum */
 		for (x = y = 1; x != (64 + 1); x++) {
-			if (hist[y] <= hist[x])
+			if ((hist[y] < hist[x]) ||
+			    ((hist[y] == hist[x]) &&
+			    ((y - 1) % 32) < ((x - 1) % 32))) {
 				y = x;
+			}
 		}
 
 		if (y >= (32 + 1))
