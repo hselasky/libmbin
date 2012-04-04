@@ -171,8 +171,8 @@ uint32_t mbin_base_2toM_32(uint32_t bm, uint32_t xor_val, uint32_t pol_val);
 uint32_t mbin_base_Mto2_32(uint32_t bm, uint32_t xor_val, uint32_t pol_val);
 void	mbin_baseM_get_state32(struct mbin_baseM_state32 *ps, uint32_t x, uint32_t xor_val, uint32_t pol_val);
 void	mbin_baseM_inc_state32(struct mbin_baseM_state32 *ps);
-uint32_t mbin_baseM_bits_slow_32(uint32_t x, uint32_t xor);
-void	mbin_baseM_bits_init_32(struct mbin_baseM_bits32 *st, uint32_t x, uint32_t xor);
+uint32_t mbin_baseM_bits_slow_32(uint32_t x, uint32_t xor_val);
+void	mbin_baseM_bits_init_32(struct mbin_baseM_bits32 *st, uint32_t x, uint32_t xor_val);
 uint32_t mbin_baseM_bits_step_32(struct mbin_baseM_bits32 *st);
 uint32_t mbin_baseM_bits_step_alt_32(struct mbin_baseM_bits32 *st);
 
