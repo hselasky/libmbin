@@ -90,7 +90,8 @@ mbin_xor_factor8_leaf_insert(struct mbin_xor_factor_leaf *parent,
 }
 
 static void
-mbin_xor_factor8_move_expr(uint8_t *src, uint8_t *dst, uint32_t mask, uint32_t xm, int8_t var)
+mbin_xor_factor8_move_expr(uint8_t *src, uint8_t *dst, uint32_t mask,
+    uint32_t xm, int8_t var, uint8_t have_not)
 {
 	uint32_t x;
 
@@ -101,7 +102,7 @@ mbin_xor_factor8_move_expr(uint8_t *src, uint8_t *dst, uint32_t mask, uint32_t x
 	do {
 
 		if (src[(x & mask) | xm]) {
-			if (src[(x & mask)]) {
+			if (src[(x & mask)] && have_not) {
 				if (var < 1) {
 					src[(x & mask) | xm] = 0;
 					src[(x & mask)] = 0;
@@ -128,7 +129,8 @@ mbin_xor_factor8_move_expr(uint8_t *src, uint8_t *dst, uint32_t mask, uint32_t x
 }
 
 static void
-mbin_xor_factor8_build_hist(const uint8_t *src, uint32_t *dst, uint32_t mask)
+mbin_xor_factor8_build_hist(const uint8_t *src, uint32_t *dst,
+    uint32_t mask, uint8_t have_not)
 {
 	uint32_t x;
 	uint32_t m;
@@ -156,7 +158,7 @@ mbin_xor_factor8_build_hist(const uint8_t *src, uint32_t *dst, uint32_t mask)
 		x = ~mask;
 		do {
 			if (src[(x & mask) | m]) {
-				if (src[(x & mask)]) {
+				if (src[(x & mask)] && have_not) {
 					dst[1 + 32 + n] += 2;
 				} else {
 					dst[1 + n] += 1;
@@ -172,8 +174,8 @@ mbin_xor_factor8_build_hist(const uint8_t *src, uint32_t *dst, uint32_t mask)
 }
 
 static void
-mbin_factor8_build_factor(uint8_t *input, uint32_t mask,
-    struct mbin_xor_factor_leaf *parent, uint8_t *pc)
+mbin_xor_factor8_build_factor(uint8_t *input, uint32_t mask,
+    struct mbin_xor_factor_leaf *parent, uint8_t *pc, uint8_t have_not)
 {
 	struct mbin_xor_factor_leaf *child;
 	uint32_t max = 1 << mbin_sumbits32(mask);
@@ -211,7 +213,7 @@ mbin_factor8_build_factor(uint8_t *input, uint32_t mask,
 
 		memset(hist, 0, sizeof(hist));
 
-		mbin_xor_factor8_build_hist(src, hist, mask);
+		mbin_xor_factor8_build_hist(src, hist, mask, have_not);
 
 		if (hist[0] == 0) {
 			break;
@@ -260,7 +262,8 @@ mbin_factor8_build_factor(uint8_t *input, uint32_t mask,
 			mbin_xor_factor8_leaf_insert(parent, child);
 			src[z] = 0;
 		}
-		mbin_xor_factor8_move_expr(src, factor, mask, z, var);
+		mbin_xor_factor8_move_expr(src, factor,
+		    mask, z, var, have_not);
 
 		/* optimise */
 
@@ -282,7 +285,8 @@ mbin_factor8_build_factor(uint8_t *input, uint32_t mask,
 		}
 		child->desc = mbin_xor_factor8_var2char(child->var);
 
-		mbin_factor8_build_factor(factor, mask & ~z, child, conv);
+		mbin_xor_factor8_build_factor(factor, mask & ~z,
+		    child, conv, have_not);
 
 		/* check if anything was left */
 
@@ -297,7 +301,7 @@ mbin_factor8_build_factor(uint8_t *input, uint32_t mask,
 }
 
 struct mbin_xor_factor_leaf *
-mbin_factor8_build_tree(uint8_t *src, uint8_t lmax)
+mbin_xor_factor8_build_tree(uint8_t *src, uint8_t lmax, uint8_t have_not)
 {
 	struct mbin_xor_factor_leaf *ptr = mbin_xor_factor8_leaf_new();
 	uint32_t mask = (1 << lmax) - 1;
@@ -307,13 +311,14 @@ mbin_factor8_build_tree(uint8_t *src, uint8_t lmax)
 	for (x = 0; x != 32; x++)
 		conv[x] = x;
 
-	mbin_factor8_build_factor(src, mask, ptr, conv);
+	mbin_xor_factor8_build_factor(src, mask, ptr,
+	    conv, have_not);
 
 	return (ptr);
 }
 
 void
-mbin_factor8_print_tree(struct mbin_xor_factor_leaf *ptr, uint8_t level)
+mbin_xor_factor8_print_tree(struct mbin_xor_factor_leaf *ptr, uint8_t level)
 {
 	struct mbin_xor_factor_leaf *child;
 	uint8_t first;
@@ -335,7 +340,7 @@ mbin_factor8_print_tree(struct mbin_xor_factor_leaf *ptr, uint8_t level)
 				first = 0;
 			}
 		}
-		mbin_factor8_print_tree(child, level + 1);
+		mbin_xor_factor8_print_tree(child, level + 1);
 		if (TAILQ_NEXT(child, entry))
 			printf("^");
 	}

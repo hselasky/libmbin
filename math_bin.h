@@ -550,7 +550,7 @@ struct mbin_xor_factor_leaf {
 uint32_t mbin_xor_factor8_var2mask(int8_t var);
 char	mbin_xor_factor8_var2char(int8_t var);
 void	mbin_xor_factor8_leaf_free(struct mbin_xor_factor_leaf *ptr);
-struct mbin_xor_factor_leaf *mbin_factor8_build_tree(uint8_t *src, uint8_t lmax);
-void	mbin_factor8_print_tree(struct mbin_xor_factor_leaf *ptr, uint8_t level);
+struct mbin_xor_factor_leaf *mbin_xor_factor8_build_tree(uint8_t *src, uint8_t lmax, uint8_t have_not);
+void	mbin_xor_factor8_print_tree(struct mbin_xor_factor_leaf *ptr, uint8_t level);
 
 #endif					/* _MATH_BIN_H_ */
