@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008-2011 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008-2012 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -487,6 +487,8 @@ void	mbin_inverse_rev_add_xform_double(double *, uint8_t);
 void	mbin_forward_rev_add_xform_double(double *, uint8_t);
 void	mbin_inverse_rev_add_xform_complex_double(struct mbin_complex_double *, uint8_t);
 void	mbin_forward_rev_add_xform_complex_double(struct mbin_complex_double *, uint8_t);
+void	mbin_inverse_gte_xform_32(uint32_t *, uint8_t);
+void	mbin_forward_gte_xform_32(uint32_t *, uint8_t);
 void	mbin_inverse_add_xform_32(uint32_t *, uint8_t);
 void	mbin_forward_add_xform_32(uint32_t *, uint8_t);
 void	mbin_inverse_add_xform_double(double *, uint8_t);
@@ -552,5 +554,11 @@ char	mbin_xor_factor8_var2char(int8_t var);
 void	mbin_xor_factor8_leaf_free(struct mbin_xor_factor_leaf *ptr);
 struct mbin_xor_factor_leaf *mbin_xor_factor8_build_tree(uint8_t *src, uint8_t lmax, uint8_t how);
 void	mbin_xor_factor8_print_tree(struct mbin_xor_factor_leaf *ptr, uint8_t level);
+void	mbin_xor_factor8_compress_tree(struct mbin_xor_factor_leaf *parent, uint32_t *pout, uint32_t *bit, uint8_t bits, uint8_t how, uint8_t val);
+
+uint32_t mbin_get_bits32(const uint32_t *ptr, uint32_t *poff, uint32_t bits);
+void	mbin_put_bits32(uint32_t *ptr, uint32_t *poff, uint32_t bits, uint32_t value);
+uint32_t mbin_get_rev_bits32(const uint32_t *ptr, uint32_t *poff, uint32_t bits);
+void	mbin_put_rev_bits32(uint32_t *ptr, uint32_t *poff, uint32_t bits, uint32_t value);
 
 #endif					/* _MATH_BIN_H_ */

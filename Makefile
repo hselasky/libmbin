@@ -24,6 +24,7 @@ SRCS+=	mbin_baseT.c
 SRCS+=	mbin_baseU.c
 SRCS+=	mbin_baseV.c
 SRCS+=	mbin_base_m3.c
+SRCS+=	mbin_bits.c
 SRCS+=	mbin_bitreverse.c
 SRCS+=	mbin_coeff.c
 SRCS+=	mbin_complex.c

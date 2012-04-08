@@ -89,43 +89,40 @@ mbin_xor_factor8_leaf_insert(struct mbin_xor_factor_leaf *parent,
 	parent->nchildren++;
 }
 
-static void
+static uint32_t
 mbin_xor_factor8_move_expr(uint8_t *src, uint8_t *dst, uint32_t mask,
     uint32_t xm, int8_t var, uint8_t how)
 {
 	uint32_t x;
+	uint32_t count = 0;
 
 	mask &= ~xm;
 
-	x = ~mask;
+	x = 0;
 
 	do {
-
 		if (src[(x & mask) | xm]) {
 			if (src[(x & mask)] && (how & 1)) {
 				if (var < 1) {
 					src[(x & mask) | xm] = 0;
 					src[(x & mask)] = 0;
 					dst[(x & mask)] = 1;
-				} else {
-					dst[(x & mask)] = 0;
+					count++;
 				}
 			} else {
 				if (var > 0) {
 					src[(x & mask) | xm] = 0;
 					dst[(x & mask)] = 1;
-				} else {
-					dst[(x & mask)] = 0;
+					count++;
 				}
 			}
-		} else {
-			dst[(x & mask)] = 0;
 		}
-
 		x |= ~mask;
 		x++;
 
 	} while (x & mask);
+
+	return (count);
 }
 
 static void
@@ -136,7 +133,7 @@ mbin_xor_factor8_build_hist(const uint8_t *src, uint32_t *dst,
 	uint32_t m;
 	uint32_t n;
 
-	x = ~mask;
+	x = 0;
 	do {
 		if (src[x & mask])
 			dst[0]++;
@@ -155,7 +152,7 @@ mbin_xor_factor8_build_hist(const uint8_t *src, uint32_t *dst,
 
 		mask &= ~m;
 
-		x = ~mask;
+		x = 0;
 		do {
 			if (src[(x & mask) | m]) {
 				if (src[(x & mask)] && (how & 1)) {
@@ -178,6 +175,7 @@ mbin_xor_factor8_build_factor(uint8_t *input, uint32_t mask,
     struct mbin_xor_factor_leaf *parent, uint8_t *pc, uint8_t how)
 {
 	struct mbin_xor_factor_leaf *child;
+	struct mbin_xor_factor_leaf *grandchild;
 	uint32_t max = 1 << mbin_sumbits32(mask);
 	uint32_t hist[64 + 1];
 	uint8_t conv[32];
@@ -186,6 +184,7 @@ mbin_xor_factor8_build_factor(uint8_t *input, uint32_t mask,
 	uint32_t x;
 	uint32_t y;
 	uint32_t z;
+	uint32_t count;
 	int8_t var;
 
 	for (x = y = 0; x != 32; x++) {
@@ -197,7 +196,7 @@ mbin_xor_factor8_build_factor(uint8_t *input, uint32_t mask,
 	for (; y != 32; y++)
 		conv[y] = 255;
 
-	x = ~mask;
+	x = 0;
 	y = 0;
 	do {
 		src[y] = input[x & mask];
@@ -207,37 +206,32 @@ mbin_xor_factor8_build_factor(uint8_t *input, uint32_t mask,
 		x++;
 	} while (x & mask);
 
-	mask = y - 1;
+	mask = max - 1;
 
+	if (src[0] != 0) {
+		child = mbin_xor_factor8_leaf_new();
+		child->var = 0;
+		child->desc = mbin_xor_factor8_var2char(child->var);
+		mbin_xor_factor8_leaf_insert(parent, child);
+		src[0] = 0;
+	}
 	while (1) {
 
 		memset(hist, 0, sizeof(hist));
 
 		mbin_xor_factor8_build_hist(src, hist, mask, how);
 
-		if (hist[0] == 0) {
+		if (hist[0] == 0)
 			break;
-		} else if (hist[0] == 1 && src[0] != 0) {
 
-			/* remove inverse */
-			child = mbin_xor_factor8_leaf_new();
-			child->var = 0;
-			child->desc = mbin_xor_factor8_var2char(0);
-			mbin_xor_factor8_leaf_insert(parent, child);
-			src[0] = 0;
-
-			break;
-		}
 		/* find most frequently occurring variable */
 
 		if (how & 2) {
 			for (x = y = 1; x != (32 + 1); x++) {
-				if (hist[x] || hist[x + 32]) {
-					if (hist[x] >= hist[x + 32]) {
-						y = x;
-					} else {
-						y = x + 32;
-					}
+				if (hist[x]) {
+					y = x;
+				} else if (hist[x + 32]) {
+					y = x + 32;
 				}
 			}
 		} else {
@@ -259,24 +253,24 @@ mbin_xor_factor8_build_factor(uint8_t *input, uint32_t mask,
 
 		z = mbin_xor_factor8_var2mask(var);
 
-		/* remove single bit variables */
+		memset(factor, 0, max);
+
+		count = mbin_xor_factor8_move_expr(src, factor,
+		    mask, z, var, how);
+
+		if (var < 0 && (count & 1))
+			src[z] ^= 1;
+
+		/* remove single bits */
 
 		if (src[z] != 0) {
 			x = (y - 1) % 32;
 			child = mbin_xor_factor8_leaf_new();
-			if (src[0] != 0) {
-				child->var = -conv[x] - 1;
-				src[0] = 0;
-			} else {
-				child->var = conv[x] + 1;
-			}
+			child->var = conv[x] + 1;
 			child->desc = mbin_xor_factor8_var2char(child->var);
 			mbin_xor_factor8_leaf_insert(parent, child);
 			src[z] = 0;
 		}
-		mbin_xor_factor8_move_expr(src, factor,
-		    mask, z, var, how);
-
 		/* optimise */
 
 		for (x = 0; x != 32; x++) {
@@ -302,10 +296,17 @@ mbin_xor_factor8_build_factor(uint8_t *input, uint32_t mask,
 
 		/* check if anything was left */
 
-		if (TAILQ_FIRST(&child->children))
+		if (child->nchildren != 0) {
 			mbin_xor_factor8_leaf_insert(parent, child);
-		else
+			if (child->nchildren == 1 &&
+			    TAILQ_FIRST(&child->children)->var == 0) {
+				grandchild = TAILQ_FIRST(&child->children);
+				TAILQ_REMOVE(&child->children, grandchild, entry);
+				mbin_xor_factor8_leaf_free(grandchild);
+			}
+		} else {
 			mbin_xor_factor8_leaf_free(child);
+		}
 	}
 
 	free(factor);
@@ -364,4 +365,77 @@ mbin_xor_factor8_print_tree(struct mbin_xor_factor_leaf *ptr, uint8_t level)
 		if (TAILQ_FIRST(&ptr->children))
 			printf(")");
 	}
+}
+
+void
+mbin_xor_factor8_compress_tree(struct mbin_xor_factor_leaf *parent,
+    uint32_t *pout, uint32_t *pbit, uint8_t bits, uint8_t how, uint8_t val)
+{
+	struct mbin_xor_factor_leaf *child = NULL;
+	int m;
+	int has_var;
+	int var;
+
+	if (!(how & 2))
+		return;
+
+	for (m = 0; m != bits; m++) {
+
+		if (parent) {
+			TAILQ_FOREACH(child, &parent->children, entry) {
+				var = child->var;
+				if ((child->nchildren == 0) &&
+				    ((var == (m + 1)) || (-var == (m + 1))))
+					break;
+			}
+		}
+		if (child) {
+			has_var = 1;
+		} else {
+			has_var = 0;
+		}
+		if (parent) {
+			TAILQ_FOREACH(child, &parent->children, entry) {
+				var = child->var;
+				if ((child->nchildren != 0) && (var == (m + 1)))
+					break;
+			}
+		}
+		if (child || has_var) {
+			mbin_put_bits32(pout, pbit, 1, 1);
+			if (m) {
+				mbin_xor_factor8_compress_tree(child, pout,
+				    pbit, m, how, has_var);
+			}
+		} else {
+			mbin_put_bits32(pout, pbit, 1, 0);
+		}
+		if (how & 1) {
+			if (parent) {
+				TAILQ_FOREACH(child, &parent->children, entry) {
+					var = child->var;
+					if ((child->nchildren != 0) && (-var == (m + 1)))
+						break;
+				}
+				if (child) {
+					mbin_put_bits32(pout, pbit, 1, 1);
+					if (m) {
+						mbin_xor_factor8_compress_tree(child, pout,
+						    pbit, m, how, 0);
+					}
+				} else {
+					mbin_put_bits32(pout, pbit, 1, 0);
+				}
+			}
+		}
+	}
+
+	if (parent) {
+		TAILQ_FOREACH(child, &parent->children, entry) {
+			var = child->var;
+			if ((child->nchildren == 0) && (var <= 0))
+				val ^= 1;
+		}
+	}
+	mbin_put_bits32(pout, pbit, 1, val);
 }
