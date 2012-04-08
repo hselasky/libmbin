@@ -555,14 +555,14 @@ mbin_forward_gte_xform_32_sub(uint32_t *ptr, uint32_t max)
 void
 mbin_forward_gte_xform_32(uint32_t *ptr, uint8_t log2_max)
 {
-	uint32_t max = 1U << log2_max;
+	const uint32_t max = 1U << log2_max;
 	uint32_t x;
 	uint32_t y;
 
 	for (y = 1; y != (max / 2); y *= 2) {
 		mbin_forward_gte_xform_32_sub(ptr + y, y);
 		for (x = 0; x != y; x++)
-			ptr[x + max] += ptr[x];
+			ptr[x + y] += ptr[x];
 	}
 }
 
