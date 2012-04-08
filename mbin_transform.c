@@ -501,6 +501,72 @@ mbin_multiply_xform_complex_double(const struct mbin_complex_double *a,
 }
 
 /*
+ * Inverse greater equal transform.
+ *
+ * f(x,y) = ((x & m) >= y) ? 1 : 0;
+ */
+static void
+mbin_inverse_gte_xform_32_sub(uint32_t *ptr, uint32_t max)
+{
+	uint32_t x, y, z;
+
+	/* decode a triangle */
+
+	y = ptr[0];
+	for (x = 1; x != max; x++) {
+		z = ptr[x];
+		ptr[x] = ptr[x] - y;
+		y = z;
+	}
+}
+
+void
+mbin_inverse_gte_xform_32(uint32_t *ptr, uint8_t log2_max)
+{
+	uint32_t max = 1U << log2_max;
+	uint32_t x;
+
+	while ((max /= 2) != 0) {
+		for (x = 0; x != max; x++)
+			ptr[x + max] -= ptr[x];
+		mbin_inverse_gte_xform_32_sub(ptr + max, max);
+	}
+}
+
+/*
+ * Forward greater equal transform.
+ *
+ * f(x,y) = ((x & m) >= y) ? 1 : 0;
+ */
+static void
+mbin_forward_gte_xform_32_sub(uint32_t *ptr, uint32_t max)
+{
+	uint32_t x, y;
+
+	/* encode a triangle */
+
+	y = ptr[0];
+	for (x = 1; x != max; x++) {
+		y += ptr[x];
+		ptr[x] = y;
+	}
+}
+
+void
+mbin_forward_gte_xform_32(uint32_t *ptr, uint8_t log2_max)
+{
+	uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+
+	for (y = 1; y != (max / 2); y *= 2) {
+		mbin_forward_gte_xform_32_sub(ptr + y, y);
+		for (x = 0; x != y; x++)
+			ptr[x + max] += ptr[x];
+	}
+}
+
+/*
  * Inverse additive transform.
  *
  * f(x,y) = ((x & y) == y) ? 1 : 0;
