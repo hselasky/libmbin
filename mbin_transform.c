@@ -503,12 +503,15 @@ mbin_multiply_xform_complex_double(const struct mbin_complex_double *a,
 /*
  * Inverse greater equal transform.
  *
- * f(x,y) = ((x & m) >= y) ? 1 : 0;
+ * f(x,y) = ((x >= y) ? 1 : 0;
  */
-static void
-mbin_inverse_gte_xform_32_sub(uint32_t *ptr, uint32_t max)
+void
+mbin_inverse_gte_xform_32(uint32_t *ptr, uint8_t lmax)
 {
-	uint32_t x, y, z;
+	const uint32_t max = 1U << lmax;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
 
 	/* decode a triangle */
 
@@ -521,27 +524,30 @@ mbin_inverse_gte_xform_32_sub(uint32_t *ptr, uint32_t max)
 }
 
 void
-mbin_inverse_gte_xform_32(uint32_t *ptr, uint8_t log2_max)
+mbin_inverse_gte_mask_xform_32(uint32_t *ptr, uint8_t log2_max)
 {
-	uint32_t max = 1U << log2_max;
-	uint32_t x;
+	while (log2_max--) {
+		const uint32_t max = 1U << log2_max;
+		uint32_t x;
 
-	while ((max /= 2) != 0) {
 		for (x = 0; x != max; x++)
 			ptr[x + max] -= ptr[x];
-		mbin_inverse_gte_xform_32_sub(ptr + max, max);
+
+		mbin_inverse_gte_xform_32(ptr + max, log2_max);
 	}
 }
 
 /*
  * Forward greater equal transform.
  *
- * f(x,y) = ((x & m) >= y) ? 1 : 0;
+ * f(x,y) = (x >= y) ? 1 : 0;
  */
-static void
-mbin_forward_gte_xform_32_sub(uint32_t *ptr, uint32_t max)
+void
+mbin_forward_gte_xform_32(uint32_t *ptr, uint8_t lmax)
 {
-	uint32_t x, y;
+	const uint32_t max = 1U << lmax;
+	uint32_t x;
+	uint32_t y;
 
 	/* encode a triangle */
 
@@ -553,16 +559,18 @@ mbin_forward_gte_xform_32_sub(uint32_t *ptr, uint32_t max)
 }
 
 void
-mbin_forward_gte_xform_32(uint32_t *ptr, uint8_t log2_max)
+mbin_forward_gte_mask_xform_32(uint32_t *ptr, uint8_t log2_max)
 {
-	const uint32_t max = 1U << log2_max;
 	uint32_t x;
-	uint32_t y;
+	uint8_t y;
 
-	for (y = 1; y != (max / 2); y *= 2) {
-		mbin_forward_gte_xform_32_sub(ptr + y, y);
-		for (x = 0; x != y; x++)
-			ptr[x + y] += ptr[x];
+	for (y = 0; y != log2_max; y++) {
+		const uint32_t max = 1U << y;
+
+		mbin_forward_gte_xform_32(ptr + max, y);
+
+		for (x = 0; x != max; x++)
+			ptr[x + max] += ptr[x];
 	}
 }
 

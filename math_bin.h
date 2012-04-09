@@ -489,6 +489,8 @@ void	mbin_inverse_rev_add_xform_complex_double(struct mbin_complex_double *, uin
 void	mbin_forward_rev_add_xform_complex_double(struct mbin_complex_double *, uint8_t);
 void	mbin_inverse_gte_xform_32(uint32_t *, uint8_t);
 void	mbin_forward_gte_xform_32(uint32_t *, uint8_t);
+void	mbin_inverse_gte_mask_xform_32(uint32_t *, uint8_t);
+void	mbin_forward_gte_mask_xform_32(uint32_t *, uint8_t);
 void	mbin_inverse_add_xform_32(uint32_t *, uint8_t);
 void	mbin_forward_add_xform_32(uint32_t *, uint8_t);
 void	mbin_inverse_add_xform_double(double *, uint8_t);
