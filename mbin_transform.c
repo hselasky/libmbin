@@ -24,6 +24,8 @@
  */
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "math_bin.h"
 
@@ -223,54 +225,99 @@ mbin_transform_xor_gte_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 	}
 }
 
-/* Sum Of Sums, SOS - transform */
+/* Sum Of Sums, SOS - transform (slow version) */
 
 void
-mbin_transform_sos_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t *scratch,
-    uint32_t mask)
+mbin_transform_sos_inv_32x32(uint32_t *ptr, uint8_t lmax)
 {
+	const uint32_t max = 1U << lmax;
+	uint32_t *k = malloc(sizeof(k[0]) * max);
+	uint32_t *t = malloc(sizeof(t[0]) * max);
 	uint32_t x;
 	uint32_t y;
-	uint32_t val;
-	uint32_t sum;
 
-	x = 0;
-	while (1) {
-		scratch[x] = 0;
-		temp[x] = ptr[x];
-		if (x == mask)
-			break;
+	for (x = 0; x != max; x++) {
+		k[x] = mbin_coeff_32(max, x);
+		if (x & 1)
+			k[x] = -k[x];
+	}
+
+	memset(t, 0, sizeof(t[0]) * max);
+
+	for (x = 0; x != max; x++) {
+		for (y = 0; y != (max - x); y++) {
+			t[x + y] += k[y] * ptr[x];
+		}
+	}
+
+	memset(ptr, 0, sizeof(ptr[0]) * max);
+
+	for (x = 0; x != max; x++) {
+		for (y = 0; y <= x; y++) {
+			ptr[x - y] += mbin_coeff_32(x, x - y) * t[x];
+		}
+	}
+
+	for (x = 0; x != (max / 2);) {
+
+		y = ptr[x];
+		ptr[x] = -ptr[max - 1 - x];
+		ptr[max - 1 - x] = y;
+
+		x++;
+
+		y = -ptr[x];
+		ptr[x] = ptr[max - 1 - x];
+		ptr[max - 1 - x] = y;
+
 		x++;
 	}
 
-	scratch[0] = 1;
+	free(k);
+	free(t);
+}
 
-	/* transform "f" */
-	x = 0;
-	while (1) {
-		val = temp[x];
+/* Sum Of Sums, SOS - transform (slow version) */
+
+void
+mbin_transform_sos_fwd_32x32(uint32_t *ptr, uint8_t lmax)
+{
+	const uint32_t max = 1U << lmax;
+	uint32_t *k = malloc(sizeof(k[0]) * max);
+	uint32_t *t = malloc(sizeof(t[0]) * max);
+	uint32_t x;
+	uint32_t y;
+	uint32_t sum;
+	uint32_t val;
+
+	memset(k, 0, sizeof(k[0]) * max);
+	memset(t, 0, sizeof(t[0]) * max);
+
+	k[0] = 1;
+
+	for (x = 0; x != max; x++) {
+
 		sum = 0;
+		val = ptr[x];
 		if (val) {
-			for (y = x;; y++) {
-				sum += scratch[y - x];
-				temp[y] -= sum * val;
-				scratch[y - x] = sum;
-				if (y == mask)
-					break;
+			for (y = 0; y != max; y++) {
+				sum += k[y];
+				t[y] += sum * val;
+				k[y] = sum;
 			}
-			temp[x] = val;
 		} else {
-			for (y = x;; y++) {
-				sum += scratch[y - x];
-				scratch[y - x] = sum;
-				if (y == mask)
-					break;
+			for (y = 0; y != max; y++) {
+				sum += k[y];
+				k[y] = sum;
 			}
 		}
-		if (x == mask)
-			break;
-		x++;
 	}
+
+	for (x = 0; x != max; x++)
+		ptr[x] = t[x];
+
+	free(k);
+	free(t);
 }
 
 /* Sum Of Sums, under modulus, SOS - transform */
