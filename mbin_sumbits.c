@@ -28,6 +28,18 @@
 #include "math_bin.h"
 
 uint8_t
+mbin_sumbits64(uint64_t val)
+{
+	val = ((val & (0x1ULL * 0xAAAAAAAAAAAAAAAAULL)) >> 1) + (val & (0x1ULL * 0x5555555555555555ULL));
+	val = ((val & (0x3ULL * 0x4444444444444444ULL)) >> 2) + (val & (0x3ULL * 0x1111111111111111ULL));
+	val = ((val & (0xFULL * 0x1010101010101010ULL)) >> 4) + (val & (0xFULL * 0x0101010101010101ULL));
+	val = ((val & (0xFFULL * 0x0100010001000100ULL)) >> 8) + (val & (0xFFULL * 0x0001000100010001ULL));
+	val = ((val & (0xFFFFULL * 0x0001000000010000ULL)) >> 16) + (val & (0xFFFFULL * 0x0000000100000001ULL));
+	val = ((val & (0xFFFFFFFFULL * 0x0000000100000000ULL)) >> 32) + (val & (0xFFFFFFFFULL * 0x0000000000000001ULL));
+	return (val);
+}
+
+uint8_t
 mbin_sumbits32(uint32_t val)
 {
 #if 0
@@ -88,4 +100,38 @@ mbin_sumbits8(uint8_t val)
 	val = ((val & (15U * 0x10101010U)) / 16U) + (val & (15U * 0x01010101U));
 	return (val);
 #endif
+}
+
+/* Find leading digit in 2-base: */
+
+uint8_t
+mbin_fld_64(uint64_t y)
+{
+	if (y == 0)
+		return (0);
+	return (mbin_sumbits64((~y) & (y - 1)));
+}
+
+uint8_t
+mbin_fld_32(uint32_t y)
+{
+	if (y == 0)
+		return (0);
+	return (mbin_sumbits32((~y) & (y - 1)));
+}
+
+uint8_t
+mbin_fld_16(uint16_t y)
+{
+	if (y == 0)
+		return (0);
+	return (mbin_sumbits16((~y) & (y - 1)));
+}
+
+uint8_t
+mbin_fld_8(uint8_t y)
+{
+	if (y == 0)
+		return (0);
+	return (mbin_sumbits8((~y) & (y - 1)));
 }
