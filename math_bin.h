@@ -74,9 +74,15 @@ void	mbin_transform_find_negative_32x1(uint32_t *ptr, uint32_t *neg, uint32_t ma
 void	mbin_transform_find_gte_32x1(uint32_t *ptr, uint32_t *gte, uint32_t mask, uint32_t slice);
 uint8_t	mbin_compute_value_32x32(uint32_t *ptr, const uint8_t *premap, uint32_t mask, uint32_t set_bits, uint32_t work_slice);
 
+uint8_t	mbin_sumbits64(uint64_t val);
 uint8_t	mbin_sumbits32(uint32_t val);
 uint8_t	mbin_sumbits16(uint16_t val);
 uint8_t	mbin_sumbits8(uint8_t val);
+
+uint8_t	mbin_fld_64(uint64_t y);
+uint8_t	mbin_fld_32(uint32_t y);
+uint8_t	mbin_fld_16(uint16_t y);
+uint8_t	mbin_fld_8(uint8_t y);
 
 uint32_t mbin_lsb32(uint32_t val);
 uint16_t mbin_lsb16(uint16_t val);
@@ -268,6 +274,10 @@ uint32_t mbin_power3_32_alt1(uint32_t x);
 uint32_t mbin_power3_32_alt2(uint32_t x);
 uint32_t mbin_power3_32_alt3(uint32_t x);
 uint32_t mbin_power3_32_alt4(uint32_t x);
+uint32_t mbin_inv_odd_non_linear_32(uint32_t val, uint32_t mod);
+uint32_t mbin_inv_odd_prime_32(uint32_t val, uint32_t mod);
+uint64_t mbin_cos_b2_odd_64(uint64_t x);
+uint64_t mbin_sin_b2_odd_64(uint64_t x);
 
 void	mbin_log_table_gen_32(uint32_t *pt);
 uint32_t mbin_log_32(uint32_t r, uint32_t x);
@@ -446,9 +456,8 @@ struct mbin_fet_32_mod {
 	uint32_t conv;
 };
 
-void	mbin_fet_32_find_mod(struct mbin_fet_32_mod *);
 void	mbin_fet_32_generate(uint8_t);
-uint32_t mbin_fet_32_generate_power(uint64_t);
+uint32_t mbin_fet_32_generate_power(uint32_t n);
 
 /* Equation prototypes */
 
