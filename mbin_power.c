@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2009-2010 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2009-2012 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -392,4 +392,95 @@ mbin_power3_32_alt4(uint32_t x)
 			r = r + ((r * f) << (s + 1));
 	}
 	return (r);
+}
+
+uint32_t
+mbin_inv_odd_non_linear_32(uint32_t val, uint32_t mod)
+{
+	return (mbin_power_mod_32(val, mod, mod));
+}
+
+uint32_t
+mbin_inv_odd_prime_32(uint32_t val, uint32_t mod)
+{
+	return (mbin_power_mod_32(val, mod - 2, mod));
+}
+
+/* Standard converging power series for cosinus in 2-adic form: */
+
+uint64_t
+mbin_cos_b2_odd_64(uint64_t x)
+{
+	uint64_t s = 1;
+	uint64_t div = 1;
+	uint64_t k = x * x;
+	uint64_t y = 2;
+	uint8_t z;
+	uint8_t p2 = 2 * 2;
+
+	while (p2 < 64) {
+
+		y--;
+		z = mbin_fld_64(y);
+		div *= (y >> z);
+		y++;
+		p2 -= z;
+
+		z = mbin_fld_64(y);
+		div *= (y >> z);
+		p2 -= z;
+
+		if (y & 2) {
+			s -= mbin_div_odd64(k, div) << p2;
+		} else {
+			s += mbin_div_odd64(k, div) << p2;
+		}
+
+		k *= x;
+		k *= x;
+
+		y += 2;
+		p2 += 4;
+	}
+	return (s);
+}
+
+/* Standard converging power series for sinus in 2-adic form: */
+
+uint64_t
+mbin_sin_b2_odd_64(uint64_t x)
+{
+	uint64_t s = 0;
+	uint64_t div = 1;
+	uint64_t k = x;
+	uint64_t y = 1;
+	uint8_t z;
+	uint8_t p2 = 1 * 2;
+
+	while (p2 < 64) {
+
+		if (y != 1) {
+			y--;
+			z = mbin_fld_64(y);
+			div *= (y >> z);
+			y++;
+			p2 -= z;
+		}
+		z = mbin_fld_64(y);
+		div *= (y >> z);
+		p2 -= z;
+
+		if (y & 2) {
+			s -= mbin_div_odd64(k, div) << p2;
+		} else {
+			s += mbin_div_odd64(k, div) << p2;
+		}
+
+		k *= x;
+		k *= x;
+
+		y += 2;
+		p2 += 4;
+	}
+	return (s);
 }
