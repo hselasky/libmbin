@@ -253,7 +253,7 @@ struct mbin_fp {
 
 typedef struct mbin_fp mbin_fp_t;
 
-void	mbin_fp_set_modulus32(uint32_t prime);
+void	mbin_fp_set_modulus32(uint32_t prime, uint32_t off);
 uint64_t mbin_fp_remainder(mbin_fp_t temp, int16_t _exp);
 mbin_fp_t mbin_fp_number(uint64_t x, int16_t _exp);
 mbin_fp_t mbin_fp_power(mbin_fp_t base, uint64_t power);

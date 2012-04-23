@@ -31,11 +31,13 @@
 #define	BITS_REMAINDER 64
 
 static uint32_t mod_prime = 0;
+static uint32_t mod_off = 0;
 
 void
-mbin_fp_set_modulus32(uint32_t prime)
+mbin_fp_set_modulus32(uint32_t prime, uint32_t mod_off)
 {
 	mod_prime = prime;
+	mod_off = mod_off;
 }
 
 static mbin_fp_t
@@ -254,7 +256,7 @@ mbin_fp_div(mbin_fp_t a, mbin_fp_t b)
 {
 	if (mod_prime != 0) {
 		a.remainder = a.remainder *
-		mbin_power_mod_32(b.remainder, mod_prime - 2, mod_prime);
+		mbin_power_mod_32(b.remainder, mod_prime - mod_off, mod_prime);
 	} else {
 		a.remainder = mbin_div_odd64(a.remainder, b.remainder);
 	}
