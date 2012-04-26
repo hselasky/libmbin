@@ -106,8 +106,8 @@ mbin_fet_32_generate(uint8_t power)
 		printf("#error \"Invalid power\"\n");
 		return;
 	}
-	br_type = (power <= 8) ? "uint8_t" :
-	    (power <= 16) ? "uint16_t" :
+	br_type = (power <= 7) ? "uint8_t" :
+	    (power <= 15) ? "uint16_t" :
 	    "uint32_t";
 
 	max = 1 << power;
