@@ -61,25 +61,22 @@ mbin_fet_generate_bitrev(uint8_t power, const char *br_type)
 
 	lim = 0;
 
-	for (i = 0; i != max; i++) {
+	for (i = 0; i != max; i += 2) {
 
 		j = mbin_bitrev32(i << (32 - power));
 
-		if (j < i) {
+		if (j < i)
 			lim++;
-		}
 	}
 
 	printf("\t" "static const %s bit_rev[0x%x] = {\n",
-	    (power <= 8) ? "uint8_t" :
-	    (power <= 16) ? "uint16_t" :
-	    "uint32_t", (2 * lim) + 8);
+	    br_type, (2 * lim) + 8);
 
 	printf("\t\t");
 
 	k = 0;
 
-	for (i = 0; i != max; i++) {
+	for (i = 0; i != max; i += 2) {
 
 		j = mbin_bitrev32(i << (32 - power));
 
@@ -92,17 +89,6 @@ mbin_fet_generate_bitrev(uint8_t power, const char *br_type)
 	}
 
 	printf("\n\t};\n");
-	return;
-}
-
-static int32_t
-mbin_fet_32_fix_factor(uint32_t factor)
-{
-	/* correctly handle negative values */
-	if (factor >= (FET32_PRIME / 2))
-		factor -= FET32_PRIME;
-
-	return (factor);
 }
 
 void
@@ -114,8 +100,9 @@ mbin_fet_32_generate(uint8_t power)
 	uint32_t y;
 	uint32_t z;
 	uint32_t n;
+	uint8_t forward;
 
-	if (power > FET32_SHIFT || power <= 0) {
+	if (power > FET32_SHIFT || power < 2) {
 		printf("#error \"Invalid power\"\n");
 		return;
 	}
@@ -123,16 +110,12 @@ mbin_fet_32_generate(uint8_t power)
 	    (power <= 16) ? "uint16_t" :
 	    "uint32_t";
 
-	printf("void\n"
-	    "fet_forward_%d_32(int64_t *data)\n", 1 << power);
-
-	printf("{\n");
-
-	mbin_fet_generate_bitrev(power, br_type);
-
 	max = 1 << power;
+	forward = 0;
 
-	printf("\t" "static const int32_t ktable[0x%x] = {\n", max / 2);
+	printf("static const uint32_t "
+	    "fet_%d_32_table[0x%x] = {\n",
+	    max, max / 2);
 
 	freq = (FET32_RING_SIZE >> power);
 	for (y = 0; y != (max / 2); y++) {
@@ -140,62 +123,90 @@ mbin_fet_32_generate(uint8_t power)
 
 		z = mbin_bitrev32(y << (32 - power));
 		factor = mbin_fet_32_generate_power(freq * z);
-		printf("\t\t%d,\n", mbin_fet_32_fix_factor(factor));
+		printf("\t0x%08x,\n", factor);
 	}
 
-	printf("\t" "};\n");
+	printf("};\n\n");
+
+top:
+	printf("void\n"
+	    "fet_%s_%d_32(uint32_t *data)\n"
+	    "{\n", forward ? "forward" : "inverse", max);
+
+	mbin_fet_generate_bitrev(power, br_type);
 
 	printf("\n");
 
-	printf("\t" "const int32_t *ptab;\n");
+	printf("\t" "const uint32_t *ptab;\n");
 	printf("\t" "const %s *p = bit_rev;\n", br_type);
-	printf("\t" "int64_t ta;\n");
-	printf("\t" "int64_t tb;\n");
-	printf("\t" "int64_t tc;\n");
-	printf("\t" "int32_t td;\n");
+	printf("\t" "uint64_t ta;\n");
+	printf("\t" "uint64_t tb;\n");
+	printf("\t" "uint64_t tc;\n");
+	if (forward != 0) {
+		printf("\t" "uint64_t te = ((uint64_t)data[0]) * 0x%xULL;\n",
+		    0x10001 << (power - 2));
+	}
+	printf("\t" "uint32_t td;\n");
 	printf("\t" "%s x;\n", br_type);
 	printf("\t" "%s y;\n", br_type);
-
 	printf("\n");
 
 	for (n = 0; n != power; n++) {
 
 		printf("\t" "/* round %d */\n", n);
-		printf("\t" "ptab = ktable;\n");
+		printf("\t" "ptab = fet_%d_32_table;\n", max);
 
-		printf("\t" "for (y = 0; y != 0x%x; y += 0x%x) {\n", max, 1 << (power - n));
+		printf("\t" "for (y = 0; y != 0x%x; y += 0x%x) {\n",
+		    max, (1 << (power - n)));
 
 		if (n != 0) {
-			printf("\t\t" "td = ptab[0];\n");
+			printf("\t\t" "td = *ptab;\n");
 			printf("\t\t" "ptab++;\n");
 		}
-		printf("\t\t" "for (x = 0; x != 0x%x; x++) {\n", (max >> (n + 1)));
+		if (n != (power - 1)) {
+			printf("\t\t" "for (x = 0; x != 0x%x; x++) {\n",
+			    (max >> (n + 1)));
+		} else {
+			printf("\t\t" "x = 0;\n"
+			    "\t\t" "if (1) {\n");
+		}
 
 		if (n == 0) {
 			printf("\t\t\t" "ta = data[x];\n");
-			printf("\t\t\t" "tb = data[x+0x%x];\n", (max >> (n + 1)));
+			printf("\t\t\t" "data[x] = ta;\n");
+			printf("\t\t\t" "data[x+0x%x] = ta;\n",
+			    (max >> (n + 1)));
 		} else {
 			printf("\t\t\t" "ta = data[x];\n");
-			printf("\t\t\t" "tb = data[x+0x%x] * (int64_t)(td);\n", (max >> (n + 1)));
-		}
+			printf("\t\t\t" "tb = data[x+0x%x] * (int64_t)(td);\n",
+			    (max >> (n + 1)));
+			printf("\t\t\t" "tc = ta + tb%s;\n",
+			    (forward != 0 && n == (power - 1)) ? " - te" : "");
+			printf("\t\t\t" "tc = (tc >> 32) + ((uint32_t)tc);\n");
+			printf("\t\t\t" "tc = (tc >> 32) + ((uint32_t)tc);\n");
+			if (forward != 0 && n == (power - 1)) {
+				printf("\t\t\t" "tc <<= %d;\n", 18 - power);
+				printf("\t\t\t" "tc = (tc >> 32) + ((uint32_t)tc);\n");
+				printf("\t\t\t" "tc = (tc >> 32) + ((uint32_t)tc);\n");
+			}
+			if (n == (power - 1))
+				printf("\t\t\t" "if (tc == 0xFFFFFFFFULL) tc = 0;\n");
 
-		printf("\t\t\t" "tc = ta + tb;\n");
-		printf("\t\t\t" "tc = (tc >> 32) + ((uint32_t)tc);\n");
-		printf("\t\t\t" "tc = (tc >> 32) + ((uint32_t)tc);\n");
-		printf("\t\t\t" "data[x] = tc;\n");
-		printf("\t\t\t" "data[x+0x%x] = tc;\n", (max >> (n + 1)));
+			printf("\t\t\t" "data[x] = tc;\n");
+			printf("\t\t\t" "data[x+0x%x] = %s;\n",
+			    (max >> (n + 1)), (n == (power - 1)) ? "0" : "tc");
+		}
 
 		printf("\t\t" "}\n");
 		printf("\t\t" "data += 0x%x;\n", 1 << (power - n));
 		printf("\t" "}\n");
 		printf("\t" "data -= 0x%x;\n", max);
 	}
-
 	printf("\t/* In-place index bit-reversal */\n");
 
 	printf(
 	    "\t" "while (*p) {\n"
-	    "\t\t" "int64_t t;\n"
+	    "\t\t" "uint32_t t;\n"
 	    "\t\t" "%s a,b;\n\n"
 	    "\t\t" "a = *(p + 0);\n"
 	    "\t\t" "b = *(p + 1);\n"
@@ -213,65 +224,10 @@ mbin_fet_32_generate(uint8_t power)
 
 	printf("}\n");
 
-	printf("\n"
-	    "void\n"
-	    "fet_conv_%d_32(const int64_t *a, const int64_t *b, int64_t *c)\n", max);
-
-	printf("{\n"
-	    "\t" "int64_t ta;\n"
-	    "\t" "int64_t tb;\n"
-	    "\t" "uint32_t x;\n"
-	    "\n"
-	    "\t" "for (x = 0; x != 0x%x; x++) {\n"
-	    "\t\t" "ta = a[x];\n"
-	    "\t\t" "if (ta < 0)\n"
-	    "\t\t\t" "ta += 0x%08xLL;\n"
-	    "\t\t" "if (ta < 0)\n"
-	    "\t\t\t" "ta += 0x%08xLL;\n"
-	    "\t\t" "tb = b[x];\n"
-	    "\t\t" "if (tb < 0)\n"
-	    "\t\t\t" "tb += 0x%08xLL;\n"
-	    "\t\t" "if (tb < 0)\n"
-	    "\t\t\t" "tb += 0x%08xLL;\n"
-	    "\t\t" "ta = ((uint64_t)(uint32_t)ta) * ((uint64_t)(uint32_t)tb);\n"
-	    "\t\t" "ta = (((uint64_t)ta) >> 32) + ((uint32_t)ta);\n"
-	    "\t\t" "ta = (((uint64_t)ta) >> 32) + ((uint32_t)ta);\n"
-	    "\t\t" "c[x] = ta;\n"
-	    "\t" "}\n",
-	    max,
-	    FET32_PRIME,
-	    FET32_PRIME,
-	    FET32_PRIME,
-	    FET32_PRIME);
-
-	printf("\n"
-	    "\t" "for (x = 1; x != 0x%x; x++) {\n"
-	    "\t\t" "/* swap */\n"
-	    "\t\t" "ta = c[0x%x - x];\n"
-	    "\t\t" "tb = c[x];\n"
-	    "\t\t" "c[x] = ta;\n"
-	    "\t\t" "c[0x%x - x] = tb;\n"
-	    "\t" "}\n", max / 2, max, max);
-
-	printf("}\n");
-
-	printf("\n"
-	    "int64_t\n"
-	    "fet_to_lin(int64_t x)\n"
-	    "{\n"
-	    "\t" "if (x < 0)\n"
-	    "\t\t" "x += 0x%08xLL;\n"
-	    "\t" "if (x < 0)\n"
-	    "\t\t" "x += 0x%08xLL;\n"
-	    "\t" "if (x >= (0x%08xLL/2))\n"
-	    "\t\t" "x -= 0x%08xLL;\n"
-	    "\n"
-	    "\t" "return (x);\n"
-	    "}\n",
-	    FET32_PRIME,
-	    FET32_PRIME,
-	    FET32_PRIME,
-	    FET32_PRIME);
+	if (forward == 0) {
+		forward = 1;
+		goto top;
+	}
 }
 
 void
