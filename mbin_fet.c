@@ -61,7 +61,7 @@ mbin_fet_generate_bitrev(uint8_t power, const char *br_type)
 
 	lim = 0;
 
-	for (i = 0; i != max; i += 2) {
+	for (i = 0; i != max; i++) {
 
 		j = mbin_bitrev32(i << (32 - power));
 
@@ -76,7 +76,7 @@ mbin_fet_generate_bitrev(uint8_t power, const char *br_type)
 
 	k = 0;
 
-	for (i = 0; i != max; i += 2) {
+	for (i = 0; i != max; i++) {
 
 		j = mbin_bitrev32(i << (32 - power));
 
@@ -92,211 +92,27 @@ mbin_fet_generate_bitrev(uint8_t power, const char *br_type)
 }
 
 static void
-mbin_fet_32_generate_r8(uint32_t step, uint32_t max)
+mbin_fet_32_add_mul(const char *indent, const char *va,
+    const char *vb, const char *vc, const char *vr)
 {
-	const char *indent;
-
-	indent = "\t";
-
-	printf("%s" "do {\n", indent);
-
-	indent = "\t\t";
-
-	printf("%s" "enum { FET_MAX = 0x%x, FET_STEP = 0x%x };\n", indent, max, step);
-	printf("%s" "\n", indent);
-
-	printf("%s" "const uint32_t *pk0 = fet_%d_32_table;\n", indent, max);
-	printf("%s" "const uint32_t *pk1 = fet_%d_32_table;\n", indent, max);
-	printf("%s" "const uint32_t *pk2 = fet_%d_32_table;\n", indent, max);
-	printf("%s" "\n", indent);
-
-	printf("%s" "for (y = 0; y != FET_MAX; y += 8 * FET_STEP) {\n", indent);
-
-	indent = "\t\t\t";
-
-	printf("%s" "for (x = y; x != (FET_STEP + y); x++) {\n", indent);
-
-	indent = "\t\t\t\t";
-
-	printf("%s" "uint64_t t0;\n", indent);
-	printf("%s" "uint64_t t1;\n", indent);
-	printf("%s" "uint64_t t2;\n", indent);
-	printf("%s" "uint64_t t3;\n", indent);
-	printf("%s" "uint64_t t4;\n", indent);
-	printf("%s" "uint64_t t5;\n", indent);
-	printf("%s" "uint64_t t6;\n", indent);
-	printf("%s" "uint64_t t7;\n", indent);
-
-	printf("%s" "\n", indent);
-	printf("%s" "t0 = data[x];\n", indent);
-	printf("%s" "t1 = data[x+(1*FET_STEP)];\n", indent);
-	printf("%s" "t2 = data[x+(2*FET_STEP)];\n", indent);
-	printf("%s" "t3 = data[x+(3*FET_STEP)];\n", indent);
-	printf("%s" "t4 = data[x+(4*FET_STEP)];\n", indent);
-	printf("%s" "t5 = data[x+(5*FET_STEP)];\n", indent);
-	printf("%s" "t6 = data[x+(6*FET_STEP)];\n", indent);
-	printf("%s" "t7 = data[x+(7*FET_STEP)];\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t0 = t0 + (((uint32_t)t4) * ((uint64_t)pk0[0]));\n", indent);
-	printf("%s" "t1 = t1 + (((uint32_t)t5) * ((uint64_t)pk0[0]));\n", indent);
-	printf("%s" "t2 = t2 + (((uint32_t)t6) * ((uint64_t)pk0[0]));\n", indent);
-	printf("%s" "t3 = t3 + (((uint32_t)t7) * ((uint64_t)pk0[0]));\n", indent);
-
-	/* t0,t1,t2,t3,t0,t1,t2,t3 */
-
-	printf("%s" "\n", indent);
-	printf("%s" "t0 = ((uint64_t)(uint32_t)t0) + (t0 >> 32);\n", indent);
-	printf("%s" "t0 = ((uint64_t)(uint32_t)t0) + (t0 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n", indent);
-	printf("%s" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t2 = ((uint64_t)(uint32_t)t2) + (t2 >> 32);\n", indent);
-	printf("%s" "t2 = ((uint64_t)(uint32_t)t2) + (t2 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t3 = ((uint64_t)(uint32_t)t3) + (t3 >> 32);\n", indent);
-	printf("%s" "t3 = ((uint64_t)(uint32_t)t3) + (t3 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-
-	printf("%s" "t4 = t0 + (((uint32_t)t2) * ((uint64_t)pk1[0]));\n", indent);
-	printf("%s" "t5 = t1 + (((uint32_t)t3) * ((uint64_t)pk1[0]));\n", indent);
-	printf("%s" "t6 = t0 + (((uint32_t)t2) * ((uint64_t)pk1[1]));\n", indent);
-	printf("%s" "t7 = t1 + (((uint32_t)t3) * ((uint64_t)pk1[1]));\n", indent);
-
-	/* t4,t5,t4,t5,t6,t7,t6,t7 */
-
-	printf("%s" "\n", indent);
-	printf("%s" "t4 = ((uint64_t)(uint32_t)t4) + (t4 >> 32);\n", indent);
-	printf("%s" "t4 = ((uint64_t)(uint32_t)t4) + (t4 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t5 = ((uint64_t)(uint32_t)t5) + (t5 >> 32);\n", indent);
-	printf("%s" "t5 = ((uint64_t)(uint32_t)t5) + (t5 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t6 = ((uint64_t)(uint32_t)t6) + (t6 >> 32);\n", indent);
-	printf("%s" "t6 = ((uint64_t)(uint32_t)t6) + (t6 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t7 = ((uint64_t)(uint32_t)t7) + (t7 >> 32);\n", indent);
-	printf("%s" "t7 = ((uint64_t)(uint32_t)t7) + (t7 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-
-	printf("%s" "t0 = t4 + (((uint32_t)t5) * ((uint64_t)pk2[0]));\n", indent);
-	printf("%s" "t1 = t4 + (((uint32_t)t5) * ((uint64_t)pk2[1]));\n", indent);
-	printf("%s" "t2 = t6 + (((uint32_t)t7) * ((uint64_t)pk2[2]));\n", indent);
-	printf("%s" "t3 = t6 + (((uint32_t)t7) * ((uint64_t)pk2[3]));\n", indent);
-
-	/* t0,t0,t1,t1,t2,t2,t3,t3 */
-
-	printf("%s" "t0 = ((uint64_t)(uint32_t)t0) + (t0 >> 32);\n", indent);
-	printf("%s" "t0 = ((uint64_t)(uint32_t)t0) + (t0 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n", indent);
-	printf("%s" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t2 = ((uint64_t)(uint32_t)t2) + (t2 >> 32);\n", indent);
-	printf("%s" "t2 = ((uint64_t)(uint32_t)t2) + (t2 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t3 = ((uint64_t)(uint32_t)t3) + (t3 >> 32);\n", indent);
-	printf("%s" "t3 = ((uint64_t)(uint32_t)t3) + (t3 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "data[x] = t0;\n", indent);
-	printf("%s" "data[x+(1*FET_STEP)] = %s;\n", indent, (step != 1) ? "t0" : "0");
-	printf("%s" "data[x+(2*FET_STEP)] = t1;\n", indent);
-	printf("%s" "data[x+(3*FET_STEP)] = %s;\n", indent, (step != 1) ? "t1" : "0");
-	printf("%s" "data[x+(4*FET_STEP)] = t2;\n", indent);
-	printf("%s" "data[x+(5*FET_STEP)] = %s;\n", indent, (step != 1) ? "t2" : "0");
-	printf("%s" "data[x+(6*FET_STEP)] = t3;\n", indent);
-	printf("%s" "data[x+(7*FET_STEP)] = %s;\n", indent, (step != 1) ? "t3" : "0");
-
-	indent = "\t\t\t";
-
-	printf("%s" "}\n", indent);
-
-	printf("%s" "pk0 += 1;\n", indent);
-	printf("%s" "pk1 += 2;\n", indent);
-	printf("%s" "pk2 += 4;\n", indent);
-
-	indent = "\t\t";
-
-	printf("%s" "}\n", indent);
-
-	indent = "\t";
-
-	printf("%s" "} while (0);\n", indent);
-}
-
-static void
-mbin_fet_32_generate_r4(uint32_t step, uint32_t max)
-{
-	const char *indent;
-
-	indent = "\t";
-
-	printf("%s" "do {\n", indent);
-
-	indent = "\t\t";
-
-	printf("%s" "enum { FET_MAX = 0x%x, FET_STEP = 0x%x };\n", indent, max, step);
-	printf("%s" "\n", indent);
-
-	printf("%s" "const uint32_t *pk0 = fet_%d_32_table;\n", indent, max);
-	printf("%s" "const uint32_t *pk1 = fet_%d_32_table;\n", indent, max);
-	printf("%s" "\n", indent);
-
-	printf("%s" "for (y = 0; y != FET_MAX; y += 4 * FET_STEP) {\n", indent);
-
-	indent = "\t\t\t";
-
-	printf("%s" "for (x = y; x != (FET_STEP + y); x++) {\n", indent);
-
-	indent = "\t\t\t\t";
-
-	printf("%s" "uint64_t t0;\n", indent);
-	printf("%s" "uint64_t t1;\n", indent);
-	printf("%s" "uint64_t t2;\n", indent);
-	printf("%s" "uint64_t t3;\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t0 = data[x];\n", indent);
-	printf("%s" "t1 = data[x+FET_STEP];\n", indent);
-	printf("%s" "t2 = data[x+(2*FET_STEP)];\n", indent);
-	printf("%s" "t3 = data[x+(3*FET_STEP)];\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t0 = t0 + (((uint32_t)t2) * ((uint64_t)pk0[0]));\n", indent);
-	printf("%s" "t1 = t1 + (((uint32_t)t3) * ((uint64_t)pk0[0]));\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t0 = ((uint64_t)(uint32_t)t0) + (t0 >> 32);\n", indent);
-	printf("%s" "t0 = ((uint64_t)(uint32_t)t0) + (t0 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n", indent);
-	printf("%s" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t2 = t0 + (((uint32_t)t1) * ((uint64_t)pk1[0]));\n", indent);
-	printf("%s" "t3 = t0 + (((uint32_t)t1) * ((uint64_t)pk1[1]));\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t2 = ((uint64_t)(uint32_t)t2) + (t2 >> 32);\n", indent);
-	printf("%s" "t2 = ((uint64_t)(uint32_t)t2) + (t2 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "t3 = ((uint64_t)(uint32_t)t3) + (t3 >> 32);\n", indent);
-	printf("%s" "t3 = ((uint64_t)(uint32_t)t3) + (t3 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "data[x] = t2;\n", indent);
-	printf("%s" "data[x+FET_STEP] = %s;\n", indent, (step != 1) ? "t2" : "0");
-	printf("%s" "data[x+(2*FET_STEP)] = t3;\n", indent);
-	printf("%s" "data[x+(3*FET_STEP)] = %s;\n", indent, (step != 1) ? "t3" : "0");
-
-	indent = "\t\t\t";
-
-	printf("%s" "}\n", indent);
-
-	printf("%s" "pk0 += 1;\n", indent);
-	printf("%s" "pk1 += 2;\n", indent);
-
-	indent = "\t\t";
-
-	printf("%s" "}\n", indent);
-
-	indent = "\t";
-
-	printf("%s" "} while (0);\n", indent);
+#if 0
+	printf("%s" "%s = %s + (uint64_t)%s * (uint64_t)%s;\n",
+	    indent, vr, va, vb, vc);
+	printf("%s" "%s = (uint32_t)%s + (%s >> 32);\n",
+	    indent, vr, vr, vr);
+	printf("%s" "%s = (uint32_t)%s + (%s >> 32);\n",
+	    indent, vr, vr, vr);
+#else
+	printf("%s" "asm(\n", indent);
+	printf("%s\t" "\"mul %%2\\n\"\n", indent);
+	printf("%s\t" "\"add %%%%edx, %%0\\n\"\n", indent);
+	printf("%s\t" "\"adc $0, %%0\\n\"\n", indent);
+	printf("%s\t" "\"add %%3, %%0\\n\"\n", indent);
+	printf("%s\t" "\"adc $0, %%0\\n\" :\n", indent);
+	printf("%s\t" "\"=a\" (%s) : \n", indent, vr);
+	printf("%s\t" "\"a\" (%s), \"%s\" (%s), \"r\" (%s) : \"%%edx\");\n",
+	    indent, vb, "r", vc, va);
+#endif
 }
 
 static void
@@ -320,29 +136,30 @@ mbin_fet_32_generate_r2(uint32_t step, uint32_t max)
 
 	indent = "\t\t\t";
 
-	printf("%s" "for (x = y; x != (FET_STEP + y); x++) {\n", indent);
+	printf("%s" "uint32_t k0 = pk0[0];\n", indent);
+	printf("%s" "uint32_t k1 = pk0[1];\n", indent);
+	printf("%s" "pk0 += 2;\n", indent);
+
+	printf("%s" "for (x = 0; x != FET_STEP; x++) {\n", indent);
 
 	indent = "\t\t\t\t";
 
-	printf("%s" "uint64_t t0;\n", indent);
-	printf("%s" "uint64_t t1;\n", indent);
+	printf("%s" "uint32_t t0;\n", indent);
+	printf("%s" "uint32_t t1;\n", indent);
+	printf("%s" "uint32_t temp;\n", indent);
 	printf("%s" "\n", indent);
-	printf("%s" "t0 = data[x];\n", indent);
-	printf("%s" "t1 = ((uint64_t)data[x+FET_STEP]) * ((uint64_t)pk0[0]);\n", indent);
+	printf("%s" "t0 = data[y + x];\n", indent);
+	printf("%s" "t1 = data[y + x + FET_STEP];\n", indent);
 	printf("%s" "\n", indent);
-	printf("%s" "t0 = t0 + t1;\n", indent);
+	mbin_fet_32_add_mul(indent, "t0", "t1", "k0", "temp");
+	printf("%s" "data[y + x] = temp;\n", indent);
 	printf("%s" "\n", indent);
-	printf("%s" "t0 = ((uint64_t)(uint32_t)t0) + (t0 >> 32);\n", indent);
-	printf("%s" "t0 = ((uint64_t)(uint32_t)t0) + (t0 >> 32);\n", indent);
-	printf("%s" "\n", indent);
-	printf("%s" "data[x] = t0;\n", indent);
-	printf("%s" "data[x+FET_STEP] = %s;\n", indent, (step != 1) ? "t0" : "0");
+	mbin_fet_32_add_mul(indent, "t0", "t1", "k1", "temp");
+	printf("%s" "data[y + x + FET_STEP] = temp;\n", indent);
 
 	indent = "\t\t\t";
 
 	printf("%s" "}\n", indent);
-
-	printf("%s" "pk0 += 1;\n", indent);
 
 	indent = "\t\t";
 
@@ -375,10 +192,10 @@ mbin_fet_32_generate(uint8_t power)
 
 	printf("static const uint32_t "
 	    "fet_%d_32_table[0x%x] = {\n",
-	    max, max / 2);
+	    max, max);
 
 	freq = 1U << (FET32_SHIFT - power);
-	for (y = 0; y != (max / 2); y++) {
+	for (y = 0; y != max; y++) {
 		uint32_t factor;
 
 		z = mbin_bitrev32(y << (32 - power));
@@ -402,16 +219,7 @@ mbin_fet_32_generate(uint8_t power)
 	printf("\t" "%s y;\n", br_type);
 
 	for (n = 0; n != power; n++) {
-
-		if ((power - n) >= 3) {
-			n += 2;
-			printf("\t" "/* round %d - r8 */\n", n);
-			mbin_fet_32_generate_r8(1U << (power - n - 1), max);
-		} else if ((power - n) >= 2) {
-			n++;
-			printf("\t" "/* round %d - r4 */\n", n);
-			mbin_fet_32_generate_r4(1U << (power - n - 1), max);
-		} else {
+		if (1) {
 			printf("\t" "/* round %d - r2 */\n", n);
 			mbin_fet_32_generate_r2(1U << (power - n - 1), max);
 		}
@@ -450,14 +258,15 @@ mbin_fet_32_generate(uint8_t power)
 
 	printf("\t" "fet_inverse_%d_32(data);\n", max);
 
-	printf("\t" "t0 = t0 * 0x%xULL;\n", 0x10001 << (power - 2));
+	printf("\t" "t0 = t0 * 0x%xULL;\n", 0x10001 << (power - 1));
 	printf("\t" "t0 = ((uint64_t)(uint32_t)t0) + (t0 >> 32);\n");
 	printf("\t" "t0 = ((uint64_t)(uint32_t)t0) + (t0 >> 32);\n");
+	printf("\t" "t0 = 0xFFFFFFFFULL - t0;\n");
 
 	printf("\t" "t1 = data[0];\n");
-	printf("\t" "t1 = t1 + 0xFFFFFFFFULL - t0;\n");
+	printf("\t" "t1 = t1 + t0;\n");
 	printf("\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
-	printf("\t" "t1 <<= %d;\n", 18 - power);
+	printf("\t" "t1 <<= %d;\n", 17 - power);
 	printf("\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
 	printf("\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
 	printf("\t" "if (t1 == 0xFFFFFFFFULL)\n");
@@ -466,13 +275,13 @@ mbin_fet_32_generate(uint8_t power)
 	printf("\t" "\t" "t1 = (uint16_t)-t1;\n");
 	printf("\t" "data[0] = t1;\n");
 
-	printf("\t" "for (x = 1; x != 0x%x; x++) {\n", (max / 4) + 1);
+	printf("\t" "for (x = 1; x != 0x%x; x++) {\n", (max / 2) + 1);
 	printf("\t" "\t" "uint32_t temp;\n");
 	printf("\t" "\t" "temp = data[x];\n");
-	printf("\t" "\t" "t1 = data[0x%x-x];\n", max / 2);
-	printf("\t" "\t" "t1 = t1 + 0xFFFFFFFFULL - t0;\n");
+	printf("\t" "\t" "t1 = data[0x%x-x];\n", max);
+	printf("\t" "\t" "t1 = t1 + t0;\n");
 	printf("\t" "\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
-	printf("\t" "\t" "t1 <<= %d;\n", 18 - power);
+	printf("\t" "\t" "t1 <<= %d;\n", 17 - power);
 	printf("\t" "\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
 	printf("\t" "\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
 	printf("\t" "\t" "if (t1 == 0xFFFFFFFFULL)\n");
@@ -481,16 +290,16 @@ mbin_fet_32_generate(uint8_t power)
 	printf("\t" "\t" "\t" "t1 = (uint16_t)-t1;\n");
 	printf("\t" "\t" "data[x] = t1;\n");
 	printf("\t" "\t" "t1 = temp;\n");
-	printf("\t" "\t" "t1 = t1 + 0xFFFFFFFFULL - t0;\n");
+	printf("\t" "\t" "t1 = t1 + t0;\n");
 	printf("\t" "\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
-	printf("\t" "\t" "t1 <<= %d;\n", 18 - power);
+	printf("\t" "\t" "t1 <<= %d;\n", 17 - power);
 	printf("\t" "\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
 	printf("\t" "\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
 	printf("\t" "\t" "if (t1 == 0xFFFFFFFFULL)\n");
 	printf("\t" "\t" "\t" "t1 = 0;\n");
 	printf("\t" "\t" "else\n");
 	printf("\t" "\t" "\t" "t1 = (uint16_t)-t1;\n");
-	printf("\t" "\t" "data[0x%x-x] = t1;\n", max / 2);
+	printf("\t" "\t" "data[0x%x-x] = t1;\n", max);
 	printf("\t" "}\n");
 	printf("}\n");
 }
