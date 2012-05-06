@@ -288,7 +288,6 @@ mbin_fet_32_generate(uint8_t power)
 	printf("\t" "\t" "\t" "t1 = (uint16_t)((t1 >> 16) - t1);\n");
 	printf("\t" "\t" "data[x] = t1;\n");
 	printf("\t" "\t" "t1 = temp;\n");
-	printf("\t" "\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
 	printf("\t" "\t" "t1 <<= %d;\n", 16 - power);
 	printf("\t" "\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
 	printf("\t" "\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
