@@ -268,7 +268,6 @@ mbin_fet_32_generate(uint8_t power)
 	printf("\t" "t1 = data[0];\n");
 	printf("\t" "t1 <<= %d;\n", 16 - power);
 	printf("\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
-	printf("\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
 	printf("\t" "if (t1 == 0xFFFFFFFFULL)\n");
 	printf("\t" "\t" "t1 = 0;\n");
 	printf("\t" "else\n");
@@ -281,7 +280,6 @@ mbin_fet_32_generate(uint8_t power)
 	printf("\t" "\t" "t1 = data[0x%x-x];\n", max);
 	printf("\t" "\t" "t1 <<= %d;\n", 16 - power);
 	printf("\t" "\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
-	printf("\t" "\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
 	printf("\t" "\t" "if (t1 == 0xFFFFFFFFULL)\n");
 	printf("\t" "\t" "\t" "t1 = 0;\n");
 	printf("\t" "\t" "else\n");
@@ -289,7 +287,6 @@ mbin_fet_32_generate(uint8_t power)
 	printf("\t" "\t" "data[x] = t1;\n");
 	printf("\t" "\t" "t1 = temp;\n");
 	printf("\t" "\t" "t1 <<= %d;\n", 16 - power);
-	printf("\t" "\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
 	printf("\t" "\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
 	printf("\t" "\t" "if (t1 == 0xFFFFFFFFULL)\n");
 	printf("\t" "\t" "\t" "t1 = 0;\n");
