@@ -457,7 +457,7 @@ struct mbin_fet_32_mod {
 };
 
 void	mbin_fet_32_generate(uint8_t);
-uint32_t mbin_fet_32_generate_power(uint32_t n);
+uint32_t mbin_fet_32_generate_power(uint32_t f, uint32_t n);
 
 /* Equation prototypes */
 
