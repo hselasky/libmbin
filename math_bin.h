@@ -456,7 +456,12 @@ struct mbin_fet_32_mod {
 	uint32_t conv;
 };
 
-void	mbin_fet_32_generate(uint8_t);
+#define	FET_ARCH_GENERIC 0
+#define	FET_ARCH_I386 1
+#define	FET_ARCH_AMD64 2
+
+void	mbin_fet_64_generate(uint8_t, uint8_t);
+void	mbin_fet_32_generate(uint8_t, uint8_t);
 uint32_t mbin_fet_32_generate_power(uint32_t f, uint32_t n);
 
 /* Equation prototypes */
