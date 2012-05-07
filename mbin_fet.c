@@ -333,7 +333,7 @@ mbin_fet_32_add_mul(const char *indent, const char *va,
 		printf(indent);
 		printf("asm(\n");
 		printf(indent);
-		printf("\t" "\"mulq %%2\\n\"\n");
+		printf("\t" "\"mul %%2\\n\"\n");
 		printf(indent);
 		printf("\t" "\"add %%%%edx, %%0\\n\"\n");
 		printf(indent);
