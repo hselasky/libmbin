@@ -202,13 +202,11 @@ mbin_fet_64_generate_fixup(const char *indent, uint8_t power, uint8_t arch)
 		break;
 	default:
 		printf(indent);
-		printf("uint128_t temp;\n");
+		printf("uint64_t temp;\n");
 		printf(indent);
 		printf("temp = data[x];\n");
 		printf(indent);
-		printf("temp <<= %d;\n", 32 - power);
-		printf(indent);
-		printf("temp = ((uint128_t)(uint64_t)temp) + (temp >> 64);\n");
+		printf("temp = (temp << %u) | (temp >> %u);\n", 32 - power, 32 + power);
 		printf(indent);
 		printf("temp = (uint32_t)((temp >> 32) - temp);\n");
 		printf(indent);
@@ -526,17 +524,29 @@ mbin_fet_32_generate(uint8_t power, uint8_t arch)
 	printf("}\n\n");
 
 	printf("void\n"
+	    "fet_conv_%d_32(uint32_t *a, uint32_t *b, uint32_t *c)\n"
+	    "{\n", max);
+	printf("\t" "uint32_t x;\n");
+	printf("\t" "for (x = 0; x != 0x%x; x++) {\n", max);
+	printf("\t" "\t" "uint64_t temp;\n");
+	printf("\t" "\t" "temp = ((uint64_t)a[x]) * ((uint64_t)b[x]);\n");
+	printf("\t" "\t" "temp = (uint32_t)temp + (temp >> 32);\n");
+	printf("\t" "\t" "temp = (uint32_t)temp + (temp >> 32);\n");
+	printf("\t" "\t" "c[x] = temp;\n");
+	printf("\t" "}\n");
+	printf("}\n");
+
+	printf("void\n"
 	    "fet_forward_%d_32(uint32_t *data)\n"
 	    "{\n", max);
 
-	printf("\t" "uint64_t t1;\n\n");
+	printf("\t" "uint32_t t1;\n\n");
 	printf("\t" "%s x;\n\n", br_type);
 
 	printf("\t" "fet_inverse_%d_32(data);\n", max);
 
 	printf("\t" "t1 = data[0];\n");
-	printf("\t" "t1 <<= %d;\n", 16 - power);
-	printf("\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
+	printf("\t" "t1 = (t1 << %u) | (t1 >> %u);\n", 16 - power, 16 + power);
 	printf("\t" "t1 = (uint16_t)((t1 >> 16) - t1);\n");
 	printf("\t" "data[0] = t1;\n");
 
@@ -544,13 +554,11 @@ mbin_fet_32_generate(uint8_t power, uint8_t arch)
 	printf("\t" "\t" "uint32_t temp;\n");
 	printf("\t" "\t" "temp = data[x];\n");
 	printf("\t" "\t" "t1 = data[0x%x-x];\n", max);
-	printf("\t" "\t" "t1 <<= %d;\n", 16 - power);
-	printf("\t" "\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
+	printf("\t" "\t" "t1 = (t1 << %u) | (t1 >> %u);\n", 16 - power, 16 + power);
 	printf("\t" "\t" "t1 = (uint16_t)((t1 >> 16) - t1);\n");
 	printf("\t" "\t" "data[x] = t1;\n");
 	printf("\t" "\t" "t1 = temp;\n");
-	printf("\t" "\t" "t1 <<= %d;\n", 16 - power);
-	printf("\t" "\t" "t1 = ((uint64_t)(uint32_t)t1) + (t1 >> 32);\n");
+	printf("\t" "\t" "t1 = (t1 << %u) | (t1 >> %u);\n", 16 - power, 16 + power);
 	printf("\t" "\t" "t1 = (uint16_t)((t1 >> 16) - t1);\n");
 	printf("\t" "\t" "data[0x%x-x] = t1;\n", max);
 	printf("\t" "}\n");
