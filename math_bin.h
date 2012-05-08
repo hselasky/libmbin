@@ -464,6 +464,10 @@ void	mbin_fet_64_generate(uint8_t, uint8_t);
 void	mbin_fet_32_generate(uint8_t, uint8_t);
 uint32_t mbin_fet_32_generate_power(uint32_t f, uint32_t n);
 
+void	mbin_fet_inverse_64(uint64_t *, uint8_t);
+void	mbin_fet_conv_64(const uint64_t *, const uint64_t *, uint64_t *, uint8_t);
+void	mbin_fet_forward_64(uint64_t *, uint8_t);
+
 /* Equation prototypes */
 
 uint32_t *mbin_compress_tab_32(const uint32_t *ptr, uint32_t last, uint32_t slice);

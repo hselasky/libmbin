@@ -565,6 +565,112 @@ mbin_fet_32_generate(uint8_t power, uint8_t arch)
 	printf("}\n");
 }
 
+static void
+mbin_fet_inverse_64_sub(uint64_t *data, uint8_t power, uint8_t step)
+{
+	uint64_t mask = (1ULL << power) - 1;
+	uint32_t x;
+	uint32_t y;
+	uint32_t k;
+	uint8_t s = 32 - mbin_sumbits32(power - 1);
+
+	for (k = y = 0; y != power; k += 2, y += 2 * step) {
+		uint32_t k0 = mbin_bitrev32(k << s);
+		uint32_t k1 = k0 | (power / 2);
+
+		for (x = 0; x != step; x++) {
+			uint64_t t0;
+			uint64_t t1;
+			uint64_t temp;
+
+			t0 = data[y + x];
+			t1 = data[y + x + step];
+
+			temp = t0 + (t1 << k0);
+			temp = (temp & mask) + (temp >> power);
+			temp = (temp & mask) + (temp >> power);
+			data[y + x] = temp;
+
+			temp = t0 + (t1 << k1);
+			temp = (temp & mask) + (temp >> power);
+			temp = (temp & mask) + (temp >> power);
+			data[y + x + step] = temp;
+		}
+	}
+}
+
+void
+mbin_fet_inverse_64(uint64_t *data, uint8_t power)
+{
+	uint8_t n;
+	uint8_t i;
+	uint8_t j;
+
+	if (power > 5)
+		return;
+
+	for (n = 0; n != power; n++) {
+		mbin_fet_inverse_64_sub(data, 1 << power,
+		    1 << (power - n - 1));
+	}
+
+	/* In-place data order bit-reversal */
+
+	for (i = 0; i != 1U << power; i++) {
+
+		j = mbin_bitrev32(i << (32 - power));
+
+		if (j < i) {
+			uint64_t temp;
+
+			temp = data[i];
+			data[i] = data[j];
+			data[j] = temp;
+		}
+	}
+}
+
+void
+mbin_fet_conv_64(const uint64_t *a, const uint64_t *b, uint64_t *c, uint8_t power)
+{
+	uint8_t max = (1U << power);
+	uint8_t x;
+	uint64_t mask = (1ULL << max) - 1ULL;
+	uint64_t temp;
+
+	for (x = 0; x != max; x++) {
+		temp = a[x] * b[x];
+		temp = (temp & mask) + (temp >> max);
+		temp = (temp & mask) + (temp >> max);
+		c[x] = temp;
+	}
+}
+
+void
+mbin_fet_forward_64(uint64_t *data, uint8_t power)
+{
+	uint8_t max = (1U << power);
+	uint8_t max_half = (max / 2);
+	uint8_t x;
+	uint64_t mask = (1ULL << max_half) - 1ULL;
+	uint64_t temp;
+
+	mbin_fet_inverse_64(data, power);
+
+	for (x = 0; x != max; x++) {
+		temp = data[x];
+		temp = (temp << (max_half - power)) | (temp >> (max_half + power));
+		temp = mask & ((temp >> max_half) - temp);
+		data[x] = temp;
+	}
+
+	for (x = 1; x != max_half; x++) {
+		temp = data[x];
+		data[x] = data[max - x];
+		data[max - x] = temp;
+	}
+}
+
 void
 mbin_fet_32_find_mod(struct mbin_fet_32_mod *pmod)
 {
