@@ -694,6 +694,22 @@ mbin_fet_add_64(const uint64_t *pa, const uint64_t *pb,
 }
 
 void
+mbin_fet_sub_64(const uint64_t *pa, const uint64_t *pb,
+    uint64_t *pc, uint32_t num)
+{
+	uint64_t carry = 0;
+	uint64_t temp;
+	uint32_t x;
+
+	for (x = 0; x != num; x++) {
+		temp = pa[x] - carry;
+		carry = (temp > pa[x]);
+		pc[x] = temp - pb[x];
+		carry += (pc[x] > temp);
+	}
+}
+
+void
 mbin_fet_rol_64(uint64_t *pa, uint32_t shift, uint32_t num)
 {
 	uint32_t rem = (shift & 63);

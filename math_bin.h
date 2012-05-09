@@ -469,6 +469,7 @@ void	mbin_fet_conv_64(const uint64_t *, const uint64_t *, uint64_t *, uint8_t);
 void	mbin_fet_forward_64(uint64_t *, uint8_t);
 
 void	mbin_fet_add_64(const uint64_t *, const uint64_t *, uint64_t *, uint32_t);
+void	mbin_fet_sub_64(const uint64_t *, const uint64_t *, uint64_t *, uint32_t);
 void	mbin_fet_rol_64(uint64_t *, uint32_t, uint32_t);
 
 /* Equation prototypes */
