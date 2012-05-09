@@ -29,11 +29,8 @@
  */
 
 #include <stdio.h>
-
 #include <stdint.h>
-
 #include <stdlib.h>
-
 #include <string.h>
 
 #include "math_bin.h"
@@ -668,6 +665,74 @@ mbin_fet_forward_64(uint64_t *data, uint8_t power)
 		temp = data[x];
 		data[x] = data[max - x];
 		data[max - x] = temp;
+	}
+}
+
+void
+mbin_fet_add_64(const uint64_t *pa, const uint64_t *pb,
+    uint64_t *pc, uint32_t num)
+{
+	uint64_t carry = 0;
+	uint64_t temp;
+	uint32_t x;
+
+	for (x = 0; x != num; x++) {
+		temp = carry + pa[x];
+		carry = (temp < pa[x]);
+		temp = temp + pb[x];
+		carry += (temp < pb[x]);
+		pc[x] = temp;
+	}
+
+	while (carry) {
+		for (x = 0; x != num; x++) {
+			temp = carry + pc[x];
+			carry = (temp < pc[x]);
+			pc[x] = temp;
+		}
+	}
+}
+
+void
+mbin_fet_rol_64(uint64_t *pa, uint32_t shift, uint32_t num)
+{
+	uint32_t rem = (shift & 63);
+	uint32_t div = (shift / 64);
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	uint64_t temp;
+	uint64_t carry;
+
+	if (rem) {
+		uint64_t mask = (1ULL << rem) - 1;
+
+		for (x = 0; x != num; x++)
+			pa[x] = (pa[x] << rem) | (pa[x] >> (64 - rem));
+
+		temp = pa[num - 1] & mask;
+
+		for (x = 0; x != num; x++) {
+			carry = pa[x] & mask;
+			pa[x] &= ~mask;
+			pa[x] |= temp;
+			temp = carry;
+		}
+	}
+	if (div) {
+		uint32_t delta = ((~div) & (div - 1)) + 1;
+
+		for (x = 0; x != delta; x++) {
+			carry = pa[x];
+			y = x;
+			do {
+				z = (y + div) & (num - 1);
+				temp = pa[z];
+				pa[z] = carry;
+				carry = temp;
+				y = z;
+			} while (y != x);
+		}
 	}
 }
 

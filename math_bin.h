@@ -468,6 +468,9 @@ void	mbin_fet_inverse_64(uint64_t *, uint8_t);
 void	mbin_fet_conv_64(const uint64_t *, const uint64_t *, uint64_t *, uint8_t);
 void	mbin_fet_forward_64(uint64_t *, uint8_t);
 
+void	mbin_fet_add_64(const uint64_t *, const uint64_t *, uint64_t *, uint32_t);
+void	mbin_fet_rol_64(uint64_t *, uint32_t, uint32_t);
+
 /* Equation prototypes */
 
 uint32_t *mbin_compress_tab_32(const uint32_t *ptr, uint32_t last, uint32_t slice);
