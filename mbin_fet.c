@@ -563,7 +563,7 @@ mbin_fet_32_generate(uint8_t power, uint8_t arch)
 }
 
 static void
-mbin_fet_inverse_64_sub(uint64_t *data, uint8_t power, uint8_t step)
+mbin_fet_inverse_small_64_sub(uint64_t *data, uint8_t power, uint8_t step)
 {
 	uint64_t mask = (1ULL << power) - 1;
 	uint32_t x;
@@ -597,7 +597,7 @@ mbin_fet_inverse_64_sub(uint64_t *data, uint8_t power, uint8_t step)
 }
 
 void
-mbin_fet_inverse_64(uint64_t *data, uint8_t power)
+mbin_fet_inverse_small_64(uint64_t *data, uint8_t power)
 {
 	uint8_t n;
 	uint8_t i;
@@ -607,7 +607,7 @@ mbin_fet_inverse_64(uint64_t *data, uint8_t power)
 		return;
 
 	for (n = 0; n != power; n++) {
-		mbin_fet_inverse_64_sub(data, 1 << power,
+		mbin_fet_inverse_small_64_sub(data, 1 << power,
 		    1 << (power - n - 1));
 	}
 
@@ -628,7 +628,8 @@ mbin_fet_inverse_64(uint64_t *data, uint8_t power)
 }
 
 void
-mbin_fet_conv_64(const uint64_t *a, const uint64_t *b, uint64_t *c, uint8_t power)
+mbin_fet_conv_small_64(const uint64_t *a, const uint64_t *b,
+    uint64_t *c, uint8_t power)
 {
 	uint8_t max = (1U << power);
 	uint8_t x;
@@ -644,7 +645,7 @@ mbin_fet_conv_64(const uint64_t *a, const uint64_t *b, uint64_t *c, uint8_t powe
 }
 
 void
-mbin_fet_forward_64(uint64_t *data, uint8_t power)
+mbin_fet_forward_small_64(uint64_t *data, uint8_t power)
 {
 	uint8_t max = (1U << power);
 	uint8_t max_half = (max / 2);
@@ -656,7 +657,8 @@ mbin_fet_forward_64(uint64_t *data, uint8_t power)
 
 	for (x = 0; x != max; x++) {
 		temp = data[x];
-		temp = (temp << (max_half - power)) | (temp >> (max_half + power));
+		temp = (temp << (max_half - power)) |
+		    (temp >> (max_half + power));
 		temp = mask & ((temp >> max_half) - temp);
 		data[x] = temp;
 	}
@@ -669,27 +671,57 @@ mbin_fet_forward_64(uint64_t *data, uint8_t power)
 }
 
 void
+mbin_fet_cpy_64(uint64_t *dst, const uint64_t *src, uint32_t num)
+{
+	memcpy(dst, src, num * 8);
+}
+
+void
 mbin_fet_add_64(const uint64_t *pa, const uint64_t *pb,
-    uint64_t *pc, uint32_t num)
+    uint64_t *pc, uint32_t num, uint8_t is_mod)
 {
 	uint64_t carry = 0;
 	uint64_t temp;
 	uint32_t x;
+	uint32_t z;
 
-	for (x = 0; x != num; x++) {
+#ifdef FET_DEBUG
+	printf("ADD %d qwords %s\n", num, is_mod ? "mod" : "");
+#endif
+
+	z = num & ~3;
+
+	for (x = 0; x != z; x += 4) {
 		temp = carry + pa[x];
-		carry = (temp < pa[x]);
-		temp = temp + pb[x];
-		carry += (temp < pb[x]);
-		pc[x] = temp;
+		pc[x] = temp + pb[x];
+		carry = (pc[x] < temp) || (temp < pa[x]);
+
+		temp = carry + pa[x + 1];
+		pc[x + 1] = temp + pb[x + 1];
+		carry = (pc[x + 1] < temp) || (temp < pa[x + 1]);
+
+		temp = carry + pa[x + 2];
+		pc[x + 2] = temp + pb[x + 2];
+		carry = (pc[x + 2] < temp) || (temp < pa[x + 2]);
+
+		temp = carry + pa[x + 3];
+		pc[x + 3] = temp + pb[x + 3];
+		carry = (pc[x + 3] < temp) || (temp < pa[x + 3]);
 	}
 
-	while (carry) {
-		for (x = 0; x != num; x++) {
-			temp = carry + pc[x];
-			carry = (temp < pc[x]);
-			pc[x] = temp;
-		}
+	for (; x != num; x++) {
+		temp = carry + pa[x];
+		pc[x] = temp + pb[x];
+		carry = (pc[x] < temp) || (temp < pa[x]);
+	}
+
+	if (is_mod == 0)
+		return;
+
+	for (x = 0; x != num && carry; x++) {
+		temp = carry + pc[x];
+		carry = (temp < pc[x]);
+		pc[x] = temp;
 	}
 }
 
@@ -700,56 +732,204 @@ mbin_fet_sub_64(const uint64_t *pa, const uint64_t *pb,
 	uint64_t carry = 0;
 	uint64_t temp;
 	uint32_t x;
+	uint32_t z;
 
-	for (x = 0; x != num; x++) {
+	z = num & ~3;
+
+	for (x = 0; x != z; x += 4) {
 		temp = pa[x] - carry;
-		carry = (temp > pa[x]);
 		pc[x] = temp - pb[x];
-		carry += (pc[x] > temp);
+		carry = (pc[x] > temp) || (temp > pa[x]);
+
+		temp = pa[x + 1] - carry;
+		pc[x + 1] = temp - pb[x + 1];
+		carry = (pc[x + 1] > temp) || (temp > pa[x + 1]);
+
+		temp = pa[x + 2] - carry;
+		pc[x + 2] = temp - pb[x + 2];
+		carry = (pc[x + 2] > temp) || (temp > pa[x + 2]);
+
+		temp = pa[x + 3] - carry;
+		pc[x + 3] = temp - pb[x + 3];
+		carry = (pc[x + 3] > temp) || (temp > pa[x + 3]);
+	}
+
+	for (; x != num; x++) {
+		temp = pa[x] - carry;
+		pc[x] = temp - pb[x];
+		carry = (pc[x] > temp) || (pa[x] - carry);
 	}
 }
 
 void
 mbin_fet_rol_64(uint64_t *pa, uint32_t shift, uint32_t num)
 {
-	uint32_t rem = (shift & 63);
-	uint32_t div = (shift / 64);
+	uint8_t rem = (shift & 63);
+	uint8_t mer = 64 - rem;
+	uint32_t div = (shift / 64) & (num - 1);
 	uint32_t x;
 	uint32_t y;
 	uint32_t z;
 	uint64_t temp;
 	uint64_t carry;
 
+#ifdef FET_DEBUG
+	printf("ROL %d qwords %d bits\n", num, shift);
+#endif
 	if (rem) {
-		uint64_t mask = (1ULL << rem) - 1;
+		carry = pa[num - 1];
 
-		for (x = 0; x != num; x++)
-			pa[x] = (pa[x] << rem) | (pa[x] >> (64 - rem));
+		z = num & ~3;
 
-		temp = pa[num - 1] & mask;
-
-		for (x = 0; x != num; x++) {
-			carry = pa[x] & mask;
-			pa[x] &= ~mask;
-			pa[x] |= temp;
-			temp = carry;
+		for (x = 0; x != z; x += 4) {
+			temp = pa[x];
+			pa[x] = (temp << rem) | (carry >> mer);
+			carry = temp;
+			temp = pa[x + 1];
+			pa[x + 1] = (temp << rem) | (carry >> mer);
+			carry = temp;
+			temp = pa[x + 2];
+			pa[x + 2] = (temp << rem) | (carry >> mer);
+			carry = temp;
+			temp = pa[x + 3];
+			pa[x + 3] = (temp << rem) | (carry >> mer);
+			carry = temp;
+		}
+		for (; x != num; x++) {
+			temp = pa[x];
+			pa[x] = (temp << rem) | (carry >> mer);
+			carry = temp;
 		}
 	}
 	if (div) {
 		uint32_t delta = ((~div) & (div - 1)) + 1;
 
 		for (x = 0; x != delta; x++) {
-			carry = pa[x];
 			y = x;
+			carry = pa[y];
 			do {
-				z = (y + div) & (num - 1);
-				temp = pa[z];
-				pa[z] = carry;
+				y = (y + div) & (num - 1);
+				temp = pa[y];
+				pa[y] = carry;
 				carry = temp;
-				y = z;
-			} while (y != x);
+			} while (x != y);
 		}
 	}
+}
+
+static void
+mbin_fet_inverse_64_sub(uint64_t *data, uint64_t *ptemp,
+    uint8_t power, uint8_t step)
+{
+	uint32_t x;
+	uint32_t y;
+	uint32_t k;
+	uint32_t num = power >> 6;
+	uint8_t d = mbin_sumbits32(power - 1) - 6;
+	uint8_t s = 32 - d - 6;
+
+	for (k = y = 0; y != power; k += 2, y += 2 * step) {
+		uint32_t k0 = mbin_bitrev32(k << s);
+		uint32_t k1 = k0 | (power / 2);
+
+		for (x = 0; x != step; x++) {
+
+			mbin_fet_cpy_64(ptemp,
+			    data + ((y + x + step) << d), num);
+
+			mbin_fet_rol_64(ptemp, k1, num);
+
+			mbin_fet_add_64(data + ((y + x) << d), ptemp,
+			    data + ((y + x + step) << d), num, 1);
+
+			mbin_fet_rol_64(ptemp, k0 - k1, num);
+
+			mbin_fet_add_64(data + ((y + x) << d), ptemp,
+			    data + ((y + x) << d), num, 1);
+		}
+	}
+}
+
+void
+mbin_fet_inverse_64(uint64_t *data, uint8_t power)
+{
+	uint32_t num = (1 << power) >> 6;
+	uint64_t w1[num];
+	uint32_t i;
+	uint32_t j;
+	uint8_t n;
+	uint8_t d = power - 6;
+
+	if (power < 6)
+		return;
+
+	for (n = 0; n != power; n++) {
+		mbin_fet_inverse_64_sub(data, w1, 1 << power,
+		    1 << (power - n - 1));
+	}
+
+	/* In-place data order bit-reversal */
+
+	for (i = 0; i != 1 << power; i++) {
+
+		j = mbin_bitrev32(i << (32 - power));
+
+		if (j < i) {
+			mbin_fet_cpy_64(w1, data + (i << d), num);
+			mbin_fet_cpy_64(data + (i << d),
+			    data + (j << d), num);
+			mbin_fet_cpy_64(data + (j << d), w1, num);
+		}
+	}
+}
+
+void
+mbin_fet_forward_64(uint64_t *data, uint8_t power)
+{
+	uint32_t num = (1 << power) >> 6;
+	uint64_t temp[num];
+	uint32_t max = (1 << power);
+	uint32_t max_half = (max / 2);
+	uint32_t x;
+	uint8_t d = power - 6;
+
+	if (power < 6)
+		return;
+
+	mbin_fet_inverse_64(data, power);
+
+	for (x = 0; x != max; x++) {
+		mbin_fet_rol_64(data + (x << d), (max_half - power), num);
+		if (num == 1) {
+			data[x] = (uint32_t)((data[x] >> 32) - data[x]);
+		} else {
+			mbin_fet_sub_64(data + (x << d) + (1 << (d - 1)),
+			    data + (x << d), data + (x << d), num / 2);
+			memset(data + (x << d) + (1 << (d - 1)), 0, num * (8 / 2));
+		}
+	}
+
+	for (x = 1; x != max_half; x++) {
+		mbin_fet_cpy_64(temp, data + (x << d), num);
+		mbin_fet_cpy_64(data + (x << d), data + ((max - x) << d), num);
+		mbin_fet_cpy_64(data + ((max - x) << d), temp, num);
+	}
+}
+
+void
+mbin_fet_conv_64(const uint64_t *a, const uint64_t *b, uint64_t *c,
+    mbin_fet_mul_64_t *func, uint8_t power)
+{
+	uint32_t num = (1 << power) >> 6;
+	uint32_t max = (1 << power);
+	uint32_t x;
+	uint8_t d = power - 6;
+
+	if (power < 6)
+		return;
+
+	for (x = 0; x != max; x++)
+		func(a + (x << d), b + (x << d), c + (x << d), num);
 }
 
 void
