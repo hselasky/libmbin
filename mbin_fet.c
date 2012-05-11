@@ -781,7 +781,7 @@ mbin_fet_sub_64(const uint64_t *pa, const uint64_t *pb,
 	for (; x != num; x++) {
 		temp = pa[x] - carry;
 		last = temp - pb[x];
-		carry = (last > temp) + (pa[x] - carry);
+		carry = (last > temp) + (temp > pa[x]);
 		pc[x] = last;
 	}
 }
@@ -1051,7 +1051,7 @@ mbin_fet_read_64(uint64_t *ptr, uint32_t *poff,
 			val |= (ptr[(temp / 64)] >> (temp & 63)) << (64 - bits);
 			val |= (ptr[(temp / 64) + 1] << (64 - (temp & 63))) << (64 - bits);
 		} else {
-			val |= ptr[(temp & 64)] << (64 - bits);
+			val |= ptr[(temp / 64)] << (64 - bits);
 		}
 
 		if (rem < bits) {
