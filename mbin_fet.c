@@ -921,8 +921,7 @@ mbin_fet_inverse_64_sub(uint64_t *data, uint32_t max, uint32_t step)
 	uint32_t num = max >> 6;
 	uint8_t d = mbin_sumbits32(max - 1) - 6;
 	uint8_t s = 32 - d - 6;
-	uint64_t w0[num];
-	uint64_t w1[num];
+	uint64_t temp[num];
 
 	for (k = y = 0; y != max; k += 2, y += 2 * step) {
 
@@ -934,16 +933,15 @@ mbin_fet_inverse_64_sub(uint64_t *data, uint32_t max, uint32_t step)
 			uint64_t *p0 = data + ((y + x) << d);
 			uint64_t *p1 = data + ((y + x + step) << d);
 
-			mbin_fet_cpy_64(w0, p0, num);
-			mbin_fet_cpy_64(w1, p1, num);
+			mbin_fet_cpy_64(temp, p1, num);
 
-			mbin_fet_rol_64(w1, k0, num);
+			mbin_fet_rol_64(temp, k1, num);
 
-			mbin_fet_add_64(w0, w1, p0, num, 1);
+			mbin_fet_add_64(p0, temp, p1, num, 1);
 
-			mbin_fet_rol_64(w1, k1 - k0, num);
+			mbin_fet_rol_64(temp, k0 - k1, num);
 
-			mbin_fet_add_64(w0, w1, p1, num, 1);
+			mbin_fet_add_64(p0, temp, p0, num, 1);
 		}
 	}
 }
@@ -1371,8 +1369,6 @@ mbin_fet_mul_64(const uint64_t *a, const uint64_t *b,
 		if ((bits << power) >= (num * 64 * 2))
 			break;
 	}
-
-	printf("power = %d, bits = %d\n", power, bits);
 
 	tnum = (1 << power) << (power - 6);
 	max_bits = (1 << power);
