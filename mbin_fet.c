@@ -1354,9 +1354,13 @@ mbin_fet_mul_64(const uint64_t *a, const uint64_t *b,
 		mbin_fet_mul_64_2(a, b, c, num, is_mod);
 		return;
 	case 3:
+		if (mbin_fet_mul_64_ptr == mbin_fet_mul_64)
+			break;
 		mbin_fet_mul_64_ptr(a, b, c, num, is_mod);
 		return;
 	case 4:
+		if (mbin_fet_mul_64_ptr == mbin_fet_mul_64)
+			break;
 		mbin_fet_mul_64_ptr(a, b, c, num, is_mod);
 		return;
 	default:
