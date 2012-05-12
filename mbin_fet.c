@@ -41,6 +41,7 @@
 #define	FET32_SHIFT		16
 #define	FET32_FACTOR		7
 #define	FET32_LIMIT		6
+#undef	FET32_VERIFY
 
 uint32_t
 mbin_fet_32_generate_power(uint32_t f, uint32_t y)
@@ -673,6 +674,9 @@ mbin_fet_forward_small_64(uint64_t *data, uint8_t power)
 void
 mbin_fet_cpy_64(uint64_t *dst, const uint64_t *src, uint32_t num)
 {
+#ifdef FET32_VERIFY
+	printf("CPY %d\n", num);
+#endif
 	memcpy(dst, src, num * 8);
 }
 
@@ -680,14 +684,42 @@ void
 mbin_fet_add_64(const uint64_t *pa, const uint64_t *pb,
     uint64_t *pc, uint32_t num, uint8_t is_mod)
 {
+#ifdef FET32_VERIFY
+	uint64_t temp[num];
+	uint32_t x;
+	uint32_t carry = 0;
+
+	printf("ADD %d qwords %s\n", num, is_mod ? "mod" : "");
+
+	memset(temp, 0, num * 8);
+
+	for (x = 0; x != (num * 64); x++) {
+		carry += ((pa[x / 64] & (1ULL << (x % 64))) ? 1 : 0) +
+		    ((pb[x / 64] & (1ULL << (x % 64))) ? 1 : 0);
+		if (carry & 1)
+			temp[x / 64] |= (1ULL << (x % 64));
+		carry /= 2;
+	}
+
+	memcpy(pc, temp, sizeof(temp));
+
+	if (is_mod) {
+		while (carry) {
+			for (x = 0; x != (num * 64); x++) {
+				carry += ((pc[x / 64] & (1ULL << (x % 64))) ? 1 : 0);
+				if (carry & 1)
+					pc[x / 64] |= (1ULL << (x % 64));
+				else
+					pc[x / 64] &= ~(1ULL << (x % 64));
+				carry /= 2;
+			}
+		}
+	}
+#else
 	uint64_t carry;
 	uint64_t temp;
 	uint32_t x;
 	uint32_t z;
-
-#ifdef FET_DEBUG
-	printf("ADD %d qwords %s\n", num, is_mod ? "mod" : "");
-#endif
 
 	if (num == 1) {
 		pc[0] = pa[0] + pb[0];
@@ -737,58 +769,92 @@ mbin_fet_add_64(const uint64_t *pa, const uint64_t *pb,
 			pc[x] = temp;
 		}
 	}
+#endif
 }
 
 void
 mbin_fet_sub_64(const uint64_t *pa, const uint64_t *pb,
     uint64_t *pc, uint32_t num)
 {
+#ifdef FET32_VERIFY
+	uint64_t temp[num];
+	uint32_t x;
+	uint32_t carry = 0;
+
+	printf("SUB %d\n", num);
+
+	memset(temp, 0, num * 8);
+
+	for (x = 0; x != (num * 64); x++) {
+		carry = ((pa[x / 64] & (1ULL << (x % 64))) ? 1 : 0) -
+		    ((pb[x / 64] & (1ULL << (x % 64))) ? 1 : 0) - carry;
+		if (carry & 1)
+			temp[x / 64] |= (1ULL << (x % 64));
+		if (carry & 2)
+			carry = 1;
+		else
+			carry = 0;
+	}
+
+	memcpy(pc, temp, num * 8);
+
+#else
 	uint64_t carry;
 	uint64_t temp;
-	uint64_t last;
 	uint32_t x;
 	uint32_t z;
 
 	if (num == 1) {
-		pc[0] = (uint32_t)(pa[0] - pb[0]);
+		pc[0] = pa[0] - pb[0];
 		return;
 	}
+	carry = 1;
 	z = num & ~3;
-	carry = 0;
 
 	for (x = 0; x != z; x += 4) {
-		temp = pa[x] - carry;
-		last = temp - pb[x];
-		carry = (last > temp) + (temp > pa[x]);
-		pc[x] = last;
+		temp = carry + pa[x];
+		pc[x] = temp + (~pb[x]);
+		carry = (pc[x] < temp) + (temp < carry);
 
-		temp = pa[x + 1] - carry;
-		last = temp - pb[x + 1];
-		carry = (last > temp) + (temp > pa[x + 1]);
-		pc[x + 1] = last;
+		temp = carry + pa[x + 1];
+		pc[x + 1] = temp + (~pb[x + 1]);
+		carry = (pc[x + 1] < temp) + (temp < carry);
 
-		temp = pa[x + 2] - carry;
-		last = temp - pb[x + 2];
-		carry = (last > temp) + (temp > pa[x + 2]);
-		pc[x + 2] = last;
+		temp = carry + pa[x + 2];
+		pc[x + 2] = temp + (~pb[x + 2]);
+		carry = (pc[x + 2] < temp) + (temp < carry);
 
-		temp = pa[x + 3] - carry;
-		last = temp - pb[x + 3];
-		carry = (last > temp) + (temp > pa[x + 3]);
-		pc[x + 3] = last;
+		temp = carry + pa[x + 3];
+		pc[x + 3] = temp + (~pb[x + 3]);
+		carry = (pc[x + 3] < temp) + (temp < carry);
 	}
 
 	for (; x != num; x++) {
-		temp = pa[x] - carry;
-		last = temp - pb[x];
-		carry = (last > temp) + (temp > pa[x]);
-		pc[x] = last;
+		temp = carry + pa[x];
+		pc[x] = temp + (~pb[x]);
+		carry = (pc[x] < temp) + (temp < carry);
 	}
+#endif
 }
 
 void
 mbin_fet_rol_64(uint64_t *pa, uint32_t shift, uint32_t num)
 {
+#ifdef FET32_VERIFY
+	uint64_t temp[num];
+	uint32_t x;
+
+	printf("ROL %d qwords %d bits\n", num, shift);
+
+	memset(temp, 0, sizeof(temp));
+
+	for (x = 0; x != (num * 64); x++) {
+		if (pa[x / 64] & (1ULL << (x % 64)))
+			temp[((x + shift) & ((num * 64) - 1)) / 64] |= (1ULL << ((x + shift) & 63));
+	}
+
+	memcpy(pa, temp, sizeof(temp));
+#else
 	uint8_t rem = (shift & 63);
 	uint8_t mer = 64 - rem;
 	uint32_t div = (shift / 64) & (num - 1);
@@ -797,10 +863,6 @@ mbin_fet_rol_64(uint64_t *pa, uint32_t shift, uint32_t num)
 	uint32_t z;
 	uint64_t temp;
 	uint64_t carry;
-
-#ifdef FET_DEBUG
-	printf("ROL %d qwords %d bits\n", num, shift);
-#endif
 
 	if (num == 1) {
 		shift &= 63;
@@ -847,39 +909,41 @@ mbin_fet_rol_64(uint64_t *pa, uint32_t shift, uint32_t num)
 			} while (x != y);
 		}
 	}
+#endif
 }
 
 static void
-mbin_fet_inverse_64_sub(uint64_t *data, uint32_t power, uint32_t step)
+mbin_fet_inverse_64_sub(uint64_t *data, uint32_t max, uint32_t step)
 {
 	uint32_t x;
 	uint32_t y;
 	uint32_t k;
-	uint32_t num = power >> 6;
-	uint8_t d = mbin_sumbits32(power - 1) - 6;
+	uint32_t num = max >> 6;
+	uint8_t d = mbin_sumbits32(max - 1) - 6;
 	uint8_t s = 32 - d - 6;
 	uint64_t w0[num];
 	uint64_t w1[num];
 
-	for (k = y = 0; y != power; k += 2, y += 2 * step) {
+	for (k = y = 0; y != max; k += 2, y += 2 * step) {
+
 		uint32_t k0 = mbin_bitrev32(k << s);
-		uint32_t k1 = k0 | (power / 2);
+		uint32_t k1 = k0 | (max / 2);
 
 		for (x = 0; x != step; x++) {
 
-			mbin_fet_cpy_64(w0,
-			    data + ((y + x) << d), num);
+			uint64_t *p0 = data + ((y + x) << d);
+			uint64_t *p1 = data + ((y + x + step) << d);
 
-			mbin_fet_cpy_64(w1,
-			    data + ((y + x + step) << d), num);
+			mbin_fet_cpy_64(w0, p0, num);
+			mbin_fet_cpy_64(w1, p1, num);
 
 			mbin_fet_rol_64(w1, k0, num);
 
-			mbin_fet_add_64(w0, w1, data + ((y + x) << d), num, 1);
+			mbin_fet_add_64(w0, w1, p0, num, 1);
 
 			mbin_fet_rol_64(w1, k1 - k0, num);
 
-			mbin_fet_add_64(w0, w1, data + ((y + x + step) << d), num, 1);
+			mbin_fet_add_64(w0, w1, p1, num, 1);
 		}
 	}
 }
@@ -900,28 +964,52 @@ mbin_fet_inverse_64(uint64_t *data, uint8_t power)
 }
 
 void
-mbin_fet_bitrev_64(uint64_t *data, uint8_t power)
+mbin_fet_bitrev_64(uint64_t *data, uint8_t power, uint32_t num)
 {
-	uint32_t num = (1 << power) >> 6;
-	uint64_t w1[num];
+	uint32_t max = (1 << power);
 	uint32_t i;
 	uint32_t j;
 	uint8_t d = power - 6;
+	uint8_t s = 32 - power;
 
-	if (power < 6)
+	if (num == 0)
 		return;
 
-	/* In-place data order bit-reversal */
+	if (num == 1) {
 
-	for (i = 0; i != (1 << power); i++) {
+		/* In-place data order bit-reversal */
 
-		j = mbin_bitrev32(i << (32 - power));
+		for (i = 0; i != max; i++) {
 
-		if (j < i) {
-			mbin_fet_cpy_64(w1, data + (i << d), num);
-			mbin_fet_cpy_64(data + (i << d),
-			    data + (j << d), num);
-			mbin_fet_cpy_64(data + (j << d), w1, num);
+			j = mbin_bitrev32(i << s);
+
+			if (j < i) {
+				uint64_t *p1 = data + (i << d);
+				uint64_t *p2 = data + (j << d);
+				uint64_t temp;
+
+				temp = *p1;
+				*p1 = *p2;
+				*p2 = temp;
+			}
+		}
+	} else {
+		uint64_t temp[num];
+
+		/* In-place data order bit-reversal */
+
+		for (i = 0; i != max; i++) {
+
+			j = mbin_bitrev32(i << s);
+
+			if (j < i) {
+				uint64_t *p1 = data + (i << d);
+				uint64_t *p2 = data + (j << d);
+
+				mbin_fet_cpy_64(temp, p1, num);
+				mbin_fet_cpy_64(p1, p2, num);
+				mbin_fet_cpy_64(p2, temp, num);
+			}
 		}
 	}
 }
@@ -930,36 +1018,56 @@ void
 mbin_fet_forward_64(uint64_t *data, uint8_t power)
 {
 	uint32_t num = (1 << power) >> 6;
-	uint64_t temp[num];
 	uint32_t max = (1 << power);
 	uint32_t max_half = (max / 2);
 	uint32_t x;
 	uint8_t d = power - 6;
 
-	if (power < 6)
+	if (num == 0)
 		return;
 
 	mbin_fet_inverse_64(data, power);
 
-	mbin_fet_bitrev_64(data, power);
-
-	for (x = 0; x != max; x++) {
-
-		if (num == 1) {
+	if (num == 1) {
+		for (x = 0; x != max; x++) {
 			data[x] = (data[x] << (max_half - power)) | (data[x] >> (max_half + power));
 			data[x] = (uint32_t)((data[x] >> 32) - data[x]);
-		} else {
-			mbin_fet_rol_64(data + (x << d), (max_half - power), num);
-			mbin_fet_sub_64(data + (x << d) + (1 << (d - 1)),
-			    data + (x << d), data + (x << d), num / 2);
-			memset(data + (x << d) + (1 << (d - 1)), 0, num * (8 / 2));
 		}
-	}
 
-	for (x = 1; x != max_half; x++) {
-		mbin_fet_cpy_64(temp, data + (x << d), num);
-		mbin_fet_cpy_64(data + (x << d), data + ((max - x) << d), num);
-		mbin_fet_cpy_64(data + ((max - x) << d), temp, num);
+		mbin_fet_bitrev_64(data, power, 1);
+
+		for (x = 1; x != max_half; x++) {
+			uint64_t *p1 = data + (x << d);
+			uint64_t *p2 = data + ((max - x) << d);
+			uint64_t temp;
+
+			temp = *p1;
+			*p1 = *p2;
+			*p2 = temp;
+		}
+	} else {
+		for (x = 0; x != max; x++) {
+			uint64_t *p1 = data + (x << d);
+			uint64_t *p2 = data + (x << d) + (1 << (d - 1));
+
+			mbin_fet_rol_64(p1, (max_half - power), num);
+			mbin_fet_sub_64(p2, p1, p1, num / 2);
+			memset(p2, 0, num * (8 / 2));	/* XXX can leave this */
+		}
+
+		num /= 2;		/* the upper half is zero */
+
+		mbin_fet_bitrev_64(data, power, num);
+
+		for (x = 1; x != max_half; x++) {
+			uint64_t *p1 = data + (x << d);
+			uint64_t *p2 = data + ((max - x) << d);
+			uint64_t temp[num];
+
+			mbin_fet_cpy_64(temp, p1, num);
+			mbin_fet_cpy_64(p1, p2, num);
+			mbin_fet_cpy_64(p2, temp, num);
+		}
 	}
 }
 
@@ -972,7 +1080,7 @@ mbin_fet_conv_64(const uint64_t *a, const uint64_t *b, uint64_t *c,
 	uint32_t x;
 	uint8_t d = power - 6;
 
-	if (power < 6)
+	if (num == 0)
 		return;
 
 	for (x = 0; x != max; x++)
@@ -1013,7 +1121,7 @@ mbin_fet_write_64(uint64_t *ptr, uint64_t val, uint32_t *poff,
 		}
 
 		if (off & 63) {
-			ptr[off / 64] |= temp << (off & 63);
+			ptr[(off / 64)] |= temp << (off & 63);
 			ptr[(off / 64) + 1] |= temp >> (64 - (off & 63));
 		} else {
 			ptr[(off / 64)] |= temp;
@@ -1072,236 +1180,265 @@ mbin_fet_read_64(uint64_t *ptr, uint32_t *poff,
 	return (val);
 }
 
+static mbin_fet_mul_64_t *mbin_fet_mul_64_ptr = &mbin_fet_mul_64;
+
+void
+mbin_fet_mul_64_set_ptr(mbin_fet_mul_64_t *ptr)
+{
+	mbin_fet_mul_64_ptr = ptr;
+}
+
+void
+mbin_fet_mul_64_1(const uint64_t *a, const uint64_t *b,
+    uint64_t *c, uint32_t num, uint8_t is_mod)
+{
+#ifdef __amd64__
+	if (is_mod) {
+		__asm(
+		    "mov %1, %%rax\n"
+		    "mov %2, %%rdx\n"
+		    "mul %%rdx\n"
+		    "add %%rdx, %%rax\n"
+		    "adc $0, %%rax\n"
+		    "mov %%rax, %0\n"
+:		    "=m"(*c)
+:		    "m"(*a), "m"(*b)
+:		    "memory", "rax", "rdx"
+		);
+	} else {
+		__asm(
+		    "mov %2, %%rax\n"
+		    "mov %3, %%rdx\n"
+		    "mul %%rdx\n"
+		    "mov %%rax, %0\n"
+		    "mov %%rdx, %1\n"
+:		    "=m"(c[0]), "=m"(c[1])
+:		    "m"(*a), "m"(*b)
+:		    "memory", "rax", "rdx"
+		    );
+	}
+#else
+	uint64_t p1;
+	uint64_t p2;
+	uint64_t p3;
+	uint64_t p4;
+	uint64_t carry;
+	uint64_t temp[2];
+
+	p1 = ((uint64_t)(uint32_t)a[0]) * ((uint64_t)(uint32_t)b[0]);
+	p2 = ((uint64_t)(uint32_t)(a[0] >> 32)) * ((uint64_t)(uint32_t)b[0]);
+	p3 = ((uint64_t)(uint32_t)a[0]) * ((uint64_t)(uint32_t)(b[0] >> 32));
+	p4 = ((uint64_t)(uint32_t)(a[0] >> 32)) * ((uint64_t)(uint32_t)(b[0] >> 32));
+
+	if (is_mod) {
+
+		p2 = (p2 << 32) | (p2 >> 32);
+		p3 = (p3 << 32) | (p3 >> 32);
+
+		carry = 0;
+		p1 = p1 + p2;
+		if (p1 < p2)
+			carry++;
+		p1 = p1 + p3;
+		if (p1 < p3)
+			carry++;
+		p1 = p1 + p4;
+		if (p1 < p4)
+			carry++;
+		p1 = p1 + carry;
+		if (p1 < carry) {
+			p1 = p1 + 1;
+			if (p1 < 1)
+				p1 = p1 + 1;
+		}
+		c[0] = p1;
+	} else {
+		c[0] = p1;
+		c[1] = 0;
+
+		temp[0] = p2 << 32;
+		temp[1] = p2 >> 32;
+
+		mbin_fet_add_64(c, temp, c, 2, 0);
+
+		temp[0] = p3 << 32;
+		temp[1] = p3 >> 32;
+
+		mbin_fet_add_64(c, temp, c, 2, 0);
+
+		temp[0] = 0;
+		temp[1] = p4;
+
+		mbin_fet_add_64(c, temp, c, 2, 0);
+	}
+#endif
+}
+
+void
+mbin_fet_mul_64_2(const uint64_t *a, const uint64_t *b,
+    uint64_t *c, uint32_t num, uint8_t is_mod)
+{
+	uint64_t p1[2], p2[2], p3[2], p4[2];
+	uint64_t temp[4];
+
+	mbin_fet_mul_64_1(a + 0, b + 0, p1, 1, 0);
+	mbin_fet_mul_64_1(a + 1, b + 0, p2, 1, 0);
+	mbin_fet_mul_64_1(a + 0, b + 1, p3, 1, 0);
+	mbin_fet_mul_64_1(a + 1, b + 1, p4, 1, 0);
+
+	if (is_mod) {
+
+		temp[0] = p2[0];
+		p2[0] = p2[1];
+		p2[1] = temp[0];
+
+		temp[0] = p3[0];
+		p3[0] = p3[1];
+		p3[1] = temp[0];
+
+		mbin_fet_add_64(p1, p2, c, 2, 1);
+		mbin_fet_add_64(p3, p4, temp, 2, 1);
+		mbin_fet_add_64(c, temp, c, 2, 1);
+	} else {
+
+		c[0] = p1[0];
+		c[1] = p1[1];
+		c[2] = 0;
+		c[3] = 0;
+
+		temp[0] = 0;
+		temp[1] = p2[0];
+		temp[2] = p2[1];
+		temp[3] = 0;
+
+		mbin_fet_add_64(c, temp, c, 4, 0);
+
+		temp[0] = 0;
+		temp[1] = p3[0];
+		temp[2] = p3[1];
+		temp[3] = 0;
+
+		mbin_fet_add_64(c, temp, c, 4, 0);
+
+		temp[0] = 0;
+		temp[1] = 0;
+		temp[2] = p4[0];
+		temp[3] = p4[1];
+
+		mbin_fet_add_64(c, temp, c, 4, 0);
+	}
+
+}
+
 void
 mbin_fet_mul_64(const uint64_t *a, const uint64_t *b,
     uint64_t *c, uint32_t num, uint8_t is_mod)
 {
-	uint64_t p1[2], p2[2], p3[2], p4[2], carry;
-	uint64_t temp[4];
+	uint64_t *t0;
+	uint64_t *t1;
+	uint64_t *t2;
+	uint64_t *t3;
+	uint64_t *t4;
 	uint32_t bits;
+	uint32_t tnum;
+	uint32_t max_bits;
+	uint32_t off;
+	uint32_t x;
 	uint8_t power;
 
 	switch (num) {
 	case 0:
 		return;
 	case 1:
-		p1[0] = ((uint64_t)(uint32_t)a[0]) * ((uint64_t)(uint32_t)b[0]);
-		p2[0] = ((uint64_t)(uint32_t)(a[0] >> 32)) * ((uint64_t)(uint32_t)b[0]);
-		p3[0] = ((uint64_t)(uint32_t)a[0]) * ((uint64_t)(uint32_t)(b[0] >> 32));
-		p4[0] = ((uint64_t)(uint32_t)(a[0] >> 32)) * ((uint64_t)(uint32_t)(b[0] >> 32));
-
-		if (is_mod) {
-
-			p2[0] = (p2[0] << 32) | (p2[0] >> 32);
-			p3[0] = (p3[0] << 32) | (p3[0] >> 32);
-
-			carry = 0;
-			p1[0] = p1[0] + p2[0];
-			if (p1[0] < p2[0])
-				carry++;
-			p1[0] = p1[0] + p3[0];
-			if (p1[0] < p3[0])
-				carry++;
-			p1[0] = p1[0] + p4[0];
-			if (p1[0] < p4[0])
-				carry++;
-			p1[0] = p1[0] + carry;
-			if (p1[0] < carry) {
-				p1[0] = p1[0] + 1;
-				if (p1[0] < 1)
-					p1[0] = p1[0] + 1;
-			}
-			c[0] = p1[0];
-		} else {
-			c[0] = p1[0];
-			c[1] = 0;
-
-			temp[0] = p2[0] << 32;
-			temp[1] = p2[0] >> 32;
-
-			mbin_fet_add_64(c, temp, c, 2, 0);
-
-			temp[0] = p3[0] << 32;
-			temp[1] = p3[0] >> 32;
-
-			mbin_fet_add_64(c, temp, c, 2, 0);
-
-			temp[0] = 0;
-			temp[1] = p4[0];
-
-			mbin_fet_add_64(c, temp, c, 2, 0);
-		}
+		mbin_fet_mul_64_1(a, b, c, num, is_mod);
 		return;
 	case 2:
-		temp[0] = a[0];
-		temp[1] = 0;
-		temp[2] = b[0];
-		temp[3] = 0;
-
-		mbin_fet_mul_64(temp + 0, temp + 2, p1, 1, 0);
-
-		temp[0] = a[1];
-		temp[1] = 0;
-		temp[2] = b[0];
-		temp[3] = 0;
-
-		mbin_fet_mul_64(temp + 0, temp + 2, p2, 1, 0);
-
-		temp[0] = a[0];
-		temp[1] = 0;
-		temp[2] = b[1];
-		temp[3] = 0;
-
-		mbin_fet_mul_64(temp + 0, temp + 2, p3, 1, 0);
-
-		temp[0] = a[1];
-		temp[1] = 0;
-		temp[2] = b[1];
-		temp[3] = 0;
-
-		mbin_fet_mul_64(temp + 0, temp + 2, p4, 1, 0);
-
-		if (is_mod) {
-
-			temp[0] = p2[0];
-			p2[0] = p2[1];
-			p2[1] = temp[0];
-
-			temp[0] = p3[0];
-			p3[0] = p3[1];
-			p3[1] = temp[0];
-
-			mbin_fet_add_64(p1, p2, c, 2, 1);
-			mbin_fet_add_64(p3, p4, temp, 2, 1);
-			mbin_fet_add_64(c, temp, c, 2, 1);
-		} else {
-
-			c[0] = p1[0];
-			c[1] = p1[1];
-			c[2] = 0;
-			c[3] = 0;
-
-			temp[0] = 0;
-			temp[1] = p2[0];
-			temp[2] = p2[1];
-			temp[3] = 0;
-
-			mbin_fet_add_64(c, temp, c, 4, 0);
-
-			temp[0] = 0;
-			temp[1] = p3[0];
-			temp[2] = p3[1];
-			temp[3] = 0;
-
-			mbin_fet_add_64(c, temp, c, 4, 0);
-
-			temp[0] = 0;
-			temp[1] = 0;
-			temp[2] = p4[0];
-			temp[3] = p4[1];
-
-			mbin_fet_add_64(c, temp, c, 4, 0);
-		}
+		mbin_fet_mul_64_2(a, b, c, num, is_mod);
+		return;
+	case 3:
+		mbin_fet_mul_64_ptr(a, b, c, num, is_mod);
+		return;
+	case 4:
+		mbin_fet_mul_64_ptr(a, b, c, num, is_mod);
 		return;
 	default:
 		break;
 	}
 
 	for (power = 6;; power++) {
-		bits = ((1 << (power - 1)) - ((power + 1) / 2)) / 2;
+		bits = (1 << (power - 2)) - power - 1;
 
 		if ((bits << power) >= (num * 64 * 2))
 			break;
 	}
 
-	if (1) {
-		uint32_t tnum = (1 << power) << (power - 6);
-		uint32_t max_bits = (1 << power);
-		uint32_t aoff;
-		uint32_t boff;
-		uint32_t x;
-		uint64_t t0[tnum];
-		uint64_t t1[tnum];
+	printf("power = %d, bits = %d\n", power, bits);
 
-		uint64_t t2[2 * num];
-		uint64_t t3[2 * num];
-		uint64_t t4[2 * num];
+	tnum = (1 << power) << (power - 6);
+	max_bits = (1 << power);
 
-		memset(t0, 0, sizeof(t0));
-		memset(t1, 0, sizeof(t1));
+	t0 = alloca(8 * tnum);
+	t1 = alloca(8 * tnum);
 
-		aoff = 0;
-		boff = 0;
+	memset(t0, 0, 8 * tnum);
+	memset(t1, 0, 8 * tnum);
 
-		for (x = 0; x != num; x++) {
-			mbin_fet_write_64(t0, a[x], &aoff, bits, max_bits);
-			mbin_fet_write_64(t1, b[x], &boff, bits, max_bits);
-		}
+	for (off = x = 0; x != num; x++)
+		mbin_fet_write_64(t0, a[x], &off, bits, max_bits);
 
-		mbin_fet_inverse_64(t0, power);
-		mbin_fet_inverse_64(t1, power);
+	for (off = x = 0; x != num; x++)
+		mbin_fet_write_64(t1, b[x], &off, bits, max_bits);
 
-		mbin_fet_conv_64(t0, t1, t0, &mbin_fet_mul_64, power, 1);
+	mbin_fet_inverse_64(t0, power);
 
-		mbin_fet_bitrev_64(t0, power);
+	mbin_fet_inverse_64(t1, power);
 
-		mbin_fet_forward_64(t0, power);
+	switch (max_bits / 64) {
+	case 1:
+		mbin_fet_conv_64(t0, t1, t0, &mbin_fet_mul_64_1, power, 1);
+		break;
+	case 2:
+		mbin_fet_conv_64(t0, t1, t0, &mbin_fet_mul_64_2, power, 1);
+		break;
+	default:
+		mbin_fet_conv_64(t0, t1, t0, mbin_fet_mul_64_ptr, power, 1);
+		break;
+	}
 
-		if (is_mod) {
+	mbin_fet_bitrev_64(t0, power, max_bits / 64);
 
-			aoff = 0;
+	mbin_fet_forward_64(t0, power);
 
-			for (x = 0; x != (2 * num); x++)
-				t2[x] = mbin_fet_read_64(t0, &aoff, 0, bits, max_bits);
+	t2 = alloca(2 * 8 * num);
+	t3 = alloca(2 * 8 * num);
+	t4 = alloca(2 * 8 * num);
 
-			aoff = 0;
+	for (off = x = 0; x != (2 * num); x++)
+		t2[x] = mbin_fet_read_64(t0, &off, 0, bits, max_bits);
 
-			for (x = 0; x != (2 * num); x++)
-				t3[x] = mbin_fet_read_64(t0, &aoff, bits, bits, max_bits);
+	for (off = x = 0; x != (2 * num); x++)
+		t3[x] = mbin_fet_read_64(t0, &off, bits, bits, max_bits);
 
-			aoff = 0;
+	for (off = x = 0; x != (2 * num); x++)
+		t4[x] = mbin_fet_read_64(t0, &off, 2 * bits, bits, max_bits);
 
-			for (x = 0; x != (2 * num); x++)
-				t4[x] = mbin_fet_read_64(t0, &aoff, 2 * bits, bits, max_bits);
+	mbin_fet_rol_64(t3, bits, 2 * num);
+	mbin_fet_rol_64(t4, 2 * bits, 2 * num);
 
-			mbin_fet_rol_64(t3, bits, num);
-			mbin_fet_rol_64(t3 + num, bits, num);
-
-			mbin_fet_rol_64(t4, 2 * bits, num);
-			mbin_fet_rol_64(t4 + num, 2 * bits, num);
-
-			mbin_fet_add_64(t2 + num, t3 + num, t2 + num, num, 1);
-			mbin_fet_add_64(t4 + num, t2 + num, t2 + num, num, 1);
-
-			mbin_fet_add_64(t2, t3, t2, num, 1);
-			mbin_fet_add_64(t4, t2, t2, num, 1);
-
-			mbin_fet_add_64(t2, t2 + num, c, num, 1);
-
-		} else {
-
-			aoff = 0;
-
-			for (x = 0; x != (2 * num); x++) {
-				t2[x] = mbin_fet_read_64(t0, &aoff, 0, bits, max_bits);
-			}
-
-			aoff = 0;
-
-			for (x = 0; x != (2 * num); x++)
-				t3[x] = mbin_fet_read_64(t0, &aoff, bits, bits, max_bits);
-
-			aoff = 0;
-
-			for (x = 0; x != (2 * num); x++)
-				t4[x] = mbin_fet_read_64(t0, &aoff, 2 * bits, bits, max_bits);
-
-			mbin_fet_rol_64(t3, bits, 2 * num);
-			mbin_fet_rol_64(t4, 2 * bits, 2 * num);
-
-			mbin_fet_add_64(t2, t3, c, 2 * num, 0);
-			mbin_fet_add_64(t4, c, c, 2 * num, 0);
-		}
+	if (is_mod) {
+#if 1
+		mbin_fet_add_64(t3, t2, t2, 2 * num, 1);
+		mbin_fet_add_64(t4, t2, t2, 2 * num, 1);
+#else
+		mbin_fet_add_64(t3, t2, t2, num, 1);
+		mbin_fet_add_64(t4, t2, t2, num, 1);
+		mbin_fet_add_64(t3 + num, t2 + num, t2 + num, num, 1);
+		mbin_fet_add_64(t4 + num, t2 + num, t2 + num, num, 1);
+#endif
+		mbin_fet_add_64(t2, t2 + num, c, num, 1);
+	} else {
+		mbin_fet_add_64(t2, t3, c, 2 * num, 0);
+		mbin_fet_add_64(t4, c, c, 2 * num, 0);
 	}
 }
 

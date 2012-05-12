@@ -468,11 +468,11 @@ void	mbin_fet_inverse_small_64(uint64_t *, uint8_t);
 void	mbin_fet_conv_small_64(const uint64_t *, const uint64_t *, uint64_t *, uint8_t);
 void	mbin_fet_forward_small_64(uint64_t *, uint8_t);
 
-void	mbin_fet_inverse_64(uint64_t *data, uint8_t power);
-void	mbin_fet_forward_64(uint64_t *data, uint8_t power);
-void	mbin_fet_bitrev_64(uint64_t *data, uint8_t power);
+void	mbin_fet_inverse_64(uint64_t *, uint8_t);
+void	mbin_fet_forward_64(uint64_t *, uint8_t);
+void	mbin_fet_bitrev_64(uint64_t *, uint8_t, uint32_t);
 
-typedef void mbin_fet_mul_64_t (const uint64_t *a, const uint64_t *b, uint64_t *c, uint32_t num, uint8_t arg);
+typedef void mbin_fet_mul_64_t (const uint64_t *, const uint64_t *, uint64_t *, uint32_t, uint8_t);
 
 void	mbin_fet_cpy_64(uint64_t *, const uint64_t *, uint32_t);
 void	mbin_fet_add_64(const uint64_t *, const uint64_t *, uint64_t *, uint32_t, uint8_t);
@@ -481,7 +481,11 @@ void	mbin_fet_sub_64(const uint64_t *, const uint64_t *, uint64_t *, uint32_t);
 void	mbin_fet_rol_64(uint64_t *, uint32_t, uint32_t);
 void	mbin_fet_conv_64(const uint64_t *, const uint64_t *, uint64_t *, mbin_fet_mul_64_t *, uint8_t arg, uint8_t);
 
-void	mbin_fet_mul_64(const uint64_t *, const uint64_t *, uint64_t *, uint32_t, uint8_t);
+void	mbin_fet_mul_64_set_ptr(mbin_fet_mul_64_t *ptr);
+
+mbin_fet_mul_64_t mbin_fet_mul_64_1;
+mbin_fet_mul_64_t mbin_fet_mul_64_2;
+mbin_fet_mul_64_t mbin_fet_mul_64;
 
 void	mbin_fet_write_64(uint64_t *, uint64_t, uint32_t *, uint32_t, uint32_t);
 uint64_t mbin_fet_read_64(uint64_t *, uint32_t *, uint32_t, uint32_t, uint32_t);
