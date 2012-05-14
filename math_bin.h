@@ -468,27 +468,33 @@ void	mbin_fet_inverse_small_64(uint64_t *, uint8_t);
 void	mbin_fet_conv_small_64(const uint64_t *, const uint64_t *, uint64_t *, uint8_t);
 void	mbin_fet_forward_small_64(uint64_t *, uint8_t);
 
-void	mbin_fet_inverse_64(uint64_t *, uint8_t);
-void	mbin_fet_forward_64(uint64_t *, uint8_t);
-void	mbin_fet_bitrev_64(uint64_t *, uint8_t, uint32_t);
+void	mbin_fet_inverse_8(uint8_t *, uint8_t, uint8_t);
+void	mbin_fet_forward_8(uint8_t *, uint8_t, uint8_t);
+void	mbin_fet_bitrev_8(uint8_t *, uint8_t, uint8_t);
 
-typedef void mbin_fet_mul_64_t (const uint64_t *, const uint64_t *, uint64_t *, uint32_t, uint8_t);
+typedef void mbin_fet_mul_8_t (const uint8_t *, const uint8_t *, uint8_t *, uint32_t);
 
-void	mbin_fet_cpy_64(uint64_t *, const uint64_t *, uint32_t);
-void	mbin_fet_add_64(const uint64_t *, const uint64_t *, uint64_t *, uint32_t, uint8_t);
+void	mbin_fet_cpy_8(uint8_t *, const uint8_t *, uint32_t);
+uint8_t	mbin_fet_add_8(const uint8_t *, const uint8_t *, uint8_t *, uint8_t, uint32_t);
 
-void	mbin_fet_sub_64(const uint64_t *, const uint64_t *, uint64_t *, uint32_t);
-void	mbin_fet_rol_64(uint64_t *, uint32_t, uint32_t);
-void	mbin_fet_conv_64(const uint64_t *, const uint64_t *, uint64_t *, mbin_fet_mul_64_t *, uint8_t arg, uint8_t);
+uint8_t	mbin_fet_add_carry_8(uint8_t *pa, uint8_t do_loop, uint32_t bytes);
 
-void	mbin_fet_mul_64_set_ptr(mbin_fet_mul_64_t *ptr);
+uint8_t	mbin_fet_sub_8(const uint8_t *, const uint8_t *, uint8_t *, uint8_t, uint32_t);
+void	mbin_fet_rol_8(uint8_t *, uint32_t, uint32_t);
+void	mbin_fet_rol_bit_8(uint8_t *, uint32_t, uint32_t);
 
-mbin_fet_mul_64_t mbin_fet_mul_64_1;
-mbin_fet_mul_64_t mbin_fet_mul_64_2;
-mbin_fet_mul_64_t mbin_fet_mul_64;
+void	mbin_fet_conv_8(const uint8_t *, const uint8_t *, uint8_t *, mbin_fet_mul_8_t *, uint8_t, uint8_t);
 
-void	mbin_fet_write_64(uint64_t *, uint64_t, uint32_t *, uint32_t, uint32_t);
-uint64_t mbin_fet_read_64(uint64_t *, uint32_t *, uint32_t, uint32_t, uint32_t);
+void	mbin_fet_mul_8_set_ptr(mbin_fet_mul_8_t *ptr);
+
+mbin_fet_mul_8_t mbin_fet_mul_8_1;
+mbin_fet_mul_8_t mbin_fet_mul_8_2;
+mbin_fet_mul_8_t mbin_fet_mul_8_4;
+mbin_fet_mul_8_t mbin_fet_mul_8_8;
+mbin_fet_mul_8_t mbin_fet_mul_8;
+
+void	mbin_fet_write_8(uint8_t *, const uint8_t *, uint32_t, uint32_t, uint32_t, uint32_t);
+void	mbin_fet_read_8(const uint8_t *, uint8_t *, uint32_t, uint32_t, uint32_t);
 
 /* Equation prototypes */
 
