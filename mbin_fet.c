@@ -682,43 +682,38 @@ mbin_fet_cpy_8(uint8_t *dst, const uint8_t *src, uint32_t bytes)
 	memcpy(dst, src, bytes);
 }
 
+void
+mbin_fet_mod_8(uint8_t *var, uint32_t bytes)
+{
+	uint32_t bytes_half = bytes / 2;
+
+	if (mbin_fet_sub_8(var, var + bytes_half, var, 0, bytes_half)) {
+		memset(var + bytes_half, 0, bytes_half);
+		mbin_fet_add_carry_8(var, 0, bytes);
+	} else {
+		memset(var + bytes_half, 0, bytes_half);
+	}
+}
+
 uint8_t
 mbin_fet_add_carry_8(uint8_t *pa, uint8_t do_loop, uint32_t bytes)
 {
 	while (1) {
+		uint64_t carry = 1;
 		uint32_t x = 0;
 
-#ifdef __amd64__
-		volatile uint64_t carry = 1;
+#if defined(__i386__) || defined(__amd64__)
+		for (; (x + 8) <= bytes; x += 8) {
+			uint64_t temp;
 
-		for (; ((x + 32) <= bytes) && carry; x += 32) {
-			asm(
-			    "mov %9, %%rbx\n"
-			    "xor %%rax, %%rax\n"
-			    "add %%rbx, %0\n"
-			    "adc $0, %1\n"
-			    "adc $0, %2\n"
-			    "adc $0, %3\n"
-			    "adc $0, %%rax\n"
-			    "mov %%rax, %4\n"
-	:		    "=m"(pa[x]), "=m"(pa[x + 8]), "=m"(pa[x + 16]), "=m"(pa[x + 24]), "=m"(carry)
-	:		    "m"(pa[x]), "m"(pa[x + 8]), "m"(pa[x + 16]), "m"(pa[x + 24]), "m"(carry)
-	:		    "rbx", "rax", "memory");
+			temp = le64toh(*(uint64_t *)(pa + x));
+			if (++temp) {
+				*(uint64_t *)(pa + x) = htole64(temp);
+				carry = 0;
+				break;
+			}
+			*(uint64_t *)(pa + x) = htole64(temp);
 		}
-
-		for (; ((x + 8) <= bytes) && carry; x += 8) {
-			asm("mov %2, %%rbx\n"
-			    "xor %%rax, %%rax\n"
-			    "add %%rbx, %0\n"
-			    "adc $0, %%rax\n"
-			    "mov %%rax, %1\n"
-	:		    "=m"(pa[x]), "=m"(carry)
-	:		    "m"(carry), "m"(pa[x])
-	:		    "rbx", "rax", "memory");
-		}
-#else
-		volatile uint8_t carry = 1;
-
 #endif
 		if (carry != 0) {
 			for (; x != bytes; x++) {
@@ -737,67 +732,62 @@ mbin_fet_add_carry_8(uint8_t *pa, uint8_t do_loop, uint32_t bytes)
 }
 
 uint8_t
+mbin_fet_sub_carry_8(uint8_t *pa, uint8_t do_loop, uint32_t bytes)
+{
+	while (1) {
+		uint64_t carry = 1;
+		uint32_t x = 0;
+
+#if defined(__i386__) || defined(__amd64__)
+		for (; (x + 8) <= bytes; x += 8) {
+			uint64_t temp;
+
+			temp = le64toh(*(uint64_t *)(pa + x));
+			if (temp--) {
+				*(uint64_t *)(pa + x) = htole64(temp);
+				carry = 0;
+				break;
+			}
+			*(uint64_t *)(pa + x) = htole64(temp);
+		}
+#endif
+		if (carry != 0) {
+			for (; x != bytes; x++) {
+				if (pa[x]--) {
+					carry = 0;
+					break;
+				}
+			}
+		}
+		if (carry == 0)
+			break;
+		if (do_loop == 0)
+			return (carry);
+	}
+	return (0);
+}
+
+uint8_t
 mbin_fet_add_8(const uint8_t *pa, const uint8_t *pb, uint8_t *pc,
     uint8_t carry_in, uint32_t bytes)
 {
 	uint32_t x = 0;
+	uint64_t carry = carry_in;
 
-#ifdef __amd64__
-
-	volatile uint64_t carry = carry_in;
-
-	for (; (x + 32) <= bytes; x += 32) {
-		asm(
-		    "mov %13, %%rbx\n"
-		    "xor %%rax, %%rax\n"
-		    "add %5, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "add %6, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "mov %%rbx, %0\n"
-		    "mov %%rax, %%rbx\n"
-		    "xor %%rax, %%rax\n"
-		    "add %7, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "add %8, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "mov %%rbx, %1\n"
-		    "mov %%rax, %%rbx\n"
-		    "xor %%rax, %%rax\n"
-		    "add %9, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "add %10, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "mov %%rbx, %2\n"
-		    "mov %%rax, %%rbx\n"
-		    "xor %%rax, %%rax\n"
-		    "add %11, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "add %12, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "mov %%rbx, %3\n"
-		    "mov %%rax, %4\n"
-:		    "=m"(pc[x]), "=m"(pc[x + 8]), "=m"(pc[x + 16]), "=m"(pc[x + 24]), "=m"(carry)
-:		    "m"(pa[x]), "m"(pb[x]), "m"(pa[x + 8]), "m"(pb[x + 8]),
-		    "m"(pa[x + 16]), "m"(pb[x + 16]), "m"(pa[x + 24]), "m"(pb[x + 24]), "m"(carry)
-:		    "rbx", "rax", "memory");
-	}
+#if defined(__i386__) || defined(__amd64__)
 	for (; (x + 8) <= bytes; x += 8) {
-		asm("mov %2, %%rbx\n"
-		    "xor %%rax, %%rax\n"
-		    "add %3, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "add %4, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "mov %%rbx, %0\n"
-		    "mov %%rax, %1\n"
-:		    "=m"(pc[x]), "=m"(carry)
-:		    "m"(carry), "m"(pa[x]), "m"(pb[x])
-:		    "rbx", "rax", "memory");
-	}
-#else
-	volatile uint32_t carry = carry_in;
+		uint64_t temp;
+		uint64_t carry_out;
 
+		temp = le64toh(*(uint64_t *)(pa + x));
+		carry = carry + temp;
+		carry_out = (carry < temp);
+		temp = le64toh(*(uint64_t *)(pb + x));
+		carry = carry + temp;
+		carry_out += (carry < temp);
+		*(uint64_t *)(pc + x) = htole64(carry);
+		carry = carry_out;
+	}
 #endif
 	for (; x != bytes; x++) {
 		carry = pa[x] + pb[x] + carry;
@@ -812,73 +802,23 @@ mbin_fet_sub_8(const uint8_t *pa, const uint8_t *pb,
     uint8_t *pc, uint8_t carry_in, uint32_t bytes)
 {
 	uint32_t x = 0;
+	uint64_t carry = carry_in;
 
-#ifdef __amd64__
-
-	volatile uint64_t carry = carry_in;
-
-	for (; (x + 32) <= bytes; x += 32) {
-		asm(
-		    "mov %5, %%rbx\n"
-		    "xor %%rax, %%rax\n"
-		    "sub %13, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "sub %6, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "mov %%rbx, %0\n"
-		    "mov %%rax, %%rcx\n"
-
-		    "mov %7, %%rbx\n"
-		    "xor %%rax, %%rax\n"
-		    "sub %%rcx, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "sub %8, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "mov %%rbx, %1\n"
-		    "mov %%rax, %%rcx\n"
-
-		    "mov %9, %%rbx\n"
-		    "xor %%rax, %%rax\n"
-		    "sub %%rcx, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "sub %10, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "mov %%rbx, %2\n"
-		    "mov %%rax, %%rcx\n"
-
-		    "mov %11, %%rbx\n"
-		    "xor %%rax, %%rax\n"
-		    "sub %%rcx, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "sub %12, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "mov %%rbx, %3\n"
-		    "mov %%rax, %4\n"
-
-:		    "=m"(pc[x]), "=m"(pc[x + 8]), "=m"(pc[x + 16]), "=m"(pc[x + 24]), "=m"(carry)
-:		    "m"(pa[x]), "m"(pb[x]), "m"(pa[x + 8]), "m"(pb[x + 8]),
-		    "m"(pa[x + 16]), "m"(pb[x + 16]), "m"(pa[x + 24]), "m"(pb[x + 24]), "m"(carry)
-:		    "rcx", "rbx", "rax", "memory");
-	}
-
+#if defined(__i386__) || defined(__amd64__)
 	for (; (x + 8) <= bytes; x += 8) {
-		asm("mov %3, %%rbx\n"
-		    "xor %%rax, %%rax\n"
-		    "sub %2, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "sub %4, %%rbx\n"
-		    "adc $0, %%rax\n"
-		    "mov %%rbx, %0\n"
-		    "mov %%rax, %1\n"
-:		    "=m"(pc[x]), "=m"(carry)
-:		    "m"(carry), "m"(pa[x]), "m"(pb[x])
-:		    "rbx", "rax", "memory");
+		uint64_t temp;
+		uint64_t carry_out;
+
+		temp = le64toh(*(uint64_t *)(pa + x));
+		carry = temp - carry;
+		carry_out = (carry > temp);
+		temp = le64toh(*(uint64_t *)(pb + x));
+		temp = carry - temp;
+		carry_out += (temp > carry);
+		*(uint64_t *)(pc + x) = htole64(temp);
+		carry = carry_out;
 	}
-#else
-	volatile uint32_t carry = carry_in;
-
 #endif
-
 	for (; x != bytes; x++) {
 		carry = pa[x] - pb[x] - carry;
 		pc[x] = carry;
@@ -900,15 +840,6 @@ mbin_fet_rol_8(uint8_t *pa, uint32_t rol_bytes, uint32_t bytes)
 	memcpy(temp, pa + bytes - rol_bytes, rol_bytes);
 	memcpy(temp + rol_bytes, pa, bytes - rol_bytes);
 	memcpy(pa, temp, bytes);
-}
-
-static void
-mbin_fet_rol_cpy_8(uint8_t *pb, const uint8_t *pa, uint32_t rol_bytes, uint32_t bytes)
-{
-	rol_bytes &= (bytes - 1);
-
-	memcpy(pb, pa + bytes - rol_bytes, rol_bytes);
-	memcpy(pb + rol_bytes, pa, bytes - rol_bytes);
 }
 
 void
@@ -944,6 +875,38 @@ mbin_fet_rol_bit_8(uint8_t *pa, uint32_t rol_bits, uint32_t bytes)
 	}
 }
 
+void
+mbin_fet_shl_cpy_bit_8(uint8_t *pc, const uint8_t *pa, uint32_t shl_bits, uint32_t bytes)
+{
+	uint32_t x;
+	uint64_t carry;
+	uint64_t temp;
+
+	if (shl_bits == 0) {
+		memcpy(pc, pa, bytes);
+		return;
+	}
+	carry = 0;
+	x = 0;
+
+#if defined(__i386__) || defined(__amd64__)
+	for (; (x + 8) <= bytes; x += 8) {
+		temp = le64toh(*(const uint64_t *)(pa + x));
+		carry = (temp << shl_bits) | (carry >> (64 - shl_bits));
+		*(uint64_t *)(pc + x) = htole64(carry);
+		carry = temp;
+	}
+
+	carry >>= (64 - 8);
+#endif
+
+	for (; x <= bytes; x++) {
+		temp = pa[x];
+		pc[x] = (temp << shl_bits) | (carry >> (8 - shl_bits));
+		carry = temp;
+	}
+}
+
 static void
 mbin_fet_inverse_8_sub(uint8_t *data, uint8_t power_size,
     uint8_t n, uint32_t power_var)
@@ -953,32 +916,54 @@ mbin_fet_inverse_8_sub(uint8_t *data, uint8_t power_size,
 	uint32_t x;
 	uint32_t y;
 	uint32_t k;
-	uint32_t bytes_max = 1U << (power_var - 3);
 	uint32_t bytes_half = 1U << (power_var - 4);
 	uint8_t d = power_var - 3;
 	uint8_t s = 32 - power_var;
 	uint8_t c;
-	uint8_t temp[bytes_max] __aligned(8);
+	uint8_t e;
+	uint8_t temp[bytes_half + 1] __aligned(8);
 
-	for (k = 1, y = 0; y != max; k += 2, y += 2 * step) {
+	for (k = 0, y = 0; y != max; k += 2, y += 2 * step) {
 
 		uint32_t shift = mbin_bitrev32(k << s);
+		uint32_t shift_bytes = shift / 8;
 
 		for (x = 0; x != step; x++) {
 			uint8_t *p0 = data + ((y + x) << d);
 			uint8_t *p1 = data + ((y + x + step) << d);
 
-			mbin_fet_rol_cpy_8(temp, p1, shift / 8, bytes_max);
-			mbin_fet_rol_bit_8(temp, shift & 7, bytes_max);
+			mbin_fet_shl_cpy_bit_8(temp, p1, shift & 7, bytes_half + 1);
 
-			c = mbin_fet_add_8(p0, temp, p1, 0, bytes_max);
-			if (c)
-				mbin_fet_add_carry_8(p1, 1, bytes_max);
+			/* p1 = p0 + (p1 << (shift + bytes_half)) */
 
-			c = mbin_fet_add_8(p0, temp + bytes_half, p0, 0, bytes_half);
-			c = mbin_fet_add_8(p0 + bytes_half, temp, p0 + bytes_half, c, bytes_half);
+			c = mbin_fet_sub_8(p0 + shift_bytes, temp, p1 + shift_bytes, 0, bytes_half - shift_bytes);
+
+			e = p0[bytes_half];
+			p1[bytes_half] = 0;
+			c = mbin_fet_add_8(p0, temp + bytes_half - shift_bytes, p1, c, shift_bytes);
+			c = mbin_fet_add_8(p1 + shift_bytes, temp + bytes_half, p1 + shift_bytes, c, 1);
 			if (c)
-				mbin_fet_add_carry_8(p0, 1, bytes_max);
+				c = mbin_fet_add_carry_8(p1 + shift_bytes + 1, 0, bytes_half - shift_bytes - 1);
+			if (c)
+				c = mbin_fet_sub_carry_8(p1, 0, bytes_half);
+			if (e)
+				c += mbin_fet_sub_carry_8(p1, 0, bytes_half);
+			while (c--)
+				mbin_fet_add_carry_8(p1, 0, bytes_half + 1);
+
+			/* p0 = p0 - (p1 << (shift + bytes_half)) */
+
+			c = mbin_fet_add_8(p0 + shift_bytes, temp, p0 + shift_bytes, 0, bytes_half - shift_bytes);
+
+			c += p0[bytes_half];
+			p0[bytes_half] = 0;
+			c = mbin_fet_sub_8(p0, temp + bytes_half - shift_bytes, p0, c, shift_bytes);
+			c = mbin_fet_sub_8(p0 + shift_bytes, temp + bytes_half, p0 + shift_bytes, c, 1);
+			if (c) {
+				c = mbin_fet_sub_carry_8(p0 + shift_bytes + 1, 0, bytes_half - shift_bytes - 1);
+				if (c)
+					mbin_fet_add_carry_8(p0, 0, bytes_half + 1);
+			}
 		}
 	}
 }
@@ -1027,7 +1012,7 @@ mbin_fet_forward_8(uint8_t *data, uint8_t power_size, uint8_t power_var)
 	uint32_t var_max = (1U << (power_var - 3));
 	uint32_t var_half = (1U << (power_var - 4));
 	uint32_t x;
-	uint32_t rol_bits = ((1U << (power_var - 1)) - power_size);
+	uint32_t rol_bits = ((1U << power_var) - power_size);
 	uint8_t *p1;
 	uint8_t *p2;
 
@@ -1036,19 +1021,14 @@ mbin_fet_forward_8(uint8_t *data, uint8_t power_size, uint8_t power_var)
 	mbin_fet_inverse_8(data, power_size, power_var);
 
 	p1 = data;
-	p2 = data + var_half;
 
 	for (x = 0; x != size_max; x++) {
 		mbin_fet_rol_8(p1, rol_bits / 8, var_max);
 		mbin_fet_rol_bit_8(p1, rol_bits & 7, var_max);
 
-		if (mbin_fet_sub_8(p2, p1, p1, 0, var_half))
-			mbin_fet_add_carry_8(p1, 0, var_half);
-
-		memset(p2, 0, var_half);
+		mbin_fet_mod_8(p1, var_max);
 
 		p1 += var_max;
-		p2 += var_max;
 	}
 
 	mbin_fet_bitrev_8(data, power_size, power_var);
@@ -1072,14 +1052,16 @@ mbin_fet_conv_8(const uint8_t *a, const uint8_t *b, uint8_t *c,
 	uint32_t max = (1U << power_size);
 	uint32_t x;
 	uint32_t bytes = (1 << (power_var - 3));
-	uint8_t temp[2*bytes] __aligned(8);
+	uint8_t temp[2 * bytes] __aligned(8);
 
 	for (x = 0; x != max; x++) {
 
 		func(a, b, temp, bytes);
 
 		if (mbin_fet_add_8(temp, temp + bytes, c, 0, bytes))
-		  mbin_fet_add_carry_8(c, 1, bytes);
+			mbin_fet_add_carry_8(c, 1, bytes);
+
+		mbin_fet_mod_8(c, bytes);
 
 		a += bytes;
 		b += bytes;
@@ -1146,7 +1128,7 @@ mbin_fet_mul_8_2(const uint8_t *a, const uint8_t *b,
     uint8_t *c, uint32_t bytes)
 {
 	uint32_t temp;
-	uint32_t ta,tb;
+	uint32_t ta, tb;
 
 	ta = le16toh(*((uint16_t *)a));
 	tb = le16toh(*((uint16_t *)b));
@@ -1161,7 +1143,7 @@ mbin_fet_mul_8_4(const uint8_t *a, const uint8_t *b,
     uint8_t *c, uint32_t bytes)
 {
 	uint64_t temp;
-	uint32_t ta,tb;
+	uint32_t ta, tb;
 
 	ta = le32toh(*((uint32_t *)a));
 	tb = le32toh(*((uint32_t *)b));
@@ -1180,18 +1162,18 @@ mbin_fet_mul_8_8(const uint8_t *a, const uint8_t *b,
 
 	memset(last, 0, sizeof(last));
 
-	mbin_fet_mul_8_4(a,b,last,4);
+	mbin_fet_mul_8_4(a, b, last, 4);
 
 	memset(temp, 0, sizeof(temp));
-	mbin_fet_mul_8_4(a+4,b,temp+4,4);
+	mbin_fet_mul_8_4(a + 4, b, temp + 4, 4);
 	mbin_fet_add_8(last, temp, last, 0, 16);
 
 	memset(temp, 0, sizeof(temp));
-	mbin_fet_mul_8_4(a,b+4,temp+4,4);
+	mbin_fet_mul_8_4(a, b + 4, temp + 4, 4);
 	mbin_fet_add_8(last, temp, last, 0, 16);
 
 	memset(temp, 0, sizeof(temp));
-	mbin_fet_mul_8_4(a+4,b+4,temp+8,4);
+	mbin_fet_mul_8_4(a + 4, b + 4, temp + 8, 4);
 	mbin_fet_add_8(last, temp, last, 0, 16);
 
 	memcpy(c, last, 16);

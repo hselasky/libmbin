@@ -476,12 +476,15 @@ typedef void mbin_fet_mul_8_t (const uint8_t *, const uint8_t *, uint8_t *, uint
 
 void	mbin_fet_cpy_8(uint8_t *, const uint8_t *, uint32_t);
 uint8_t	mbin_fet_add_8(const uint8_t *, const uint8_t *, uint8_t *, uint8_t, uint32_t);
+void	mbin_fet_mod_8(uint8_t *, uint32_t);
 
-uint8_t	mbin_fet_add_carry_8(uint8_t *pa, uint8_t do_loop, uint32_t bytes);
+uint8_t	mbin_fet_add_carry_8(uint8_t *, uint8_t, uint32_t);
+uint8_t	mbin_fet_sub_carry_8(uint8_t *, uint8_t, uint32_t);
 
 uint8_t	mbin_fet_sub_8(const uint8_t *, const uint8_t *, uint8_t *, uint8_t, uint32_t);
 void	mbin_fet_rol_8(uint8_t *, uint32_t, uint32_t);
 void	mbin_fet_rol_bit_8(uint8_t *, uint32_t, uint32_t);
+void	mbin_fet_shl_cpy_bit_8(uint8_t *, const uint8_t *, uint32_t, uint32_t);
 
 void	mbin_fet_conv_8(const uint8_t *, const uint8_t *, uint8_t *, mbin_fet_mul_8_t *, uint8_t, uint8_t);
 
