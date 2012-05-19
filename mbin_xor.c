@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2012 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,76 +23,55 @@
  * SUCH DAMAGE.
  */
 
+/*
+ * This file implements XOR multiplication and some helper functions.
+ */
+
 #include <stdint.h>
 
 #include "math_bin.h"
 
 uint64_t
-mbin_msb64(uint64_t val)
+mbin_xor_exp_mod_64(uint64_t x, uint64_t y, uint64_t mod)
 {
-	if (val & 0xFFFFFFFF00000000ULL)
-		return (((uint64_t)mbin_msb32(val >> 32)) << 32);
-	else
-		return (mbin_msb32(val));
-}
+	uint64_t r = 1;
 
-uint32_t
-mbin_msb32(uint32_t val)
-{
-	uint32_t m;
-
-	if (val & 0xFFFF0000) {
-		if (val & 0xFF000000)
-			m = (1 << 31);
-		else
-			m = (1 << 23);
-	} else {
-		if (val & 0xFF00)
-			m = (1 << 15);
-		else
-			m = (1 << 7);
+	while (y) {
+		if (y & 1)
+			r = mbin_xor_mul_mod_64(r, x, mod);
+		x = mbin_xor_mul_mod_64(x, x, mod);
+		y /= 2;
 	}
-
-	do {
-		if (val & m)
-			break;
-	} while ((m /= 2));
-
-	return (m);
+	return (r);
 }
 
-uint16_t
-mbin_msb16(uint16_t val)
+uint64_t
+mbin_xor_mul_mod_64(uint64_t x, uint64_t y, uint64_t mod)
 {
-	uint16_t m;
+	uint64_t msb = mbin_msb64(mod);
+	uint64_t r = 0;
+	uint8_t n;
 
-	if (val & 0xFF00)
-		m = (1 << 15);
-	else
-		m = (1 << 7);
+	for (n = 0; n != 64; n++) {
+		if (y & (1ULL << n))
+			r ^= x;
 
-	do {
-		if (val & m)
-			break;
-	} while ((m /= 2));
-
-	return (m);
+		x <<= 1;
+		if (x & msb)
+			x ^= mod;
+	}
+	return (r);
 }
 
-uint8_t
-mbin_msb8(uint8_t val)
+uint64_t
+mbin_xor_find_mod_64(uint8_t pwr)
 {
-	uint8_t m;
+	uint64_t max = (1ULL << pwr) - 1ULL;
+	uint64_t len = (1ULL << (pwr - 1));
 
-	if (val & 0xF0)
-		m = (1 << 7);
-	else
-		m = (1 << 3);
-
-	do {
-		if (val & m)
+	for (; max > len; max -= 2) {
+		if (mbin_xor_exp_mod_64(2, len, max) == 2)
 			break;
-	} while ((m /= 2));
-
-	return (m);
+	}
+	return (max);
 }

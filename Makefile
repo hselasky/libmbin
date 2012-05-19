@@ -60,6 +60,7 @@ SRCS+=  mbin_sumdigit.c
 SRCS+=  mbin_swm.c
 SRCS+=  mbin_transform.c
 SRCS+=  mbin_vector.c
+SRCS+=  mbin_xor.c
 
 INCS=	math_bin.h
 

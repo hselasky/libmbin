@@ -88,6 +88,7 @@ uint32_t mbin_lsb32(uint32_t val);
 uint16_t mbin_lsb16(uint16_t val);
 uint8_t	mbin_lsb8(uint8_t val);
 
+uint64_t mbin_msb64(uint64_t val);
 uint32_t mbin_msb32(uint32_t val);
 uint16_t mbin_msb16(uint16_t val);
 uint8_t	mbin_msb8(uint8_t val);
@@ -612,5 +613,11 @@ uint32_t mbin_get_bits32(const uint32_t *ptr, uint32_t *poff, uint32_t bits);
 void	mbin_put_bits32(uint32_t *ptr, uint32_t *poff, uint32_t bits, uint32_t value);
 uint32_t mbin_get_rev_bits32(const uint32_t *ptr, uint32_t *poff, uint32_t bits);
 void	mbin_put_rev_bits32(uint32_t *ptr, uint32_t *poff, uint32_t bits, uint32_t value);
+
+/* XOR helpers */
+
+uint64_t mbin_xor_exp_mod_64(uint64_t, uint64_t, uint64_t);
+uint64_t mbin_xor_mul_mod_64(uint64_t, uint64_t, uint64_t);
+uint64_t mbin_xor_find_mod_64(uint8_t);
 
 #endif					/* _MATH_BIN_H_ */
