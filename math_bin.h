@@ -617,7 +617,12 @@ void	mbin_put_rev_bits32(uint32_t *ptr, uint32_t *poff, uint32_t bits, uint32_t 
 /* XOR helpers */
 
 uint64_t mbin_xor_exp_mod_64(uint64_t, uint64_t, uint64_t);
+uint64_t mbin_xor_log_mod_64(uint64_t, uint64_t);
 uint64_t mbin_xor_mul_mod_64(uint64_t, uint64_t, uint64_t);
+uint64_t mbin_xor_mod_64(uint64_t, uint64_t);
+uint64_t mbin_xor_div_64(uint64_t, uint64_t);
+uint64_t mbin_xor_div_odd_64(uint64_t, uint64_t);
+uint64_t mbin_xor_factor_slow(uint64_t);
 uint64_t mbin_xor_find_mod_64(uint8_t);
 
 #endif					/* _MATH_BIN_H_ */
