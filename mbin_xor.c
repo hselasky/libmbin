@@ -80,15 +80,14 @@ mbin_xor2_root_mod_64(uint64_t x, uint8_t p)
 {
 	uint64_t r = 0;
 	uint8_t n;
+	uint8_t q;
 
-	for (n = 0; n != p; n++) {
-		if (x & (1ULL << n)) {
-			if (n & 1) {
-				r ^= (1ULL << ((n + p) / 2));
-			} else {
-				r ^= (1ULL << (n / 2));
-			}
-		}
+	for (q = n = 0; n != p; n++) {
+		if (x & (1ULL << q))
+			r ^= 1ULL << n;
+		q += 2;
+		if (q >= p)
+			q -= p;
 	}
 	return (r);
 }
