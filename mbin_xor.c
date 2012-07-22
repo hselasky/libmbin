@@ -63,14 +63,14 @@ mbin_xor2_square_mod_64(uint64_t x, uint8_t p)
 {
 	uint64_t r = 0;
 	uint8_t n;
+	uint8_t q;
 
-	for (n = 0; n != p; n++) {
-		if (x & (1ULL << n)) {
-			if (n < (p / 2))
-				r ^= 1ULL << (2 * n);
-			else
-				r ^= 1ULL << ((2 * n) - p);
-		}
+	for (q = n = 0; n != p; n++) {
+		if (x & (1ULL << n))
+			r ^= 1ULL << q;
+		q += 2;
+		if (q >= p)
+			q -= p;
 	}
 	return (r);
 }
