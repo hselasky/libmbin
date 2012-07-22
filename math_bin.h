@@ -614,15 +614,34 @@ void	mbin_put_bits32(uint32_t *ptr, uint32_t *poff, uint32_t bits, uint32_t valu
 uint32_t mbin_get_rev_bits32(const uint32_t *ptr, uint32_t *poff, uint32_t bits);
 void	mbin_put_rev_bits32(uint32_t *ptr, uint32_t *poff, uint32_t bits, uint32_t value);
 
-/* XOR helpers */
+/* XOR functions */
 
-uint64_t mbin_xor_exp_mod_64(uint64_t, uint64_t, uint64_t);
-uint64_t mbin_xor_log_mod_64(uint64_t, uint64_t);
-uint64_t mbin_xor_mul_mod_64(uint64_t, uint64_t, uint64_t);
-uint64_t mbin_xor_mod_64(uint64_t, uint64_t);
-uint64_t mbin_xor_div_64(uint64_t, uint64_t);
-uint64_t mbin_xor_div_odd_64(uint64_t, uint64_t);
-uint64_t mbin_xor_factor_slow(uint64_t);
-uint64_t mbin_xor_find_mod_64(uint8_t);
+uint64_t mbin_xor2_rol64(uint64_t, uint8_t, uint8_t);
+uint64_t mbin_xor2_ror64(uint64_t, uint8_t, uint8_t);
+uint64_t mbin_xor2_square_mod_64(uint64_t, uint8_t);
+uint64_t mbin_xor2_root_mod_64(uint64_t, uint8_t);
+uint64_t mbin_xor2_exp3_mod_64(uint64_t, uint64_t, uint8_t);
+uint64_t mbin_xor2_log3_mod_64(uint64_t, uint8_t);
+uint64_t mbin_xor2_exp_mod_64(uint64_t, uint64_t, uint8_t);
+uint64_t mbin_xor2_exp_64(uint64_t, uint64_t);
+uint64_t mbin_xor2_neg_mod_64(uint64_t, uint8_t);
+uint64_t mbin_xor2_log_mod_64(uint64_t, uint8_t);
+uint64_t mbin_xor2_mul_64(uint64_t, uint64_t);
+uint64_t mbin_xor2_mul_mod_64(uint64_t, uint64_t, uint8_t);
+uint64_t mbin_xor2_mul_mod_any_64(uint64_t, uint64_t, uint64_t);
+uint64_t mbin_xor2_mod_64(uint64_t, uint64_t);
+uint64_t mbin_xor2_div_64(uint64_t, uint64_t);
+uint64_t mbin_xor2_div_odd_64(uint64_t, uint64_t);
+uint64_t mbin_xor2_lin_mul_64(uint64_t, uint64_t, uint8_t);
+uint64_t mbin_xor2_bit_reduce_mod_64(uint64_t, uint8_t);
+uint64_t mbin_xor2_factor_slow(uint64_t);
+uint8_t	mbin_xor2_find_mod_64(uint8_t *, uint64_t *);
+
+uint64_t mbin_xor3_64(uint64_t, uint64_t);
+uint64_t mbin_xor3_mul_mod_64(uint64_t, uint64_t, uint8_t, uint8_t);
+uint64_t mbin_xor3_mul_64(uint64_t, uint64_t);
+uint64_t mbin_xor3_exp_mod_64(uint64_t, uint64_t, uint8_t, uint8_t);
+uint64_t mbin_xor3_neg_mod_64(uint64_t, uint8_t, uint8_t);
+uint8_t	mbin_xor3_find_mod_64(uint8_t *, uint8_t *, uint64_t *);
 
 #endif					/* _MATH_BIN_H_ */
