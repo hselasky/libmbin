@@ -43,7 +43,7 @@
 #define	MBIN_XOR2_BASE_64(p) 3ULL
 
 uint64_t
-mbin_xor2_rol64(uint64_t val, uint8_t shift, uint8_t p)
+mbin_xor2_rol_mod_64(uint64_t val, uint8_t shift, uint8_t p)
 {
 	val = (val << shift) | (val >> (p - shift));
 	val &= (1ULL << p) - 1ULL;
@@ -51,7 +51,7 @@ mbin_xor2_rol64(uint64_t val, uint8_t shift, uint8_t p)
 }
 
 uint64_t
-mbin_xor2_ror64(uint64_t val, uint8_t shift, uint8_t p)
+mbin_xor2_ror_mod_64(uint64_t val, uint8_t shift, uint8_t p)
 {
 	val = (val >> shift) | (val << (p - shift));
 	val &= (1ULL << p) - 1ULL;
@@ -103,7 +103,7 @@ mbin_xor2_exp3_mod_64(uint64_t x, uint64_t y, uint8_t p)
 		if (r >= p)
 			r -= p;
 		if (y & (1ULL << n))
-			x = x ^ mbin_xor2_rol64(x, r, p);
+			x = x ^ mbin_xor2_rol_mod_64(x, r, p);
 	}
 	return (x);
 }
@@ -152,7 +152,7 @@ mbin_xor2_log3_mod_64(uint64_t x, uint8_t p)
 		for (r = 0; r != p; r++) {
 			if (ntable[r] == 0)
 				continue;
-			y = x ^ mbin_xor2_rol64(x, r, p);
+			y = x ^ mbin_xor2_rol_mod_64(x, r, p);
 			sby = mbin_sumbits64(y);
 			if (sby <= sbx) {
 				z += (1ULL << ntable[r]);
@@ -209,7 +209,7 @@ mbin_xor2_log3_mod_64(uint64_t x, uint8_t p)
 
 		z += (1ULL << ntable[r]);
 
-		x = x ^ mbin_xor2_rol64(x, r, p);
+		x = x ^ mbin_xor2_rol_mod_64(x, r, p);
 	}
 
 	/* final step */
@@ -597,4 +597,89 @@ mbin_xor3_find_mod_64(uint8_t *pbit, uint8_t *qbit, uint64_t *plen)
 	if (plen)
 		*plen = len;
 	return (0);
+}
+
+/*
+ * ========================================================================
+ *                              BASE-2 VECTOR XOR
+ * ========================================================================
+ */
+
+struct mbin_xor2v_64 mbin_xor2v_zero_64 = {0, 1};
+struct mbin_xor2v_64 mbin_xor2v_unit_64 = {1, 3};
+
+struct mbin_xor2v_64
+mbin_xor2v_mul_mod_64(struct mbin_xor2v_64 x, struct mbin_xor2v_64 y, uint8_t p)
+{
+	struct mbin_xor2v_64 t;
+
+	uint64_t val;
+
+	val = y.a1 ^ y.a0 ^ mbin_xor2_rol_mod_64(y.a0, 1, p);
+
+	t.a0 = mbin_xor2_mul_mod_64(x.a0, val, p) ^ mbin_xor2_mul_mod_64(x.a1, y.a0, p);
+	t.a1 = mbin_xor2_mul_mod_64(x.a0, y.a0, p) ^ mbin_xor2_mul_mod_64(x.a1, y.a1, p);
+
+	return (t);
+}
+
+struct mbin_xor2v_64
+mbin_xor2v_square_mod_64(struct mbin_xor2v_64 x, uint8_t p)
+{
+	struct mbin_xor2v_64 t;
+
+	uint64_t val;
+
+	val = mbin_xor2_square_mod_64(x.a0, p);
+
+	t.a0 = val ^ mbin_xor2_rol_mod_64(val, 1, p);
+	t.a1 = val ^ mbin_xor2_square_mod_64(x.a1, p);
+
+	return (t);
+}
+
+struct mbin_xor2v_64
+mbin_xor2v_neg_mod_64(struct mbin_xor2v_64 x, uint8_t p)
+{
+	struct mbin_xor2v_64 t;
+
+	/* simply swap */
+
+	t.a0 = x.a1;
+	t.a1 = x.a0;
+
+	/* adjust by adding one */
+
+	t = mbin_xor2v_mul_mod_64(t, mbin_xor2v_unit_64, p);
+
+	return (t);
+
+}
+
+struct mbin_xor2v_64
+mbin_xor2v_neg_sub_unit_mod_64(struct mbin_xor2v_64 x, uint8_t p)
+{
+	struct mbin_xor2v_64 t;
+
+	/* simply swap */
+
+	t.a0 = x.a1;
+	t.a1 = x.a0;
+
+	return (t);
+}
+
+struct mbin_xor2v_64
+mbin_xor2v_exp_mod_64(struct mbin_xor2v_64 x, uint64_t y, uint8_t p)
+{
+	struct mbin_xor2v_64 r = mbin_xor2v_zero_64;
+
+	while (y) {
+		if (y & 1)
+			r = mbin_xor2v_mul_mod_64(r, x, p);
+		x = mbin_xor2v_mul_mod_64(x, x, p);
+		y /= 2;
+	}
+	return (r);
+
 }
