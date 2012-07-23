@@ -651,8 +651,11 @@ struct mbin_xor2v_64 {
 
 extern struct mbin_xor2v_64 mbin_xor2v_zero_64;
 extern struct mbin_xor2v_64 mbin_xor2v_unit_64;
+extern struct mbin_xor2v_64 mbin_xor2v_nega_64;
 struct mbin_xor2v_64 mbin_xor2v_mul_mod_64(struct mbin_xor2v_64, struct mbin_xor2v_64, uint8_t);
 struct mbin_xor2v_64 mbin_xor2v_square_mod_64(struct mbin_xor2v_64, uint8_t);
+struct mbin_xor2v_64 mbin_xor2v_root_mod_64(struct mbin_xor2v_64, uint8_t);
+uint64_t mbin_xor2v_log_mod_64(struct mbin_xor2v_64, uint8_t);
 struct mbin_xor2v_64 mbin_xor2v_neg_mod_64(struct mbin_xor2v_64, uint8_t);
 struct mbin_xor2v_64 mbin_xor2v_neg_sub_unit_mod_64(struct mbin_xor2v_64, uint8_t);
 struct mbin_xor2v_64 mbin_xor2v_exp_mod_64(struct mbin_xor2v_64, uint64_t, uint8_t);

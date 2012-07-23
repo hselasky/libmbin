@@ -606,6 +606,21 @@ mbin_xor3_find_mod_64(uint8_t *pbit, uint8_t *qbit, uint64_t *plen)
 
 struct mbin_xor2v_64 mbin_xor2v_zero_64 = {0, 1};
 struct mbin_xor2v_64 mbin_xor2v_unit_64 = {1, 3};
+struct mbin_xor2v_64 mbin_xor2v_nega_64 = {1, 0};
+
+static uint64_t
+mbin_xor2_ungrey_mod_64(uint64_t x, uint8_t p)
+{
+	uint8_t q;
+
+	/* assuming that input has even parity */
+
+	for (q = 0; q != (p - 1); q++) {
+		if (x & (1ULL << q))
+			x ^= (2ULL << q);
+	}
+	return (x);
+}
 
 struct mbin_xor2v_64
 mbin_xor2v_mul_mod_64(struct mbin_xor2v_64 x, struct mbin_xor2v_64 y, uint8_t p)
@@ -616,8 +631,10 @@ mbin_xor2v_mul_mod_64(struct mbin_xor2v_64 x, struct mbin_xor2v_64 y, uint8_t p)
 
 	val = y.a1 ^ y.a0 ^ mbin_xor2_rol_mod_64(y.a0, 1, p);
 
-	t.a0 = mbin_xor2_mul_mod_64(x.a0, val, p) ^ mbin_xor2_mul_mod_64(x.a1, y.a0, p);
-	t.a1 = mbin_xor2_mul_mod_64(x.a0, y.a0, p) ^ mbin_xor2_mul_mod_64(x.a1, y.a1, p);
+	t.a0 = mbin_xor2_mul_mod_64(x.a0, val, p) ^
+	    mbin_xor2_mul_mod_64(x.a1, y.a0, p);
+	t.a1 = mbin_xor2_mul_mod_64(x.a0, y.a0, p) ^
+	    mbin_xor2_mul_mod_64(x.a1, y.a1, p);
 
 	return (t);
 }
@@ -635,6 +652,39 @@ mbin_xor2v_square_mod_64(struct mbin_xor2v_64 x, uint8_t p)
 	t.a1 = val ^ mbin_xor2_square_mod_64(x.a1, p);
 
 	return (t);
+}
+
+struct mbin_xor2v_64
+mbin_xor2v_root_mod_64(struct mbin_xor2v_64 x, uint8_t p)
+{
+	struct mbin_xor2v_64 t;
+
+	/* assuming that "x.a0" has even parity */
+	t.a0 = mbin_xor2_ungrey_mod_64(x.a0, p);
+	t.a0 = mbin_xor2_root_mod_64(t.a0, p);
+	t.a1 = t.a0 ^ mbin_xor2_root_mod_64(x.a1, p);
+#if 0
+	/* the other solution */
+	t.a0 ^= (1ULL << p) - 1ULL;
+	t.a1 ^= (1ULL << p) - 1ULL;
+#endif
+	return (t);
+}
+
+uint64_t
+mbin_xor2v_log_mod_64(struct mbin_xor2v_64 x, uint8_t p)
+{
+	uint64_t r = 0;
+
+	/* TODO: Optimise */
+
+	while (x.a0 != mbin_xor2v_zero_64.a0 ||
+	    x.a1 != mbin_xor2v_zero_64.a1) {
+
+		x = mbin_xor2v_mul_mod_64(x, mbin_xor2v_nega_64, p);
+		r++;
+	}
+	return (r);
 }
 
 struct mbin_xor2v_64
