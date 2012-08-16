@@ -129,7 +129,7 @@ mbin_xor2_log3_mod_64(uint64_t x, uint8_t p)
 	/* setup MOD table */
 
 	pm = (p - 1) / 2;
-	mask = (1ULL << pm) - 1ULL;
+	mask = p * ((1ULL << pm) - 1ULL);
 
 	/* there might be unused entries */
 	memset(ntable, 0, sizeof(ntable));
