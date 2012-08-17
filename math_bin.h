@@ -623,6 +623,7 @@ uint64_t mbin_xor2_root_mod_64(uint64_t, uint8_t);
 uint64_t mbin_xor2_exp3_mod_64(uint64_t, uint64_t, uint8_t);
 uint64_t mbin_xor2_log3_mod_64(uint64_t, uint8_t);
 uint64_t mbin_xor2_exp_mod_64(uint64_t, uint64_t, uint8_t);
+uint64_t mbin_xor2_exp_mod_any_64(uint64_t, uint64_t, uint64_t);
 uint64_t mbin_xor2_exp_64(uint64_t, uint64_t);
 uint64_t mbin_xor2_neg_mod_64(uint64_t, uint8_t);
 uint64_t mbin_xor2_log_mod_64(uint64_t, uint8_t);

@@ -243,6 +243,20 @@ mbin_xor2_exp_mod_64(uint64_t x, uint64_t y, uint8_t p)
 }
 
 uint64_t
+mbin_xor2_exp_mod_any_64(uint64_t x, uint64_t y, uint64_t p)
+{
+	uint64_t r = 1;
+
+	while (y) {
+		if (y & 1)
+			r = mbin_xor2_mul_mod_any_64(r, x, p);
+		x = mbin_xor2_mul_mod_any_64(x, x, p);
+		y /= 2;
+	}
+	return (r);
+}
+
+uint64_t
 mbin_xor2_exp_64(uint64_t x, uint64_t y)
 {
 	uint64_t r = 1;
