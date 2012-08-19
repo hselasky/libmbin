@@ -684,6 +684,56 @@ mbin_xor3_mul_mod_64(uint64_t x, uint64_t y, uint8_t p, uint8_t q)
 }
 
 uint64_t
+mbin_xor3_mul_mod_any_64(uint64_t x, uint64_t y, uint64_t p)
+{
+	uint64_t r = 0;
+	uint64_t msb = mbin_msb64(p);
+	uint8_t n;
+
+	if (msb & 0xAAAAAAAAAAAAAAAAULL)
+		msb /= 2;
+
+	msb = 3ULL * msb;
+
+	for (n = 0; n != 64; n += 2) {
+		uint8_t m = (y >> n) & 3;
+
+		while (m--)
+			r = mbin_xor3_64(r, x);
+
+		x <<= 2;
+		while (x & msb)
+			x = mbin_xor3_64(x, p);
+	}
+	return (r);
+}
+
+uint32_t
+mbin_xor3_mul_mod_any_32(uint32_t x, uint32_t y, uint32_t p)
+{
+	uint32_t r = 0;
+	uint32_t msb = mbin_msb32(p);
+	uint8_t n;
+
+	if (msb & 0xAAAAAAAAUL)
+		msb /= 2;
+
+	msb = 3 * msb;
+
+	for (n = 0; n != 32; n += 2) {
+		uint8_t m = (y >> n) & 3;
+
+		while (m--)
+			r = mbin_xor3_32(r, x);
+
+		x <<= 2;
+		while (x & msb)
+			x = mbin_xor3_32(x, p);
+	}
+	return (r);
+}
+
+uint64_t
 mbin_xor3_mul_64(uint64_t x, uint64_t y)
 {
 	uint64_t r = 0;

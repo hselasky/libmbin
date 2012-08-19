@@ -651,6 +651,8 @@ void	mbin_xor_print_mat_32(uint32_t *table, uint32_t size, uint8_t print_invert)
 
 uint64_t mbin_xor3_64(uint64_t, uint64_t);
 uint64_t mbin_xor3_mul_mod_64(uint64_t, uint64_t, uint8_t, uint8_t);
+uint64_t mbin_xor3_mul_mod_any_64(uint64_t, uint64_t, uint64_t);
+uint32_t mbin_xor3_mul_mod_any_32(uint32_t, uint32_t, uint32_t);
 uint64_t mbin_xor3_mul_64(uint64_t, uint64_t);
 uint64_t mbin_xor3_exp_mod_64(uint64_t, uint64_t, uint8_t, uint8_t);
 uint64_t mbin_xor3_neg_mod_64(uint64_t, uint8_t, uint8_t);
