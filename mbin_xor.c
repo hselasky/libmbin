@@ -28,6 +28,7 @@
  * division, exponent, logarithm and so on.
  */
 
+#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -256,6 +257,20 @@ mbin_xor2_exp_mod_any_64(uint64_t x, uint64_t y, uint64_t p)
 	return (r);
 }
 
+uint32_t
+mbin_xor2_exp_mod_any_32(uint32_t x, uint32_t y, uint32_t p)
+{
+	uint32_t r = 1;
+
+	while (y) {
+		if (y & 1)
+			r = mbin_xor2_mul_mod_any_32(r, x, p);
+		x = mbin_xor2_mul_mod_any_32(x, x, p);
+		y /= 2;
+	}
+	return (r);
+}
+
 uint64_t
 mbin_xor2_exp_64(uint64_t x, uint64_t y)
 {
@@ -341,6 +356,24 @@ mbin_xor2_mul_mod_any_64(uint64_t x, uint64_t y, uint64_t mod)
 	uint8_t n;
 
 	for (n = 0; n != 64; n++) {
+		if (y & (1ULL << n))
+			r ^= x;
+
+		x <<= 1;
+		if (x & msb)
+			x ^= mod;
+	}
+	return (r);
+}
+
+uint32_t
+mbin_xor2_mul_mod_any_32(uint32_t x, uint32_t y, uint32_t mod)
+{
+	uint32_t msb = mbin_msb32(mod);
+	uint32_t r = 0;
+	uint8_t n;
+
+	for (n = 0; n != 32; n++) {
 		if (y & (1ULL << n))
 			r ^= x;
 
@@ -478,6 +511,123 @@ mbin_xor2_find_mod_64(uint8_t *pbit, uint64_t *plen)
 	if (plen)
 		*plen = (1ULL << (power - 1) / 2) - 1ULL;
 	return (0);
+}
+
+/*
+ * The following function is used to solve binary matrices.
+ */
+
+uint8_t
+mbin_xor2_inv_mat_mod_any_32(uint32_t *table,
+    struct mbin_poly_32 *poly, uint32_t size)
+{
+	uint32_t temp;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	uint32_t u;
+	uint8_t retval = 0;
+
+	/* invert matrix */
+
+	for (y = 0; y != size; y++) {
+
+		/* find non-zero entry in row */
+
+		for (x = 0; x != size; x++) {
+			if (table[(size * x) + y] != 0)
+				goto found_non_zero;
+		}
+
+		retval = 1;		/* failure */
+		continue;
+
+found_non_zero:
+
+		/* normalise row */
+
+		temp = table[(size * x) + y];
+
+		/* invert temp - negative */
+
+		temp = mbin_xor2_exp_mod_any_32(temp,
+		    poly->length - 1, poly->poly);
+
+		for (z = 0; z != (2 * size); z++) {
+			table[(size * z) + y] =
+			    mbin_xor2_mul_mod_any_32(table[(size * z) + y],
+			    temp, poly->poly);
+		}
+
+		table[(size * x) + y] = 1;
+
+		/* subtract row */
+
+		for (z = 0; z != size; z++) {
+			if ((z != y) && (table[(size * x) + z] != 0)) {
+				temp = table[(size * x) + z];
+				for (u = 0; u != (2 * size); u++) {
+					table[(size * u) + z] =
+					    table[(size * u) + z] ^
+					    mbin_xor2_mul_mod_any_32(temp,
+					    table[(size * u) + y], poly->poly);
+				}
+				if (table[(size * x) + z] != 0)
+					return (2);	/* failure */
+			}
+		}
+	}
+
+	/* sort matrix */
+
+	for (y = 0; y != size; y++) {
+		for (x = 0; x != size; x++) {
+			if (table[(size * x) + y] != 0) {
+				if (x != y) {
+					/* wrong order - swap */
+					for (z = 0; z != (2 * size); z++) {
+						temp = table[(size * z) + x];
+						table[(size * z) + x] =
+						    table[(size * z) + y];
+						table[(size * z) + y] = temp;
+					}
+					y--;
+				}
+				break;
+			}
+		}
+		if (x == size)
+			retval = 3;	/* failure */
+	}
+	return (retval);		/* success */
+}
+
+void
+mbin_xor_print_mat_32(uint32_t *table, uint32_t size, uint8_t print_invert)
+{
+	uint32_t temp;
+	uint32_t x;
+	uint32_t y;
+	uint32_t off;
+	uint8_t no_solution = 0;
+
+	off = print_invert ? size : 0;
+
+	for (y = 0; y != size; y++) {
+		printf("0x%02x | ", y);
+
+		for (x = 0; x != size; x++) {
+			temp = table[((x + off) * size) + y];
+
+			printf("0x%08x", temp);
+
+			if (x != (size - 1))
+				printf(", ");
+		}
+		printf(";\n");
+	}
+	if (no_solution)
+		printf("this matrix has no solution due to undefined bits!\n");
 }
 
 /*
