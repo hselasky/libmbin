@@ -559,8 +559,6 @@ found_non_zero:
 			    temp, poly->poly);
 		}
 
-		table[(size * x) + y] = 1;
-
 		/* subtract row */
 
 		for (z = 0; z != size; z++) {
@@ -603,7 +601,7 @@ found_non_zero:
 }
 
 void
-mbin_xor_print_mat_32(uint32_t *table, uint32_t size, uint8_t print_invert)
+mbin_xor_print_mat_32(const uint32_t *table, uint32_t size, uint8_t print_invert)
 {
 	uint32_t temp;
 	uint32_t x;
@@ -822,6 +820,10 @@ struct mbin_xor2v_64 mbin_xor2v_zero_64 = {0, 1};
 struct mbin_xor2v_64 mbin_xor2v_unit_64 = {1, 3};
 struct mbin_xor2v_64 mbin_xor2v_nega_64 = {1, 0};
 
+struct mbin_xor2v_32 mbin_xor2v_zero_32 = {0, 1};
+struct mbin_xor2v_32 mbin_xor2v_unit_32 = {1, 3};
+struct mbin_xor2v_32 mbin_xor2v_nega_32 = {1, 0};
+
 static uint64_t
 mbin_xor2_ungrey_mod_64(uint64_t x, uint8_t p)
 {
@@ -849,6 +851,42 @@ mbin_xor2v_mul_mod_64(struct mbin_xor2v_64 x, struct mbin_xor2v_64 y, uint8_t p)
 	    mbin_xor2_mul_mod_64(x.a1, y.a0, p);
 	t.a1 = mbin_xor2_mul_mod_64(x.a0, y.a0, p) ^
 	    mbin_xor2_mul_mod_64(x.a1, y.a1, p);
+
+	return (t);
+}
+
+struct mbin_xor2v_64
+mbin_xor2v_mul_mod_any_64(struct mbin_xor2v_64 x, struct mbin_xor2v_64 y,
+    uint64_t p)
+{
+	struct mbin_xor2v_64 t;
+
+	uint64_t val;
+
+	val = y.a1 ^ mbin_xor2_mul_mod_any_64(y.a0, 3, p);
+
+	t.a0 = mbin_xor2_mul_mod_any_64(x.a0, val, p) ^
+	    mbin_xor2_mul_mod_any_64(x.a1, y.a0, p);
+	t.a1 = mbin_xor2_mul_mod_any_64(x.a0, y.a0, p) ^
+	    mbin_xor2_mul_mod_any_64(x.a1, y.a1, p);
+
+	return (t);
+}
+
+struct mbin_xor2v_32
+mbin_xor2v_mul_mod_any_32(struct mbin_xor2v_32 x, struct mbin_xor2v_32 y,
+    uint32_t p)
+{
+	struct mbin_xor2v_32 t;
+
+	uint32_t val;
+
+	val = y.a1 ^ mbin_xor2_mul_mod_any_32(y.a0, 3, p);
+
+	t.a0 = mbin_xor2_mul_mod_any_32(x.a0, val, p) ^
+	    mbin_xor2_mul_mod_any_32(x.a1, y.a0, p);
+	t.a1 = mbin_xor2_mul_mod_any_32(x.a0, y.a0, p) ^
+	    mbin_xor2_mul_mod_any_32(x.a1, y.a1, p);
 
 	return (t);
 }
@@ -919,6 +957,24 @@ mbin_xor2v_neg_mod_64(struct mbin_xor2v_64 x, uint8_t p)
 
 }
 
+struct mbin_xor2v_32
+mbin_xor2v_neg_mod_any_32(struct mbin_xor2v_32 x, uint32_t p)
+{
+	struct mbin_xor2v_32 t;
+
+	/* simply swap */
+
+	t.a0 = x.a1;
+	t.a1 = x.a0;
+
+	/* adjust by adding one */
+
+	t = mbin_xor2v_mul_mod_any_32(t, mbin_xor2v_unit_32, p);
+
+	return (t);
+
+}
+
 struct mbin_xor2v_64
 mbin_xor2v_neg_sub_unit_mod_64(struct mbin_xor2v_64 x, uint8_t p)
 {
@@ -944,5 +1000,99 @@ mbin_xor2v_exp_mod_64(struct mbin_xor2v_64 x, uint64_t y, uint8_t p)
 		y /= 2;
 	}
 	return (r);
+}
 
+struct mbin_xor2v_32
+mbin_xor2v_exp_mod_any_32(struct mbin_xor2v_32 x, uint32_t y, uint32_t p)
+{
+	struct mbin_xor2v_32 r = mbin_xor2v_zero_32;
+
+	while (y) {
+		if (y & 1)
+			r = mbin_xor2v_mul_mod_any_32(r, x, p);
+		x = mbin_xor2v_mul_mod_any_32(x, x, p);
+		y /= 2;
+	}
+	return (r);
+}
+
+struct mbin_xor2v_32
+mbin_xor2v_xor_32(struct mbin_xor2v_32 x, struct mbin_xor2v_32 y)
+{
+	x.a0 ^= y.a0;
+	x.a1 ^= y.a1;
+	return (x);
+}
+
+void
+mbin_xor2v_print_mat_32(const struct mbin_xor2v_32 *table,
+    uint32_t size, uint8_t print_invert)
+{
+	struct mbin_xor2v_32 temp;
+	uint32_t x;
+	uint32_t y;
+	uint32_t off;
+	uint8_t no_solution = 0;
+
+	off = print_invert ? size : 0;
+
+	for (y = 0; y != size; y++) {
+		printf("0x%02x | ", y);
+
+		for (x = 0; x != size; x++) {
+			temp = table[((x + off) * size) + y];
+
+			printf("0x%08x.0x%08x", temp.a0, temp.a1);
+
+			if (x != (size - 1))
+				printf(", ");
+		}
+		printf(";\n");
+	}
+	if (no_solution)
+		printf("this matrix has no solution due to undefined bits!\n");
+}
+
+/*
+ * ========================================================================
+ *                              BASE-4 XOR
+ * ========================================================================
+ */
+
+uint32_t
+mbin_xor4_32(uint32_t a, uint32_t b)
+{
+	const uint32_t K = 0x55555555UL;
+	uint32_t d;
+	uint32_t e;
+
+	d = a ^ b;
+	e = a & b & K;
+
+	return (d ^ (2 * e));
+}
+
+uint32_t
+mbin_xor4_mul_mod_any_32(uint32_t x, uint32_t y, uint32_t p)
+{
+	uint32_t r = 0;
+	uint32_t msb = mbin_msb32(p);
+	uint8_t n;
+
+	if (msb & 0xAAAAAAAAUL)
+		msb /= 2;
+
+	msb = 3 * msb;
+
+	for (n = 0; n != 32; n += 2) {
+		uint8_t m = (y >> n) & 3;
+
+		while (m--)
+			r = mbin_xor4_32(r, x);
+
+		x <<= 2;
+		while (x & msb)
+			x = mbin_xor4_32(x, p);
+	}
+	return (r);
 }

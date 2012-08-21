@@ -56,26 +56,6 @@ mbin_lt4_32(uint32_t a, uint32_t b)
 }
 
 uint32_t
-mbin_xor4_32(uint32_t a, uint32_t b)
-{
-	uint32_t and;
-	uint32_t xor;
-	uint32_t an;
-	uint32_t xn;
-
-	and = a & b & k;
-	xor = a ^ b;
-
-	while (and) {
-		xn = (2 * and) ^ xor;
-		an = (2 * and) & xor;
-		xor = xn;
-		and = an & k;
-	}
-	return (xor);
-}
-
-uint32_t
 mbin_inv4_32(uint32_t a)
 {
 	return (mbin_xor4_32(~a, k));

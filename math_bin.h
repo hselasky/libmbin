@@ -646,8 +646,8 @@ uint64_t mbin_xor2_lin_mul_64(uint64_t, uint64_t, uint8_t);
 uint64_t mbin_xor2_bit_reduce_mod_64(uint64_t, uint8_t);
 uint64_t mbin_xor2_factor_slow(uint64_t);
 uint8_t	mbin_xor2_find_mod_64(uint8_t *, uint64_t *);
-uint8_t	mbin_xor2_inv_mat_mod_any_32(uint32_t *table, struct mbin_poly_32 *poly, uint32_t size);
-void	mbin_xor_print_mat_32(uint32_t *table, uint32_t size, uint8_t print_invert);
+uint8_t	mbin_xor2_inv_mat_mod_any_32(uint32_t *, struct mbin_poly_32 *, uint32_t);
+void	mbin_xor_print_mat_32(const uint32_t *, uint32_t, uint8_t);
 
 uint64_t mbin_xor3_64(uint64_t, uint64_t);
 uint64_t mbin_xor3_mul_mod_64(uint64_t, uint64_t, uint8_t, uint8_t);
@@ -663,15 +663,30 @@ struct mbin_xor2v_64 {
 	uint64_t a1;
 };
 
+struct mbin_xor2v_32 {
+	uint32_t a0;
+	uint32_t a1;
+};
+
 extern struct mbin_xor2v_64 mbin_xor2v_zero_64;
 extern struct mbin_xor2v_64 mbin_xor2v_unit_64;
 extern struct mbin_xor2v_64 mbin_xor2v_nega_64;
+extern struct mbin_xor2v_32 mbin_xor2v_zero_32;
+extern struct mbin_xor2v_32 mbin_xor2v_unit_32;
+extern struct mbin_xor2v_32 mbin_xor2v_nega_32;
 struct mbin_xor2v_64 mbin_xor2v_mul_mod_64(struct mbin_xor2v_64, struct mbin_xor2v_64, uint8_t);
+struct mbin_xor2v_64 mbin_xor2v_mul_mod_any_64(struct mbin_xor2v_64 x, struct mbin_xor2v_64 y, uint64_t p);
+struct mbin_xor2v_32 mbin_xor2v_mul_mod_any_32(struct mbin_xor2v_32 x, struct mbin_xor2v_32 y, uint32_t p);
 struct mbin_xor2v_64 mbin_xor2v_square_mod_64(struct mbin_xor2v_64, uint8_t);
 struct mbin_xor2v_64 mbin_xor2v_root_mod_64(struct mbin_xor2v_64, uint8_t);
 uint64_t mbin_xor2v_log_mod_64(struct mbin_xor2v_64, uint8_t);
 struct mbin_xor2v_64 mbin_xor2v_neg_mod_64(struct mbin_xor2v_64, uint8_t);
+struct mbin_xor2v_32 mbin_xor2v_neg_mod_any_32(struct mbin_xor2v_32, uint32_t);
 struct mbin_xor2v_64 mbin_xor2v_neg_sub_unit_mod_64(struct mbin_xor2v_64, uint8_t);
 struct mbin_xor2v_64 mbin_xor2v_exp_mod_64(struct mbin_xor2v_64, uint64_t, uint8_t);
+struct mbin_xor2v_32 mbin_xor2v_exp_mod_any_32(struct mbin_xor2v_32, uint32_t, uint32_t);
+struct mbin_xor2v_32 mbin_xor2v_xor_32(struct mbin_xor2v_32, struct mbin_xor2v_32);
+uint32_t mbin_xor4_32(uint32_t, uint32_t);
+uint32_t mbin_xor4_mul_mod_any_32(uint32_t, uint32_t, uint32_t);
 
 #endif					/* _MATH_BIN_H_ */
