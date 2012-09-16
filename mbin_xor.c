@@ -763,6 +763,20 @@ mbin_xor3_exp_mod_64(uint64_t x, uint64_t y, uint8_t p, uint8_t q)
 }
 
 uint64_t
+mbin_xor3_exp_mod_any_64(uint64_t x, uint64_t y, uint64_t p)
+{
+	uint64_t r = 1;
+
+	while (y) {
+		if (y & 1)
+			r = mbin_xor3_mul_mod_any_64(r, x, p);
+		x = mbin_xor3_mul_mod_any_64(x, x, p);
+		y /= 2;
+	}
+	return (r);
+}
+
+uint64_t
 mbin_xor3_neg_mod_64(uint64_t x, uint8_t p, uint8_t q)
 {
 	uint64_t len;

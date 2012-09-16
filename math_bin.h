@@ -655,6 +655,7 @@ uint64_t mbin_xor3_mul_mod_any_64(uint64_t, uint64_t, uint64_t);
 uint32_t mbin_xor3_mul_mod_any_32(uint32_t, uint32_t, uint32_t);
 uint64_t mbin_xor3_mul_64(uint64_t, uint64_t);
 uint64_t mbin_xor3_exp_mod_64(uint64_t, uint64_t, uint8_t, uint8_t);
+uint64_t mbin_xor3_exp_mod_any_64(uint64_t, uint64_t, uint64_t);
 uint64_t mbin_xor3_neg_mod_64(uint64_t, uint8_t, uint8_t);
 uint8_t	mbin_xor3_find_mod_64(uint8_t *, uint8_t *, uint64_t *);
 
