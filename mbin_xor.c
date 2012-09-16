@@ -1110,3 +1110,17 @@ mbin_xor4_mul_mod_any_32(uint32_t x, uint32_t y, uint32_t p)
 	}
 	return (r);
 }
+
+uint32_t
+mbin_xor4_exp_mod_any_32(uint32_t x, uint32_t y, uint32_t p)
+{
+	uint32_t r = 1;
+
+	while (y) {
+		if (y & 1)
+			r = mbin_xor4_mul_mod_any_32(r, x, p);
+		x = mbin_xor4_mul_mod_any_32(x, x, p);
+		y /= 2;
+	}
+	return (r);
+}

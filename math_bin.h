@@ -689,5 +689,6 @@ struct mbin_xor2v_32 mbin_xor2v_exp_mod_any_32(struct mbin_xor2v_32, uint32_t, u
 struct mbin_xor2v_32 mbin_xor2v_xor_32(struct mbin_xor2v_32, struct mbin_xor2v_32);
 uint32_t mbin_xor4_32(uint32_t, uint32_t);
 uint32_t mbin_xor4_mul_mod_any_32(uint32_t, uint32_t, uint32_t);
+uint32_t mbin_xor4_exp_mod_any_32(uint32_t, uint32_t, uint32_t);
 
 #endif					/* _MATH_BIN_H_ */
