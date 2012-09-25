@@ -623,6 +623,8 @@ struct mbin_poly_32 {
 	uint32_t max_prime;
 };
 
+uint64_t mbin_xor2_crc2bin_64(uint64_t, uint8_t);
+uint64_t mbin_xor2_bin2crc_64(uint64_t, uint8_t);
 uint64_t mbin_xor2_rol_mod_64(uint64_t, uint8_t, uint8_t);
 uint64_t mbin_xor2_ror_mod_64(uint64_t, uint8_t, uint8_t);
 uint64_t mbin_xor2_square_mod_64(uint64_t, uint8_t);

@@ -109,6 +109,42 @@ mbin_xor2_exp3_mod_64(uint64_t x, uint64_t y, uint8_t p)
 }
 
 uint64_t
+mbin_xor2_crc2bin_64(uint64_t z, uint8_t p)
+{
+	uint64_t r;
+	uint8_t x;
+	uint8_t y;
+
+	r = (z & 1);
+
+	for (y = 1, x = 1; x != p; y *= 2, x++) {
+		if (y >= p)
+			y -= p;
+		if (z & (1ULL << y))
+			r |= (1ULL << x);
+	}
+	return (r);
+}
+
+uint64_t
+mbin_xor2_bin2crc_64(uint64_t z, uint8_t p)
+{
+	uint64_t r;
+	uint8_t x;
+	uint8_t y;
+
+	r = (z & 1);
+
+	for (y = 1, x = 1; x != p; y *= 2, x++) {
+		if (y >= p)
+			y -= p;
+		if (z & (1ULL << x))
+			r |= (1ULL << y);
+	}
+	return (r);
+}
+
+uint64_t
 mbin_xor2_log3_mod_64(uint64_t x, uint8_t p)
 {
 	uint64_t mask;
