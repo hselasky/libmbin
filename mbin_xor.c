@@ -148,6 +148,7 @@ uint64_t
 mbin_xor2_log3_mod_64(uint64_t x, uint8_t p)
 {
 	uint64_t mask;
+	uint64_t d2;
 	uint64_t history = 0;
 	uint64_t y;
 	uint64_t z;
@@ -167,6 +168,7 @@ mbin_xor2_log3_mod_64(uint64_t x, uint8_t p)
 
 	pm = (p - 1) / 2;
 	mask = p * ((1ULL << pm) - 1ULL);
+	d2 = ((1ULL << pm) - 1ULL);
 
 	/* there might be unused entries */
 	memset(ntable, 0, sizeof(ntable));
@@ -210,50 +212,19 @@ mbin_xor2_log3_mod_64(uint64_t x, uint8_t p)
 	if (to == (uint8_t)-1)
 		return (0);
 
-	sbx = 0;
-	sby = 0;
+	/* shift down */
 
-	/* locate the two bits */
+	while (!(x & 1ULL)) {
+		z += d2;
+		x /= 2ULL;
+	}
 
-	for (r = 0; r != p; r++) {
-		if (x & (1ULL << r)) {
-			sbx = r;
-			for (r++; r != p; r++) {
-				if (x & (1ULL << r)) {
-					sby = r;
-					break;
-				}
-			}
+	/* locate the second bit */
+
+	for (r = 1; r != p; r++) {
+		if (x & (1ULL << r))
 			break;
-		}
 	}
-
-	/* solve "x" into an odd number */
-
-	while (sbx && sby) {
-		if (history & (1ULL << sbx)) {
-			/* we are going into a circle */
-			history = 0;
-			r = (p + sby - sbx) % p;
-			sby = (p + (2 * sby) - sbx) % p;
-		} else {
-			/* try next combination */
-			history |= (1ULL << sbx);
-			r = (p + sbx - sby) % p;
-			sbx = (p + (2 * sbx) - sby) % p;
-		}
-
-		z += (1ULL << ntable[r]);
-
-		x = x ^ mbin_xor2_rol_mod_64(x, r, p);
-	}
-
-	/* final step */
-
-	if (sbx > sby)
-		r = sbx;
-	else
-		r = sby;
 
 	/* properly MOD the "z" variable  */
 
