@@ -149,7 +149,6 @@ mbin_xor2_log3_mod_64(uint64_t x, uint8_t p)
 {
 	uint64_t mask;
 	uint64_t d2;
-	uint64_t history = 0;
 	uint64_t y;
 	uint64_t z;
 	uint8_t pm;
@@ -565,6 +564,8 @@ found_non_zero:
 			    mbin_xor2_mul_mod_any_32(table[(size * z) + y],
 			    temp, poly->poly);
 		}
+
+		table[(size * x) + y] = 1;
 
 		/* subtract row */
 
