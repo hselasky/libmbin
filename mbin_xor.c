@@ -483,8 +483,8 @@ mbin_xor2_factor_slow(uint64_t x)
 {
 	uint64_t y;
 
-	for (y = 0; y <= x; y++) {
-		if (mbin_xor2_div_odd_64(x, (2 * y) | 1) < x)
+	for (y = 1; y <= x; y++) {
+		if (mbin_xor2_mod_64(x, (2 * y) | 1) == 0)
 			return ((2 * y) | 1);
 	}
 	return (0);
@@ -690,6 +690,82 @@ mbin_xor3_mul_mod_64(uint64_t x, uint64_t y, uint8_t p, uint8_t q)
 }
 
 uint64_t
+mbin_xor3_mod_64(uint64_t rem, uint64_t mod)
+{
+	uint8_t sr;
+	uint8_t sm;
+
+	if (rem == 0 || mod == 0)
+		return (0);
+
+	sr = mbin_sumbits32(mbin_msb32(rem) - 1);
+	sr &= ~1;
+
+	sm = mbin_sumbits32(mbin_msb32(mod) - 1);
+	sm &= ~1;
+
+	if (sm > sr)
+		return (rem);
+
+	while (1) {
+		while (rem & (3 << sr))
+			rem = mbin_xor3_64(rem, mod << (sr - sm));
+		if (sr == sm)
+			break;
+		sr -= 2;
+	}
+	return (rem);
+}
+
+uint64_t
+mbin_xor3_div_64(uint64_t rem, uint64_t div)
+{
+	uint64_t r = 0;
+	uint8_t sr;
+	uint8_t sd;
+
+	if (rem == 0 || div == 0)
+		return (0);
+
+	sr = mbin_sumbits32(mbin_msb32(rem) - 1);
+	sr &= ~1;
+
+	sd = mbin_sumbits32(mbin_msb32(div) - 1);
+	sd &= ~1;
+
+	if (sd > sr)
+		return (0);
+
+	while (1) {
+		while (rem & (3 << sr)) {
+			rem = mbin_xor3_64(rem, div << (sr - sd));
+			r = mbin_xor3_64(r, 2 << (sr - sd));
+		}
+		if (sr == sd)
+			break;
+		sr -= 2;
+	}
+	return (r);
+}
+
+uint64_t
+mbin_xor3_mul_64(uint64_t x, uint64_t y)
+{
+	uint64_t r = 0;
+	uint8_t n;
+
+	for (n = 0; n != 64; n += 2) {
+		uint8_t m = (y >> n) & 3;
+
+		while (m--)
+			r = mbin_xor3_64(r, x);
+
+		x <<= 2;
+	}
+	return (r);
+}
+
+uint64_t
 mbin_xor3_mul_mod_any_64(uint64_t x, uint64_t y, uint64_t p)
 {
 	uint64_t r = 0;
@@ -714,6 +790,22 @@ mbin_xor3_mul_mod_any_64(uint64_t x, uint64_t y, uint64_t p)
 	return (r);
 }
 
+uint64_t
+mbin_xor3_factor_slow(uint64_t x)
+{
+	uint64_t y;
+	uint64_t z;
+
+	for (y = 1; y <= x; y++) {
+		z = (2 * y) | 1;
+		if (z & (z / 2) & 0x5555555555555555ULL)
+			continue;
+		if (mbin_xor3_mod_64(x, z) == 0)
+			return (z);
+	}
+	return (0);
+}
+
 uint32_t
 mbin_xor3_mul_mod_any_32(uint32_t x, uint32_t y, uint32_t p)
 {
@@ -735,23 +827,6 @@ mbin_xor3_mul_mod_any_32(uint32_t x, uint32_t y, uint32_t p)
 		x <<= 2;
 		while (x & msb)
 			x = mbin_xor3_32(x, p);
-	}
-	return (r);
-}
-
-uint64_t
-mbin_xor3_mul_64(uint64_t x, uint64_t y)
-{
-	uint64_t r = 0;
-	uint8_t n;
-
-	for (n = 0; n != 64; n += 2) {
-		uint8_t m = (y >> n) & 3;
-
-		while (m--)
-			r = mbin_xor3_64(r, x);
-
-		x <<= 2;
 	}
 	return (r);
 }
