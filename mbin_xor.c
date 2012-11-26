@@ -608,6 +608,38 @@ found_non_zero:
 	return (retval);		/* success */
 }
 
+uint64_t
+mbin_xor2_coeff_64(int64_t n, int64_t x)
+{
+	uint64_t shift = 1ULL << 32;
+	uint64_t lsb;
+	uint64_t y;
+	uint64_t fa = 1ULL;
+	uint64_t fb = 1ULL;
+
+	/* check limits */
+	if ((n < 0) || (x < 0))
+		return (0);
+
+	if (x > n)
+		return (0);
+
+	/* handle special case */
+	if (x == n || x == 0)
+		return (1ULL);
+
+	for (y = 0; y != x; y++) {
+		lsb = (y - n) & (n - y);
+		shift *= lsb;
+		fa = mbin_xor2_mul_64(fa, (n - y) / lsb);
+
+		lsb = (-y - 1) & (y + 1);
+		shift /= lsb;
+		fb = mbin_xor2_mul_64(fb, (y + 1) / lsb);
+	}
+	return (mbin_xor2_mul_64(mbin_xor2_div_odd_64(fa, fb), (shift >> 32)));
+}
+
 void
 mbin_xor_print_mat_32(const uint32_t *table, uint32_t size, uint8_t print_invert)
 {

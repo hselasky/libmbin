@@ -649,6 +649,7 @@ uint64_t mbin_xor2_bit_reduce_mod_64(uint64_t, uint8_t);
 uint64_t mbin_xor2_factor_slow(uint64_t);
 uint8_t	mbin_xor2_find_mod_64(uint8_t *, uint64_t *);
 uint8_t	mbin_xor2_inv_mat_mod_any_32(uint32_t *, struct mbin_poly_32 *, uint32_t);
+uint64_t mbin_xor2_coeff_64(int64_t, int64_t);
 void	mbin_xor_print_mat_32(const uint32_t *, uint32_t, uint8_t);
 
 uint64_t mbin_xor3_64(uint64_t, uint64_t);
