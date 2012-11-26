@@ -609,6 +609,18 @@ found_non_zero:
 }
 
 uint64_t
+mbin_xor2_faculty_64(uint64_t n)
+{
+	uint64_t r = 1;
+
+	while (n) {
+		r = mbin_xor2_mul_64(r, n);
+		n--;
+	}
+	return (r);
+}
+
+uint64_t
 mbin_xor2_coeff_64(int64_t n, int64_t x)
 {
 	uint64_t shift = 1ULL << 32;
