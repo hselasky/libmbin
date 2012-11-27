@@ -652,7 +652,7 @@ mbin_xor2_coeff_64(int64_t n, int64_t x)
 	return (mbin_xor2_mul_64(mbin_xor2_div_odd_64(fa, fb), (shift >> 32)));
 }
 
-/* greatest common divisor for CRC's */
+/* greatest common divisor for CRC's (modified Euclid equation) */
 uint64_t
 mbin_xor2_gcd_64(uint64_t a, uint64_t b)
 {
