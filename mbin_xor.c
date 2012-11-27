@@ -294,7 +294,7 @@ mbin_xor2_exp_64(uint64_t x, uint64_t y)
 uint64_t
 mbin_xor2_neg_mod_64(uint64_t x, uint8_t p)
 {
-	uint8_t n = (p - 3) / 2;
+	uint8_t n = p - 2;
 	uint64_t r = 1;
 
 	while (n--) {
