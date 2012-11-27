@@ -652,6 +652,22 @@ mbin_xor2_coeff_64(int64_t n, int64_t x)
 	return (mbin_xor2_mul_64(mbin_xor2_div_odd_64(fa, fb), (shift >> 32)));
 }
 
+/* greatest common divisor for CRC's */
+uint64_t
+mbin_xor2_gcd_64(uint64_t a, uint64_t b)
+{
+	uint64_t an;
+	uint64_t bn;
+
+	while (b != 0) {
+		an = b;
+		bn = mbin_xor2_mod_64(a, b);
+		a = an;
+		b = bn;
+	}
+	return (a);
+}
+
 void
 mbin_xor_print_mat_32(const uint32_t *table, uint32_t size, uint8_t print_invert)
 {
