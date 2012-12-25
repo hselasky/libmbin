@@ -236,6 +236,33 @@ mbin_xor2_log3_mod_64(uint64_t x, uint8_t p)
 }
 
 uint64_t
+mbin_xor2_sliced_exp_64(uint64_t x, uint64_t y,
+    uint64_t base, uint64_t mod)
+{
+	uint64_t r;
+	uint64_t bb;
+	uint8_t msb;
+	uint8_t a;
+	uint8_t b;
+
+	msb = mbin_sumbits64(mbin_msb64(mod) - 1ULL);
+
+	for (a = 0; a != msb; a++) {
+		if (y & (1ULL << a)) {
+			bb = base;
+			r = 0;
+			for (b = 0; b != msb; b++) {
+				r |= (mbin_sumbits64(x & bb) & 1) << b;
+				bb = mbin_xor2_mul_mod_any_64(2, bb, mod);
+			}
+			x = r;
+		}
+		base = mbin_xor2_mul_mod_any_64(base, base, mod);
+	}
+	return (x);
+}
+
+uint64_t
 mbin_xor2_exp_mod_64(uint64_t x, uint64_t y, uint8_t p)
 {
 	uint64_t r = 1;
