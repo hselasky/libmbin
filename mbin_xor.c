@@ -509,10 +509,16 @@ uint64_t
 mbin_xor2_factor_slow(uint64_t x)
 {
 	uint64_t y;
+	uint64_t z;
 
-	for (y = 1; y <= x; y++) {
-		if (mbin_xor2_mod_64(x, (2 * y) | 1) == 0)
-			return ((2 * y) | 1);
+	if (x != 0 && !(x & 1))
+		return (2);
+
+	z = 2 * mbin_sqrt_64(x);
+
+	for (y = 3; y <= z; y += 2) {
+		if (mbin_xor2_mod_64(x, y) == 0)
+			return (y);
 	}
 	return (0);
 }
