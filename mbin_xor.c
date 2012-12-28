@@ -334,17 +334,28 @@ mbin_xor2_neg_mod_64(uint64_t x, uint8_t p)
 uint64_t
 mbin_xor2_log_mod_64(uint64_t x, uint8_t p)
 {
-	uint64_t msb = 1ULL << p;
-	uint64_t r;
+	uint64_t mask = (1ULL << p) - 1ULL;
+	uint64_t r = mask ^ 1ULL;
+	uint64_t y = 0;
 
+	/* Check for NUL */
 	if (x == 0)
 		return (0);
 
-	for (r = 0; r != msb; r++) {
-		if (mbin_xor2_exp_mod_64(MBIN_XOR2_BASE_64(p), r, p) == x)
-			break;
+	if (x & 1)
+		x = ~x & mask;
+	else
+		x = x & mask;
+
+	while (x != r) {
+		r = mbin_xor2_mul_mod_64(r, p, p);
+		if (r & 1)
+			r = ~r & mask;
+		if (y > mask)
+			return (0);
+		y++;
 	}
-	return (r);
+	return (y);
 }
 
 uint64_t
