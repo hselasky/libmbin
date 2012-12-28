@@ -1182,3 +1182,147 @@ mbin_sumdigits_predmax_32(uint32_t x, uint32_t radix, uint32_t max)
 	}
 	return (r % max);
 }
+
+/*
+ * Inverse additive transform.
+ *
+ * f(x,y) = ((x & y) == y) ? 1 : 0;
+ */
+void
+mbin_xor3_mod_inverse_add_xform_64(uint64_t *ptr, uint64_t neg,
+    uint64_t mod, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	uint64_t a;
+	uint64_t b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				a = mbin_xor3_exp_mod_any_64(a, neg, mod);
+				ptr[y + z + (x / 2)] =
+				    mbin_xor3_mul_mod_any_64(a, b, mod);
+			}
+		}
+	}
+}
+
+/*
+ * Forward additive transform.
+ *
+ * f(x,y) = ((x & y) == y) ? 1 : 0;
+ */
+void
+mbin_xor3_mod_forward_add_xform_64(uint64_t *ptr, uint64_t neg,
+    uint64_t mod, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	uint64_t a;
+	uint64_t b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z + (x / 2)] =
+				    mbin_xor3_mul_mod_any_64(a, b, mod);
+			}
+		}
+	}
+}
+
+/*
+ * Inverse additive transform.
+ *
+ * f(x,y) = ((x & y) == y) ? 1 : 0;
+ */
+void
+mbin_xor3_inverse_add_xform_64(uint64_t *ptr, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint64_t neg;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	uint64_t a;
+	uint64_t b;
+
+	neg = mbin_power_64(3, 32) - 1ULL;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				a = mbin_xor3_exp_64(a, neg);
+				ptr[y + z + (x / 2)] =
+				    mbin_xor3_mul_64(a, b);
+			}
+		}
+	}
+}
+
+/*
+ * Forward additive transform.
+ *
+ * f(x,y) = ((x & y) == y) ? 1 : 0;
+ */
+void
+mbin_xor3_forward_add_xform_64(uint64_t *ptr,
+    uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	uint64_t a;
+	uint64_t b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z + (x / 2)] =
+				    mbin_xor3_mul_64(a, b);
+			}
+		}
+	}
+}
+
+/*
+ * Forward additive transform.
+ *
+ * f(x,y) = ((x & y) == y) ? 1 : 0;
+ */
+void
+mbin_xor3_xform_64(uint64_t *ptr, int8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	uint64_t a;
+	uint64_t b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z + (x / 2)] =
+				    mbin_xor3_64(
+				    mbin_xor3_64(a, a), b);
+			}
+		}
+	}
+}

@@ -544,6 +544,11 @@ void	mbin_inverse_gte_mask_xform_32(uint32_t *, uint8_t);
 void	mbin_forward_gte_mask_xform_32(uint32_t *, uint8_t);
 void	mbin_inverse_add_xform_32(uint32_t *, uint8_t);
 void	mbin_forward_add_xform_32(uint32_t *, uint8_t);
+void	mbin_xor3_mod_inverse_add_xform_64(uint64_t *, uint64_t, uint64_t, uint8_t);
+void	mbin_xor3_mod_forward_add_xform_64(uint64_t *, uint64_t, uint64_t, uint8_t);
+void	mbin_xor3_inverse_add_xform_64(uint64_t *, uint8_t);
+void	mbin_xor3_forward_add_xform_64(uint64_t *, uint8_t);
+void	mbin_xor3_xform_64(uint64_t *ptr, int8_t log2_max);
 void	mbin_inverse_add_xform_double(double *, uint8_t);
 void	mbin_forward_add_xform_double(double *, uint8_t);
 void	mbin_inverse_add_xform_complex_double(struct mbin_complex_double *, uint8_t);
@@ -667,6 +672,7 @@ uint64_t mbin_xor3_exp_mod_64(uint64_t, uint64_t, uint8_t, uint8_t);
 uint64_t mbin_xor3_exp_mod_any_64(uint64_t, uint64_t, uint64_t);
 uint64_t mbin_xor3_neg_mod_64(uint64_t, uint8_t, uint8_t);
 uint8_t	mbin_xor3_find_mod_64(uint8_t *, uint8_t *, uint64_t *);
+uint64_t mbin_xor3_exp_64(uint64_t, uint64_t);
 
 struct mbin_xor2v_64 {
 	uint64_t a0;

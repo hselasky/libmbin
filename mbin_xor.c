@@ -277,6 +277,20 @@ mbin_xor2_exp_mod_64(uint64_t x, uint64_t y, uint8_t p)
 }
 
 uint64_t
+mbin_xor2_exp_64(uint64_t x, uint64_t y)
+{
+	uint64_t r = 1;
+
+	while (y) {
+		if (y & 1)
+			r = mbin_xor2_mul_64(r, x);
+		x = mbin_xor2_mul_64(x, x);
+		y /= 2;
+	}
+	return (r);
+}
+
+uint64_t
 mbin_xor2_exp_mod_any_64(uint64_t x, uint64_t y, uint64_t p)
 {
 	uint64_t r = 1;
@@ -299,20 +313,6 @@ mbin_xor2_exp_mod_any_32(uint32_t x, uint32_t y, uint32_t p)
 		if (y & 1)
 			r = mbin_xor2_mul_mod_any_32(r, x, p);
 		x = mbin_xor2_mul_mod_any_32(x, x, p);
-		y /= 2;
-	}
-	return (r);
-}
-
-uint64_t
-mbin_xor2_exp_64(uint64_t x, uint64_t y)
-{
-	uint64_t r = 1;
-
-	while (y) {
-		if (y & 1)
-			r = mbin_xor2_mul_64(r, x);
-		x = mbin_xor2_mul_64(x, x);
 		y /= 2;
 	}
 	return (r);
@@ -778,6 +778,20 @@ mbin_xor3_mul_mod_64(uint64_t x, uint64_t y, uint8_t p, uint8_t q)
 		x <<= 2;
 		while (x & (3ULL << p))
 			x = mbin_xor3_64(x, poly);
+	}
+	return (r);
+}
+
+uint64_t
+mbin_xor3_exp_64(uint64_t x, uint64_t y)
+{
+	uint64_t r = 1;
+
+	while (y) {
+		if (y & 1)
+			r = mbin_xor3_mul_64(r, x);
+		x = mbin_xor3_mul_64(x, x);
+		y /= 2;
 	}
 	return (r);
 }
