@@ -670,9 +670,12 @@ uint64_t mbin_xor3_mul_64(uint64_t, uint64_t);
 uint64_t mbin_xor3_factor_slow(uint64_t);
 uint64_t mbin_xor3_exp_mod_64(uint64_t, uint64_t, uint8_t, uint8_t);
 uint64_t mbin_xor3_exp_mod_any_64(uint64_t, uint64_t, uint64_t);
+uint64_t mbin_xor3_exp_slow_mod_any_64(uint64_t, uint64_t, uint64_t);
 uint64_t mbin_xor3_neg_mod_64(uint64_t, uint8_t, uint8_t);
 uint8_t	mbin_xor3_find_mod_64(uint8_t *, uint8_t *, uint64_t *);
 uint64_t mbin_xor3_exp_64(uint64_t, uint64_t);
+uint64_t mbin_xor3_exp_slow_64(uint64_t, uint64_t);
+uint64_t mbin_xor3_qubic_64(uint64_t);
 
 struct mbin_xor2v_64 {
 	uint64_t a0;

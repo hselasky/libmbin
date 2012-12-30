@@ -794,7 +794,7 @@ mbin_xor3_mul_mod_64(uint64_t x, uint64_t y, uint8_t p, uint8_t q)
 }
 
 uint64_t
-mbin_xor3_exp_64(uint64_t x, uint64_t y)
+mbin_xor3_exp_slow_64(uint64_t x, uint64_t y)
 {
 	uint64_t r = 1;
 
@@ -803,6 +803,70 @@ mbin_xor3_exp_64(uint64_t x, uint64_t y)
 			r = mbin_xor3_mul_64(r, x);
 		x = mbin_xor3_mul_64(x, x);
 		y /= 2;
+	}
+	return (r);
+}
+
+uint64_t
+mbin_xor3_qubic_64(uint64_t x)
+{
+	uint64_t r = 0;
+	uint8_t n;
+
+	for (n = 0; n != 16; n++)
+		r |= (x & (3ULL << (2 * n))) << (4 * n);
+
+	return (r);
+}
+
+uint64_t
+mbin_xor3_qubic_mod_64(uint64_t x, uint64_t p)
+{
+	uint64_t r = 0;
+	uint64_t m = 1;
+	uint64_t msb;
+
+	msb = mbin_msb64(p);
+	if (msb & 0xAAAAAAAA)
+		msb /= 2ULL;
+
+	msb *= 3ULL;
+
+	while (x) {
+		while (x & 3) {
+			r = mbin_xor3_64(r, m);
+			x--;
+		}
+
+		x >>= 2;
+
+		m <<= 2;
+		while (m & msb)
+			m = mbin_xor3_64(m, p);
+
+		m <<= 2;
+		while (m & msb)
+			m = mbin_xor3_64(m, p);
+
+		m <<= 2;
+		while (m & msb)
+			m = mbin_xor3_64(m, p);
+	}
+	return (r);
+}
+
+uint64_t
+mbin_xor3_exp_64(uint64_t x, uint64_t y)
+{
+	uint64_t r = 1;
+
+	while (y) {
+		while (y % 3) {
+			r = mbin_xor3_mul_64(r, x);
+			y--;
+		}
+		x = mbin_xor3_qubic_64(x);
+		y /= 3;
 	}
 	return (r);
 }
@@ -964,7 +1028,7 @@ mbin_xor3_exp_mod_64(uint64_t x, uint64_t y, uint8_t p, uint8_t q)
 }
 
 uint64_t
-mbin_xor3_exp_mod_any_64(uint64_t x, uint64_t y, uint64_t p)
+mbin_xor3_exp_slow_mod_any_64(uint64_t x, uint64_t y, uint64_t p)
 {
 	uint64_t r = 1;
 
@@ -973,6 +1037,22 @@ mbin_xor3_exp_mod_any_64(uint64_t x, uint64_t y, uint64_t p)
 			r = mbin_xor3_mul_mod_any_64(r, x, p);
 		x = mbin_xor3_mul_mod_any_64(x, x, p);
 		y /= 2;
+	}
+	return (r);
+}
+
+uint64_t
+mbin_xor3_exp_mod_any_64(uint64_t x, uint64_t y, uint64_t p)
+{
+	uint64_t r = 1;
+
+	while (y) {
+		while (y % 3) {
+			r = mbin_xor3_mul_mod_any_64(r, x, p);
+			y--;
+		}
+		x = mbin_xor3_qubic_mod_64(x, p);
+		y /= 3;
 	}
 	return (r);
 }
