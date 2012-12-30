@@ -827,7 +827,7 @@ mbin_xor3_qubic_mod_64(uint64_t x, uint64_t p)
 	uint64_t msb;
 
 	msb = mbin_msb64(p);
-	if (msb & 0xAAAAAAAA)
+	if (msb & 0xAAAAAAAAAAAAAAAAULL)
 		msb /= 2ULL;
 
 	msb *= 3ULL;
