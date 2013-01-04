@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008-2011 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008-2013 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -1322,6 +1322,45 @@ mbin_xor3_xform_64(uint64_t *ptr, int8_t log2_max)
 				ptr[y + z + (x / 2)] =
 				    mbin_xor3_64(
 				    mbin_xor3_64(a, a), b);
+			}
+		}
+	}
+}
+
+void
+mbin_baseN_xform_32(uint32_t *ptr, uint8_t base,
+    uint8_t log3_max, uint8_t forward,
+    mbin_baseN_32_t *fn)
+{
+	const uint32_t max = mbin_power_32(base, log3_max);
+	uint32_t a;
+	uint32_t b;
+	uint32_t m;
+	uint32_t n;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+
+	for (x = base; x <= max; x *= base) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / base); z++) {
+				if (forward) {
+					for (n = base - 1; n != 0xFFFFFFFFU; n--) {
+						a = ptr[y + z + (n * x / base)];
+						for (m = n + 1; m != base; m++) {
+							b = ptr[y + z + ((m * x) / base)];
+							ptr[y + z + ((m * x) / base)] = fn(b, a);
+						}
+					}
+				} else {
+					for (n = 0; n != base; n++) {
+						a = ptr[y + z + (n * x / base)];
+						for (m = n + 1; m != base; m++) {
+							b = ptr[y + z + ((m * x) / base)];
+							ptr[y + z + ((m * x) / base)] = fn(b, a);
+						}
+					}
+				}
 			}
 		}
 	}

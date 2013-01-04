@@ -709,4 +709,8 @@ uint32_t mbin_xor4_32(uint32_t, uint32_t);
 uint32_t mbin_xor4_mul_mod_any_32(uint32_t, uint32_t, uint32_t);
 uint32_t mbin_xor4_exp_mod_any_32(uint32_t, uint32_t, uint32_t);
 
+typedef uint32_t (mbin_baseN_32_t)(uint32_t, uint32_t);
+
+void	mbin_baseN_xform_32(uint32_t *, uint8_t, uint8_t, uint8_t, mbin_baseN_32_t *);
+
 #endif					/* _MATH_BIN_H_ */
