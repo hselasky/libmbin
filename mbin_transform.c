@@ -1348,16 +1348,20 @@ mbin_baseN_xform_32(uint32_t *ptr, uint8_t base,
 					for (n = base - 1; n != 0xFFFFFFFFU; n--) {
 						a = ptr[y + z + (n * x / base)];
 						for (m = n + 1; m != base; m++) {
-							b = ptr[y + z + ((m * x) / base)];
-							ptr[y + z + ((m * x) / base)] = fn(b, a);
+							if ((n & m) == n) {
+								b = ptr[y + z + ((m * x) / base)];
+								ptr[y + z + ((m * x) / base)] = fn(b, a);
+							}
 						}
 					}
 				} else {
 					for (n = 0; n != base; n++) {
 						a = ptr[y + z + (n * x / base)];
 						for (m = n + 1; m != base; m++) {
-							b = ptr[y + z + ((m * x) / base)];
-							ptr[y + z + ((m * x) / base)] = fn(b, a);
+							if ((n & m) == n) {
+								b = ptr[y + z + ((m * x) / base)];
+								ptr[y + z + ((m * x) / base)] = fn(b, a);
+							}
 						}
 					}
 				}
