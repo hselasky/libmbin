@@ -287,6 +287,7 @@ mbin_xor2_exp_mod_64(uint64_t x, uint64_t y, uint8_t p)
 	uint64_t z;
 	uint8_t n = 1;
 
+	/* optimise */
 	temp[0] = 1;
 	temp[1] = x;
 	temp[2] = mbin_xor2_multi_square_mod_64(x, 2, p);
@@ -410,14 +411,19 @@ mbin_xor2_log_mod_64(uint64_t x, uint8_t p)
 uint64_t
 mbin_xor2_mul_64(uint64_t x, uint64_t y)
 {
+	uint64_t temp[4];
 	uint64_t r = 0;
 	uint8_t n;
 
-	for (n = 0; n != 64; n++) {
-		if (y & (1ULL << n))
-			r ^= x;
+	/* optimise */
+	temp[0] = 0;
+	temp[1] = x;
+	temp[2] = 2 * x;
+	temp[3] = x ^ (2 * x);
 
-		x <<= 1;
+	for (n = 0; n != 64; n += 2) {
+		r ^= temp[y & 3] << n;
+		y /= 4;
 	}
 	return (r);
 }
@@ -425,19 +431,21 @@ mbin_xor2_mul_64(uint64_t x, uint64_t y)
 uint64_t
 mbin_xor2_mul_mod_64(uint64_t x, uint64_t y, uint8_t p)
 {
+	uint64_t temp[4];
 	uint64_t r = 0;
 	uint8_t n;
 
-	/* r = (a + b) */
+	/* optimise */
+	temp[0] = 0;
+	temp[1] = x;
+	temp[2] = 2 * x;
+	temp[3] = x ^ (2 * x);
 
-	for (n = 0; n != 64; n++) {
-		if (y & (1ULL << n))
-			r ^= x;
-
-		x <<= 1;
-		if (x & (1ULL << p))
-			x ^= (1ULL << p) ^ 1;
+	for (n = 0; n != 64; n += 2) {
+		r ^= temp[y & 3] << n;
+		y /= 4;
 	}
+	r = (r & ((1ULL << p) - 1ULL)) ^ (r >> p);
 	return (r);
 }
 
