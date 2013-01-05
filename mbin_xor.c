@@ -441,7 +441,7 @@ mbin_xor2_mul_mod_64(uint64_t x, uint64_t y, uint8_t p)
 	temp[2] = 2 * x;
 	temp[3] = x ^ (2 * x);
 
-	for (n = 0; n != 64; n += 2) {
+	for (n = 0; n < p; n += 2) {
 		r ^= temp[y & 3] << n;
 		y /= 4;
 	}
