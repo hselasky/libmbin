@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2012 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2013 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -72,6 +72,23 @@ mbin_xor2_square_mod_64(uint64_t x, uint8_t p)
 		q += 2;
 		if (q >= p)
 			q -= p;
+	}
+	return (r);
+}
+
+uint64_t
+mbin_xor2_multi_square_mod_64(uint64_t x, uint8_t y, uint8_t p)
+{
+	uint64_t r = 0;
+	uint8_t q = 0;
+
+	while (x) {
+		if (x & 1)
+			r ^= (1ULL << q);
+		q += y;
+		while (q >= p)
+			q -= p;
+		x /= 2;
 	}
 	return (r);
 }
@@ -264,6 +281,32 @@ mbin_xor2_sliced_exp_64(uint64_t x, uint64_t y,
 
 uint64_t
 mbin_xor2_exp_mod_64(uint64_t x, uint64_t y, uint8_t p)
+{
+	uint64_t r = 1;
+	uint64_t temp[4];
+	uint64_t z;
+	uint8_t n = 1;
+
+	temp[0] = 1;
+	temp[1] = x;
+	temp[2] = mbin_xor2_multi_square_mod_64(x, 2, p);
+	temp[3] = mbin_xor2_mul_mod_64(temp[1], temp[2], p);
+
+	while (y) {
+		if (y & 3) {
+			z = mbin_xor2_multi_square_mod_64(temp[y & 3], n, p);
+			r = mbin_xor2_mul_mod_64(r, z, p);
+		}
+		n *= 4;
+		while (n >= p)
+			n -= p;
+		y /= 4;
+	}
+	return (r);
+}
+
+uint64_t
+mbin_xor2_exp_mod_simple_64(uint64_t x, uint64_t y, uint8_t p)
 {
 	uint64_t r = 1;
 
