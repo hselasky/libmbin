@@ -309,11 +309,17 @@ uint64_t
 mbin_xor2_exp_mod_simple_64(uint64_t x, uint64_t y, uint8_t p)
 {
 	uint64_t r = 1;
+	uint64_t z;
+	uint8_t n = 1;
 
 	while (y) {
-		if (y & 1)
-			r = mbin_xor2_mul_mod_64(r, x, p);
-		x = mbin_xor2_mul_mod_64(x, x, p);
+		if (y & 1) {
+			z = mbin_xor2_multi_square_mod_64(x, n, p);
+			r = mbin_xor2_mul_mod_64(r, z, p);
+		}
+		n *= 2;
+		if (n >= p)
+			n -= p;
 		y /= 2;
 	}
 	return (r);
