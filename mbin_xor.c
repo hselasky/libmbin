@@ -82,14 +82,13 @@ mbin_xor2_multi_square_mod_64(uint64_t x, uint8_t y, uint8_t p)
 	uint64_t r = 0;
 	uint8_t q = 0;
 
-	while (x) {
+	do {
 		if (x & 1)
 			r ^= (1ULL << q);
 		q += y;
-		while (q >= p)
+		if (q >= p)
 			q -= p;
-		x /= 2;
-	}
+	} while ((x /= 2));
 	return (r);
 }
 
@@ -283,46 +282,22 @@ uint64_t
 mbin_xor2_exp_mod_64(uint64_t x, uint64_t y, uint8_t p)
 {
 	uint64_t r = 1;
-	uint64_t temp[4];
-	uint64_t z;
 	uint8_t n = 1;
 
-	/* optimise */
-	temp[0] = 1;
-	temp[1] = x;
-	temp[2] = mbin_xor2_multi_square_mod_64(x, 2, p);
-	temp[3] = mbin_xor2_mul_mod_64(temp[1], temp[2], p);
-
-	while (y) {
-		if (y & 3) {
-			z = mbin_xor2_multi_square_mod_64(temp[y & 3], n, p);
-			r = mbin_xor2_mul_mod_64(r, z, p);
-		}
-		n *= 4;
-		while (n >= p)
-			n -= p;
-		y /= 4;
-	}
-	return (r);
-}
-
-uint64_t
-mbin_xor2_exp_mod_simple_64(uint64_t x, uint64_t y, uint8_t p)
-{
-	uint64_t r = 1;
-	uint64_t z;
-	uint8_t n = 1;
-
-	while (y) {
+	do {
 		if (y & 1) {
+			uint64_t z;
 			z = mbin_xor2_multi_square_mod_64(x, n, p);
-			r = mbin_xor2_mul_mod_64(r, z, p);
+			if (r == 1)
+				r = z;
+			else
+				r = mbin_xor2_mul_mod_64(r, z, p);
 		}
 		n *= 2;
 		if (n >= p)
 			n -= p;
-		y /= 2;
-	}
+
+	} while ((y /= 2));
 	return (r);
 }
 
