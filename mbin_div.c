@@ -86,15 +86,41 @@ mbin_div_odd64(uint64_t r, uint64_t div)
 
 	div = -div + 1;
 
-	m = 1;
-	while (m) {
-
-		if (r & m) {
+	for (m = 1; m; m *= 2) {
+		if (r & m)
 			r += div;
-		}
-		m *= 2;
 		div *= 2;
 	}
+	return (r);
+}
+
+uint64_t
+mbin_div_odd64_alt2(uint64_t r, uint64_t div)
+{
+	uint64_t temp[16];
+	uint8_t n;
+
+	div = -div + 1;
+
+	/* Build ramp table */
+
+	for (n = 0; n != 16; n++) {
+		uint64_t z = n;
+
+		if (z & 1)
+			z += div;
+		if (z & 2)
+			z += 2 * div;
+		if (z & 4)
+			z += 4 * div;
+		if (z & 8)
+			z += 8 * div;
+		temp[n] = z - (uint64_t)n;
+	}
+
+	for (n = 0; n != 64; n += 4)
+		r += (temp[(r >> n) & 15] << n);
+
 	return (r);
 }
 

@@ -126,6 +126,7 @@ void	mbin_xor_common8(uint8_t *pa, uint8_t *pb);
 uint32_t mbin_div_odd32(uint32_t r, uint32_t div);
 uint64_t mbin_div_odd64(uint64_t r, uint64_t div);
 uint64_t mbin_div_odd64_alt1(uint64_t r, uint64_t div);
+uint64_t mbin_div_odd64_alt2(uint64_t r, uint64_t div);
 uint32_t mbin_div_odd32_alt1(uint32_t r, uint32_t div);
 uint32_t mbin_div_odd32_alt2(uint32_t r, uint32_t div);
 uint32_t mbin_div_odd32_alt3(uint32_t r, uint32_t div);
