@@ -408,7 +408,9 @@ uint64_t
 mbin_xor2_mul_mod_64(uint64_t x, uint64_t y, uint8_t p)
 {
 	uint64_t temp[4];
-	uint64_t r = 0;
+	uint64_t rl;
+	uint64_t rh = 0;
+	uint64_t z;
 	uint8_t n;
 
 	/* optimise */
@@ -417,12 +419,29 @@ mbin_xor2_mul_mod_64(uint64_t x, uint64_t y, uint8_t p)
 	temp[2] = 2 * x;
 	temp[3] = x ^ (2 * x);
 
-	for (n = 0; n < p; n += 2) {
-		r ^= temp[y & 3] << n;
+	rl = temp[y & 3];
+	y /= 4;
+
+	for (n = 2; n < p; n += 2) {
+		z = temp[y & 3];
+		rl ^= z << n;
+		rh ^= z >> (64 - n);
 		y /= 4;
 	}
-	r = (r & ((1ULL << p) - 1ULL)) ^ (r >> p);
-	return (r);
+
+	n = (64 % p);
+
+	if (n != 0)
+		rh = (rh >> n) | (rh << (64 - n));
+
+	rl ^= rh;
+
+	do {
+		z = (rl >> p);
+		rl = (rl & ((1ULL << p) - 1ULL)) ^ z;
+	} while (z);
+
+	return (rl);
 }
 
 uint64_t
