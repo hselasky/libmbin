@@ -287,6 +287,7 @@ mbin_xor2_exp_mod_64(uint64_t x, uint64_t y, uint8_t p)
 	do {
 		if (y & 1) {
 			uint64_t z;
+
 			z = mbin_xor2_multi_square_mod_64(x, n, p);
 			if (r == 1)
 				r = z;
@@ -427,61 +428,113 @@ mbin_xor2_mul_mod_64(uint64_t x, uint64_t y, uint8_t p)
 uint64_t
 mbin_xor2_mul_mod_any_64(uint64_t x, uint64_t y, uint64_t mod)
 {
-	uint64_t msb = mbin_msb64(mod);
+	uint64_t temp[4];
 	uint64_t r = 0;
 	uint8_t n;
 
-	for (n = 0; n != 64; n++) {
-		if (y & (1ULL << n))
-			r ^= x;
+	/* optimise */
+	temp[0] = 0;
+	temp[1] = x;
+	temp[2] = 2 * x;
+	temp[3] = x ^ (2 * x);
 
-		x <<= 1;
-		if (x & msb)
-			x ^= mod;
+	for (n = 0; n != 64; n += 2) {
+		r ^= temp[y & 3] << n;
+		y /= 4;
 	}
-	return (r);
+	return (mbin_xor2_mod_64(r, mod));
 }
 
 uint32_t
 mbin_xor2_mul_mod_any_32(uint32_t x, uint32_t y, uint32_t mod)
 {
-	uint32_t msb = mbin_msb32(mod);
+	uint32_t temp[4];
 	uint32_t r = 0;
 	uint8_t n;
 
-	for (n = 0; n != 32; n++) {
-		if (y & (1ULL << n))
-			r ^= x;
+	/* optimise */
+	temp[0] = 0;
+	temp[1] = x;
+	temp[2] = 2 * x;
+	temp[3] = x ^ (2 * x);
 
-		x <<= 1;
-		if (x & msb)
-			x ^= mod;
+	for (n = 0; n != 32; n += 2) {
+		r ^= temp[y & 3] << n;
+		y /= 4;
 	}
-	return (r);
+	return (mbin_xor2_mod_32(r, mod));
 }
 
 uint64_t
 mbin_xor2_mod_64(uint64_t x, uint64_t div)
 {
 	uint64_t msb = mbin_msb64(div);
-	uint64_t xsb = mbin_msb64(x);
+	uint64_t temp[4];
 	uint8_t n;
+	uint8_t shift;
 
-	if (x == 0 || div == 0)
-		return (0);
-
-	if (xsb < msb)
+	if (x < msb)
 		return (x);
 
-	for (n = 0; n != 64; n++) {
-		if (xsb & (msb << n))
-			break;
+	shift = 62 - mbin_sumbits64(msb - 1);
+
+	/* optimise */
+	temp[0] = 0;
+	temp[1] = div << shift;
+	temp[2] = (2 * temp[1]);
+	temp[3] = (2 * temp[1]);
+
+	if (temp[2] & (1ULL << 62))
+		temp[2] ^= temp[1];
+	else
+		temp[3] ^= temp[1];
+
+	for (n = 0; n <= shift; n += 2) {
+		x ^= temp[(x >> 62) & 3];
+		x *= 4;
 	}
 
-	do {
-		if (x & (msb << n))
-			x ^= (div << n);
-	} while (n--);
+	if ((shift & 1) && (x & (1ULL << 63)))
+		x ^= 2 * temp[1];
+
+	x >>= n;
+
+	return (x);
+}
+
+uint32_t
+mbin_xor2_mod_32(uint32_t x, uint32_t div)
+{
+	uint32_t msb = mbin_msb32(div);
+	uint32_t temp[4];
+	uint8_t n;
+	uint8_t shift;
+
+	if (x < msb)
+		return (x);
+
+	shift = 30 - mbin_sumbits32(msb - 1);
+
+	/* optimise */
+	temp[0] = 0;
+	temp[1] = div << shift;
+	temp[2] = (2 * temp[1]);
+	temp[3] = (2 * temp[1]);
+
+	if (temp[2] & (1ULL << 30))
+		temp[2] ^= temp[1];
+	else
+		temp[3] ^= temp[1];
+
+	for (n = 0; n <= shift; n += 2) {
+		x ^= temp[(x >> 30) & 3];
+		x *= 4;
+	}
+
+	if ((shift & 1) && (x & (1U << 31)))
+		x ^= 2 * temp[1];
+
+	x >>= n;
 
 	return (x);
 }
