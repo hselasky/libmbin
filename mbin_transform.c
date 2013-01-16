@@ -23,6 +23,7 @@
  * SUCH DAMAGE.
  */
 
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -673,6 +674,59 @@ mbin_forward_add_xform_32(uint32_t *ptr, uint8_t log2_max)
 	}
 }
 
+/*
+ * Inverse xor additive transform.
+ *
+ * f(x,y) = ((x & y) == y) ? 1 : 0;
+ */
+void
+mbin_inverse_xor_add_xform_32(uint32_t *ptr, uint8_t log2_max, uint8_t lmax)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	int32_t a;
+	int32_t b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				a = mbin_xor2_exp_mod_64(a, (1 << (lmax - 1)) - 2, lmax);
+				ptr[y + z + (x / 2)] = mbin_xor2_mul_mod_64(a, b, lmax);
+			}
+		}
+	}
+}
+
+/*
+ * Forward xor additive transform.
+ *
+ * f(x,y) = ((x & y) == y) ? 1 : 0;
+ */
+void
+mbin_forward_xor_add_xform_32(uint32_t *ptr, uint8_t log2_max, uint8_t lmax)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	int32_t a;
+	int32_t b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z + (x / 2)] = mbin_xor2_mul_mod_64(a, b, lmax);
+			}
+		}
+	}
+}
+
 void
 mbin_inverse_add_xform_double(double *ptr, uint8_t log2_max)
 {
@@ -921,6 +975,47 @@ mbin_xor_xform_32(uint32_t *ptr, uint8_t log2_max)
 			}
 		}
 	}
+}
+
+void
+mbin_xor_xform_print_32(const uint32_t *a, uint8_t log2_max)
+{
+	const uint32_t max = (1U << log2_max);
+	uint32_t x;
+	uint32_t y;
+	uint32_t count;
+
+	for (x = 0; x != 32; x++) {
+		printf("Bit%d = \n", x);
+		count = 0;
+		for (y = 0; y != max; y++) {
+			if (a[y] & (1U << x)) {
+				mbin_print16_abc(y);
+				printf(" ^\n");
+				count++;
+			}
+		}
+		printf("Count = %d\n", count);
+	}
+}
+
+void
+mbin_xor_xform_print_simple_32(const uint32_t *a, uint8_t log2_max)
+{
+	const uint32_t max = (1U << log2_max);
+	uint32_t y;
+	uint32_t count;
+
+	count = 0;
+	for (y = 0; y != max; y++) {
+		if (a[y] != 0) {
+			printf("0x%08x - ", a[y]);
+			mbin_print16_abc(y);
+			printf(" ^\n");
+			count++;
+		}
+	}
+	printf("Count = %d\n", count);
 }
 
 void
