@@ -252,6 +252,12 @@ mbin_xor2_log3_mod_64(uint64_t x, uint8_t p)
 }
 
 uint64_t
+mbin_xor2_is_div_by_3_64(uint64_t x)
+{
+	return (mbin_sumbits64(x) & 1);
+}
+
+uint64_t
 mbin_xor2_sliced_exp_64(uint64_t x, uint64_t y,
     uint64_t base, uint64_t mod)
 {
