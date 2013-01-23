@@ -978,6 +978,27 @@ mbin_xor_xform_32(uint32_t *ptr, uint8_t log2_max)
 }
 
 void
+mbin_xor_xform_64(uint64_t *ptr, uint8_t log2_max)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	uint64_t a;
+	uint64_t b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z + (x / 2)] = a ^ b;
+			}
+		}
+	}
+}
+
+void
 mbin_xor_xform_print_32(const uint32_t *a, uint8_t log2_max)
 {
 	const uint32_t max = (1U << log2_max);
