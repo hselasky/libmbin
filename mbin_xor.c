@@ -173,6 +173,95 @@ mbin_xor2_log3_mod_64(uint64_t x, uint8_t p)
 	uint8_t sbx;
 	uint8_t sby;
 	uint8_t ntable[p];
+
+	/* Check for NUL */
+	if (x <= 1)
+		return (0);
+
+	/* setup MOD table */
+
+	pm = (p - 1) / 2;
+	mask = p * ((1ULL << pm) - 1ULL);
+	d2 = ((1ULL << pm) - 1ULL);
+
+	/* there might be unused entries */
+	memset(ntable, 0, sizeof(ntable));
+
+	for (r = 1, n = 0; n != p; r *= 2, n++) {
+		if (r >= p)
+			r -= p;
+		ntable[r] = n;
+	}
+
+	z = 0;
+
+	/* Iterate until a solution is found */
+
+	sbx = mbin_sumbits64(x);
+
+	for (r = 1;;) {
+		if (sbx >= (p - 2) || sbx <= 2)
+			break;
+		y = x ^ mbin_xor2_rol_mod_64(x, r, p);
+		sby = mbin_sumbits64(y);
+		if ((sby < (p / 2) && sby < sbx) ||
+		    (sby >= (p / 2) && sby >= sbx)) {
+			z += (1ULL << ntable[r]);
+			x = y;
+			sbx = sby;
+		} else {
+			r *= 2;
+			if (r >= p)
+				r -= p;
+		}
+	}
+
+	if (sbx >= (p - 2))
+		x ^= (1ULL << p) - 1ULL;
+
+	sbx = mbin_sumbits64(x);
+
+	/* sanity check */
+
+	if (sbx == 0)
+		return (0);
+
+	/* shift down */
+
+	while (!(x & 1ULL)) {
+		z += d2;
+		x /= 2ULL;
+	}
+
+	if (sbx == 1)
+		return ((mask - (z % mask)) % mask);
+	if (sbx != 2)
+		return (0);
+
+	/* locate second bit */
+
+	r = mbin_sumbits64(x - 2ULL);
+
+	/* properly MOD the "z" variable  */
+
+	z = (mask + (1ULL << ntable[r]) - (z % mask)) % mask;
+
+	return (z);
+}
+
+uint64_t
+mbin_xor2_log3_mod_64_alt1(uint64_t x, uint8_t p)
+{
+	uint64_t mask;
+	uint64_t d2;
+	uint64_t y;
+	uint64_t z;
+	uint8_t pm;
+	uint8_t n;
+	uint8_t r;
+	uint8_t sbx;
+	uint8_t sby;
+	uint8_t ntable[p];
 	uint8_t to = p;
 
 	/* Check for NUL */
@@ -281,6 +370,14 @@ mbin_xor2_sliced_exp_64(uint64_t x, uint64_t y,
 		}
 		base = mbin_xor2_mul_mod_any_64(base, base, mod);
 	}
+	return (x);
+}
+
+uint64_t
+mbin_xor2_reduce_64(uint64_t x, uint8_t p)
+{
+	if (x & (1ULL << (p - 1)))
+		x ^= (1ULL << p) - 1ULL;
 	return (x);
 }
 
