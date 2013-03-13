@@ -26,7 +26,11 @@
 #ifndef _MATH_BIN_H_
 #define	_MATH_BIN_H_
 
+#include <stdint.h>
+#include <sys/cdefs.h>
 #include <sys/queue.h>
+
+__BEGIN_DECLS
 
 void	mbin_print8(const char *fmt, uint8_t x);
 void	mbin_print16(const char *fmt, uint16_t x);
@@ -723,5 +727,8 @@ uint32_t mbin_xor4_exp_mod_any_32(uint32_t, uint32_t, uint32_t);
 typedef uint32_t (mbin_baseN_32_t)(uint32_t, uint32_t);
 
 void	mbin_baseN_xform_32(uint32_t *, uint8_t, uint8_t, uint8_t, mbin_baseN_32_t *);
+void	mbin_xor2_power_mod_xform_64(uint64_t *, uint32_t, uint64_t, uint8_t);
+
+__END_DECLS
 
 #endif					/* _MATH_BIN_H_ */

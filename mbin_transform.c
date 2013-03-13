@@ -1485,3 +1485,29 @@ mbin_baseN_xform_32(uint32_t *ptr, uint8_t base,
 		}
 	}
 }
+
+void
+mbin_xor2_power_mod_xform_64(uint64_t *ptr, uint32_t size,
+    uint64_t base, uint8_t mod)
+{
+	uint64_t temp[size];
+	uint64_t z, t, u;
+	uint32_t x, y;
+
+	for (x = 0; x != size; x++)
+		temp[x] = ptr[x];
+
+	u = 1;
+
+	for (x = 0; x != size; x++) {
+		z = 0;
+		t = 1;
+
+		for (y = 0; y != size; y++) {
+			z ^= mbin_xor2_mul_mod_64(t, temp[y], mod);
+			t = mbin_xor2_mul_mod_64(t, u, mod);
+		}
+		ptr[x] = z;
+		u = mbin_xor2_mul_mod_64(u, base, mod);
+	}
+}
