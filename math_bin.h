@@ -70,6 +70,8 @@ void	mbin_transform_xor_fwd_32x32(uint32_t *ptr, uint32_t mask, uint32_t f_slice
 void	mbin_transform_multi_xor_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
 void	mbin_transform_gte_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
 void	mbin_transform_xor_gte_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
+void	mbin_transform_sos_xor_inv_32(uint32_t *, uint8_t);
+void	mbin_transform_sos_xor_fwd_32(uint32_t *, uint8_t);
 void	mbin_transform_sos_fwd_32x32(uint32_t *ptr, uint8_t lmax);
 void	mbin_transform_sos_inv_32x32(uint32_t *ptr, uint8_t lmax);
 void	mbin_transform_sos_mod_fwd_32x32(uint32_t *ptr, uint32_t *temp, uint32_t *scratch, uint32_t mask, uint32_t mod);

@@ -229,6 +229,40 @@ mbin_transform_xor_gte_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 /* Sum Of Sums, SOS - transform (slow version) */
 
 void
+mbin_transform_sos_xor_inv_32(uint32_t *ptr, uint8_t lmax)
+{
+	const uint32_t max = 1U << lmax;
+	uint32_t x;
+	uint32_t y;
+
+	for (x = 0; x != max; x++) {
+		for (y = max - 1; y != x; y--)
+			ptr[y] ^= ptr[y - 1];
+	}
+}
+
+/* Sum Of Sums, SOS - transform (slow version) */
+
+void
+mbin_transform_sos_xor_fwd_32(uint32_t *ptr, uint8_t lmax)
+{
+	const uint32_t max = 1U << lmax;
+	uint32_t x;
+	uint32_t y;
+	uint32_t v;
+
+	for (x = max - 1; x != -1U; x--) {
+		v = 0;
+		for (y = x; y != max; y++) {
+			v ^= ptr[x];
+			ptr[x] = v;
+		}
+	}
+}
+
+/* Sum Of Sums, SOS - transform (slow version) */
+
+void
 mbin_transform_sos_inv_32x32(uint32_t *ptr, uint8_t lmax)
 {
 	const uint32_t max = 1U << lmax;
