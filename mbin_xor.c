@@ -919,6 +919,37 @@ mbin_xor2_gcd_64(uint64_t a, uint64_t b)
 	return (a);
 }
 
+/* extended Euclidean equation for CRC */
+void
+mbin_xor2_gcd_extended_64(uint64_t a, uint64_t b, uint64_t *pa, uint64_t *pb)
+{
+	uint64_t x = 0;
+	uint64_t y = 1;
+	uint64_t lastx = 1;
+	uint64_t lasty = 0;
+	uint64_t q;
+	uint64_t an;
+	uint64_t bn;
+
+	while (b != 0) {
+		q = mbin_xor2_div_64(a, b);
+		an = b;
+		bn = mbin_xor2_mod_64(a, b);
+		a = an;
+		b = bn;
+		an = lastx ^ mbin_xor2_mul_64(q, x);
+		bn = x;
+		x = an;
+		lastx = bn;
+		an = lasty ^ mbin_xor2_mul_64(q, y);
+		bn = y;
+		y = an;
+		lasty = bn;
+	}
+	*pa = lastx;
+	*pb = lasty;
+}
+
 void
 mbin_xor_print_mat_32(const uint32_t *table, uint32_t size, uint8_t print_invert)
 {

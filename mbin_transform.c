@@ -254,8 +254,8 @@ mbin_transform_sos_xor_fwd_32(uint32_t *ptr, uint8_t lmax)
 	for (x = max - 1; x != -1U; x--) {
 		v = 0;
 		for (y = x; y != max; y++) {
-			v ^= ptr[x];
-			ptr[x] = v;
+			v ^= ptr[y];
+			ptr[y] = v;
 		}
 	}
 }
