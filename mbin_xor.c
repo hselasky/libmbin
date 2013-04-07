@@ -742,31 +742,38 @@ mbin_xor2_factor_slow(uint64_t x)
 }
 
 uint8_t
-mbin_xor2_find_mod_64(uint8_t *pbit, uint64_t *plen)
+mbin_xor2_find_mod_64(uint32_t *pbit)
 {
-	uint8_t x;
-	uint8_t power = *pbit;
+	uint32_t x;
+	uint32_t y;
+	uint32_t power = *pbit;
 
 	while (1) {
-		if (power >= 64)
+		if (power >= (1U << 24))
 			return (1);	/* not found */
-		for (x = 2; x != power; x++) {
-			if ((power % x) == 0)
+		/*
+		 * Find a suitable modulus,
+		 * typically two power of a prime:
+		 */
+		y = 1;
+		x = 0;
+		while (1) {
+			y *= 2;
+			if (y >= power)
+				y -= power;
+			x++;
+			if (y == 1)
+				break;
+			if (x == power)
 				break;
 		}
-		if ((x == power) && ((power + 1) & power))
+		if ((x == (power - 1)) && (y == 1))
 			break;
 
-		/*
-	         * Criteria: Power must be a prime and not power of two
-	         * minus one
-	         */
 		power++;
 	}
 	*pbit = power;
 
-	if (plen)
-		*plen = (1ULL << (power - 1) / 2) - 1ULL;
 	return (0);
 }
 
