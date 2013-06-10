@@ -160,6 +160,43 @@ mbin_xor2_bin2crc_64(uint64_t z, uint8_t p)
 	return (r);
 }
 
+void
+mbin_xor2_compute_inverse_mod_any_64(uint64_t base, uint64_t mod,
+    uint64_t *ptr, uint8_t lmax)
+{
+	uint64_t table[lmax][2];
+	uint64_t m;
+	uint8_t x, y;
+
+	m = (1ULL << lmax) - 1ULL;
+
+	for (x = 0; x != lmax; x++) {
+		table[x][0] = mbin_xor2_exp_mod_any_64(base, x, mod) & m;
+		table[x][1] = (1ULL << x);
+	}
+	for (x = 0; x != lmax; x++) {
+		if (table[x][0] == 0)
+			continue;
+		m = mbin_msb32(table[x][0]);
+		for (y = 0; y != lmax; y++) {
+			if (y == x)
+				continue;
+			if (table[y][0] & m) {
+				table[y][0] ^= table[x][0];
+				table[y][1] ^= table[x][1];
+			}
+		}
+	}
+	memset(ptr, 0, sizeof(ptr[0]) * lmax);
+
+	for (x = 0; x != lmax; x++) {
+		if (table[x][0] == 0)
+			continue;
+		y = mbin_sumbits32(mbin_msb32(table[x][0]) - 1ULL);
+		ptr[y] = table[x][1];
+	}
+}
+
 uint64_t
 mbin_xor2_log3_mod_64(uint64_t x, uint8_t p)
 {
