@@ -161,7 +161,7 @@ mbin_xor2_bin2crc_64(uint64_t z, uint8_t p)
 }
 
 void
-mbin_xor2_compute_inverse_mod_any_64(uint64_t base, uint64_t mod,
+mbin_xor2_compute_inverse_table_mod_any_64(uint64_t base, uint64_t mod,
     uint64_t *ptr, uint8_t lmax)
 {
 	uint64_t table[lmax][2];
@@ -195,6 +195,20 @@ mbin_xor2_compute_inverse_mod_any_64(uint64_t base, uint64_t mod,
 		y = mbin_sumbits32(mbin_msb32(table[x][0]) - 1ULL);
 		ptr[y] = table[x][1];
 	}
+}
+
+uint64_t
+mbin_xor2_compute_inverse_64(uint64_t x, const uint64_t *ptr,
+    uint8_t lmax)
+{
+	uint64_t r;
+	uint8_t y;
+
+	for (r = y = 0; y != lmax; y++) {
+		if ((x >> y) & 1)
+			r ^= ptr[y];
+	}
+	return (r);
 }
 
 uint64_t
