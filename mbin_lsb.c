@@ -27,6 +27,12 @@
 
 #include "math_bin.h"
 
+uint64_t
+mbin_lsb64(uint64_t val)
+{
+	return ((~(val - 1ULL)) & val);
+}
+
 uint32_t
 mbin_lsb32(uint32_t val)
 {

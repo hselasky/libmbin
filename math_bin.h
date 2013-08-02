@@ -90,6 +90,7 @@ uint8_t	mbin_fld_32(uint32_t y);
 uint8_t	mbin_fld_16(uint16_t y);
 uint8_t	mbin_fld_8(uint8_t y);
 
+uint64_t mbin_lsb64(uint64_t val);
 uint32_t mbin_lsb32(uint32_t val);
 uint16_t mbin_lsb16(uint16_t val);
 uint8_t	mbin_lsb8(uint8_t val);
@@ -640,6 +641,11 @@ struct mbin_poly_32 {
 	uint32_t max_prime;
 };
 
+struct mbin_xor2_pair_64 {
+	uint64_t val;
+	uint64_t mod;
+};
+
 uint64_t mbin_xor2_crc2bin_64(uint64_t, uint8_t);
 uint64_t mbin_xor2_bin2crc_64(uint64_t, uint8_t);
 uint64_t mbin_xor2_rol_mod_64(uint64_t, uint8_t, uint8_t);
@@ -648,9 +654,10 @@ uint64_t mbin_xor2_square_mod_64(uint64_t, uint8_t);
 uint64_t mbin_xor2_multi_square_mod_64(uint64_t, uint8_t, uint8_t);
 uint64_t mbin_xor2_root_mod_64(uint64_t, uint8_t);
 uint64_t mbin_xor2_exp3_mod_64(uint64_t, uint64_t, uint8_t);
-void	mbin_xor2_compute_inverse_table_mod_any_64(uint64_t, uint64_t, uint64_t *);
-uint64_t mbin_xor2_compute_inverse_64(uint64_t, const uint64_t *, uint64_t);
-uint64_t mbin_xor2_compute_div_mod_any_64(uint64_t, uint64_t, uint64_t, uint64_t *);
+void	mbin_xor2_compute_inverse_table_64(struct mbin_xor2_pair_64, struct mbin_xor2_pair_64, uint64_t *, uint8_t);
+uint64_t mbin_xor2_compute_div_64(uint64_t, uint64_t, uint64_t, uint64_t *);
+uint64_t mbin_xor2_compute_exp_64(uint64_t, uint64_t, uint64_t);
+uint64_t mbin_xor2_compute_inverse_64(uint64_t, const uint64_t *, uint8_t);
 uint64_t mbin_xor2_log3_mod_64(uint64_t, uint8_t);
 uint64_t mbin_xor2_log3_mod_64_alt1(uint64_t, uint8_t);
 uint64_t mbin_xor2_is_div_by_3_64(uint64_t);

@@ -161,24 +161,32 @@ mbin_xor2_bin2crc_64(uint64_t z, uint8_t p)
 }
 
 void
-mbin_xor2_compute_inverse_table_mod_any_64(uint64_t base,
-    uint64_t mod, uint64_t *ptr)
+mbin_xor2_compute_inverse_table_64(struct mbin_xor2_pair_64 src,
+    struct mbin_xor2_pair_64 dst, uint64_t *ptr, uint8_t lmax)
 {
-	uint8_t lmax = mbin_sumbits64(mbin_msb64(mod) - 1ULL);
 	uint64_t table[lmax][2];
-	uint64_t mtab[lmax];
+	uint64_t temp[2][lmax];
 	uint64_t m;
-	uint8_t x, y;
+	uint64_t u;
+	uint64_t v;
+	uint8_t x;
+	uint8_t y;
 
-	for (x = 0; x != lmax; x++)
-		mtab[x] = mbin_xor2_exp_mod_any_64(base, x, mod);
+	for (u = v = 1, x = 0; x != lmax; x++) {
+		temp[0][x] = u;
+		temp[1][x] = v;
+		u = mbin_xor2_mul_mod_any_64(u, src.val, src.mod);
+		v = mbin_xor2_mul_mod_any_64(v, dst.val, dst.mod);
+	}
 
 	memset(table, 0, sizeof(table));
+	memset(ptr, 0, sizeof(ptr[0]) * lmax);
 
 	for (x = 0; x != lmax; x++) {
-		for (y = 0; y != lmax; y++)
-			table[y][0] |= ((mtab[x] >> y) & 1) << x;
-		table[x][1] |= (1ULL << x);
+		for (y = 0; y != lmax; y++) {
+			table[y][0] |= ((temp[0][x] >> y) & 1) << x;
+			table[y][1] |= ((temp[1][x] >> y) & 1) << x;
+		}
 	}
 	for (x = 0; x != lmax; x++) {
 		if (table[x][0] == 0)
@@ -193,8 +201,6 @@ mbin_xor2_compute_inverse_table_mod_any_64(uint64_t base,
 			}
 		}
 	}
-	memset(ptr, 0, sizeof(ptr[0]) * lmax);
-
 	for (x = 0; x != lmax; x++) {
 		if (table[x][0] == 0)
 			continue;
@@ -204,14 +210,12 @@ mbin_xor2_compute_inverse_table_mod_any_64(uint64_t base,
 }
 
 uint64_t
-mbin_xor2_compute_inverse_64(uint64_t x, const uint64_t *ptr,
-    uint64_t mod)
+mbin_xor2_compute_inverse_64(uint64_t x, const uint64_t *ptr, uint8_t lmax)
 {
-	uint8_t lmax = mbin_sumbits64(mbin_msb64(mod) - 1ULL);
 	uint64_t r;
 	uint8_t y;
 
-	for (r = y = 0; y != lmax; y++) {
+	for (r = 0, y = 0; y != lmax; y++) {
 		if (mbin_sumbits64(x & ptr[y]) & 1)
 			r ^= (1ULL << y);
 	}
@@ -219,7 +223,7 @@ mbin_xor2_compute_inverse_64(uint64_t x, const uint64_t *ptr,
 }
 
 uint64_t
-mbin_xor2_compute_div_mod_any_64(uint64_t rem, uint64_t div,
+mbin_xor2_compute_div_64(uint64_t rem, uint64_t div,
     uint64_t mod, uint64_t *pmod)
 {
 	uint8_t lmax = mbin_sumbits64(mbin_msb64(mod) - 1ULL);
@@ -237,6 +241,63 @@ mbin_xor2_compute_div_mod_any_64(uint64_t rem, uint64_t div,
 		*pmod = temp;
 	}
 	return (mbin_xor2_compute_inverse_64(rem, table, mod));
+}
+
+uint64_t
+mbin_xor2_compute_exp_64(uint64_t base, uint64_t exp, uint64_t mod)
+{
+	uint8_t lmax = mbin_sumbits64(mbin_msb64(mod) - 1ULL);
+	uint8_t value[lmax];
+	uint8_t a;
+	uint8_t x;
+	uint8_t y;
+	uint64_t func[lmax];
+	uint64_t table[lmax];
+	uint64_t m;
+	uint64_t u;
+
+	/*
+	 * Compute modulus for exponent
+	 */
+	for (u = 1, x = 0; x != lmax; x++) {
+		func[x] = u;
+		u = mbin_xor2_mul_mod_any_64(u, base, mod);
+	}
+
+	memset(table, 0, sizeof(table));
+
+	for (x = 0; x != lmax; x++) {
+		for (y = 0; y != lmax; y++) {
+			table[y] |= ((func[x] >> y) & 1ULL) << x;
+		}
+		value[x] = (u >> x) & 1;
+	}
+	for (x = 0; x != lmax; x++) {
+		m = mbin_lsb64(table[x]);
+		for (y = 0; y != lmax; y++) {
+			if (y == x)
+				continue;
+			if (table[y] & m) {
+				table[y] ^= table[x];
+				value[y] ^= value[x];
+			}
+		}
+	}
+	for (u = (1ULL << lmax), x = 0; x != lmax; x++) {
+		if (table[x] && value[x]) {
+			y = mbin_sumbits64(table[x] - 1ULL);
+			u |= 1ULL << y;
+		}
+	}
+
+	/* compute exponent */
+	u = mbin_xor2_exp_mod_any_64(2, exp, u);
+
+	for (m = 0, a = 0; a != lmax; a++) {
+		if ((u >> a) & 1)
+			m ^= func[a];
+	}
+	return (m);
 }
 
 uint64_t
