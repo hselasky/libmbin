@@ -228,8 +228,10 @@ mbin_xor2_compute_div_64(uint64_t rem, uint64_t div,
 {
 	uint8_t lmax = mbin_sumbits64(mbin_msb64(mod) - 1ULL);
 	uint64_t table[lmax];
+	struct mbin_xor2_pair_64 src = {div, mod};
+	struct mbin_xor2_pair_64 dst = {2, mod};
 
-	mbin_xor2_compute_inverse_table_mod_any_64(div, mod, table);
+	mbin_xor2_compute_inverse_table_64(src, dst, table, lmax);
 
 	if (pmod != NULL) {
 		/* compute modulus */
