@@ -326,6 +326,63 @@ mbin_xor2_multiply_plain_64(uint64_t a, uint64_t b, uint64_t mod)
 }
 
 uint64_t
+mbin_xor2_divide_plain_64(uint64_t rem, uint64_t div,
+    uint64_t mod, uint8_t *psolved)
+{
+	uint8_t lmax = mbin_sumbits64(mbin_msb64(mod) - 1ULL);
+	uint8_t value[lmax];
+	uint8_t x;
+	uint8_t y;
+	uint64_t func[lmax];
+	uint64_t table[lmax];
+	uint64_t m;
+	uint64_t u;
+
+	for (u = 1, x = 0; x != lmax; x++) {
+		func[x] = u;
+		u = mbin_xor2_mul_mod_any_64(u, div, mod);
+	}
+
+	memset(table, 0, sizeof(table));
+
+	for (x = 0; x != lmax; x++) {
+		for (y = 0; y != lmax; y++) {
+			table[y] |= ((func[x] >> y) & 1ULL) << x;
+		}
+		value[x] = (rem >> x) & 1;
+	}
+	for (x = 0; x != lmax; x++) {
+		m = mbin_lsb64(table[x]);
+		for (y = 0; y != lmax; y++) {
+			if (y == x)
+				continue;
+			if (table[y] & m) {
+				table[y] ^= table[x];
+				value[y] ^= value[x];
+			}
+		}
+	}
+
+	if (psolved)
+		*psolved = 1;
+
+	/* gather solution */
+
+	for (u = 0, x = 0; x != lmax; x++) {
+		if (table[x]) {
+			if (value[x]) {
+				y = mbin_sumbits64(table[x] - 1ULL);
+				u |= 1ULL << y;
+			}
+		} else {
+			if (psolved)
+				*psolved = 0;
+		}
+	}
+	return (u);
+}
+
+uint64_t
 mbin_xor2_log3_mod_64(uint64_t x, uint8_t p)
 {
 	uint64_t mask;

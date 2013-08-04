@@ -659,6 +659,7 @@ uint64_t mbin_xor2_compute_div_64(uint64_t, uint64_t, uint64_t, uint64_t *);
 uint64_t mbin_xor2_compute_exp_64(uint64_t, uint64_t, uint64_t);
 uint64_t mbin_xor2_compute_inverse_64(uint64_t, const uint64_t *, uint8_t);
 uint64_t mbin_xor2_multiply_plain_64(uint64_t, uint64_t, uint64_t);
+uint64_t mbin_xor2_divide_plain_64(uint64_t, uint64_t, uint64_t, uint8_t *);
 uint64_t mbin_xor2_log3_mod_64(uint64_t, uint8_t);
 uint64_t mbin_xor2_log3_mod_64_alt1(uint64_t, uint8_t);
 uint64_t mbin_xor2_is_div_by_3_64(uint64_t);
