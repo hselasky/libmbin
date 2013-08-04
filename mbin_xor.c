@@ -302,6 +302,29 @@ mbin_xor2_compute_exp_64(uint64_t base, uint64_t exp, uint64_t mod)
 	return (m);
 }
 
+/*
+ * Example:
+ * mod=0xa41825, base=2, len=2520
+ *
+ * Properties:
+ * f(a,b) = f(b,a)
+ */
+uint64_t
+mbin_xor2_multiply_plain_64(uint64_t a, uint64_t b, uint64_t mod)
+{
+	uint8_t lmax = mbin_sumbits64(mbin_msb64(mod) - 1ULL);
+	uint8_t x;
+	uint64_t r;
+	uint64_t s;
+
+	for (r = 0, s = 1, x = 0; x != lmax; x++) {
+		if ((a >> x) & 1)
+			r ^= s;
+		s = mbin_xor2_mul_mod_any_64(s, b, mod);
+	}
+	return (r);
+}
+
 uint64_t
 mbin_xor2_log3_mod_64(uint64_t x, uint8_t p)
 {
