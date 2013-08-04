@@ -707,6 +707,7 @@ uint64_t mbin_xor3_neg_mod_64(uint64_t, uint8_t, uint8_t);
 uint8_t	mbin_xor3_find_mod_64(uint8_t *, uint8_t *, uint64_t *);
 uint64_t mbin_xor3_exp_64(uint64_t, uint64_t);
 uint64_t mbin_xor3_exp_slow_64(uint64_t, uint64_t);
+uint64_t mbin_xor3_multiply_plain_64(uint64_t, uint64_t, uint64_t);
 uint64_t mbin_xor3_qubic_64(uint64_t);
 
 struct mbin_xor2v_64 {
@@ -740,6 +741,7 @@ struct mbin_xor2v_32 mbin_xor2v_xor_32(struct mbin_xor2v_32, struct mbin_xor2v_3
 uint32_t mbin_xor4_32(uint32_t, uint32_t);
 uint32_t mbin_xor4_mul_mod_any_32(uint32_t, uint32_t, uint32_t);
 uint32_t mbin_xor4_exp_mod_any_32(uint32_t, uint32_t, uint32_t);
+uint32_t mbin_xor4_multiply_plain_32(uint32_t, uint32_t, uint32_t);
 
 typedef uint32_t (mbin_baseN_32_t)(uint32_t, uint32_t);
 

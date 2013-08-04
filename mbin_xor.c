@@ -1290,6 +1290,26 @@ mbin_xor3_exp_slow_64(uint64_t x, uint64_t y)
 }
 
 uint64_t
+mbin_xor3_multiply_plain_64(uint64_t a, uint64_t b, uint64_t mod)
+{
+	uint8_t lmax = mbin_sumbits64(mbin_msb64(mod) - 1ULL) / 2;
+	uint8_t x;
+	uint64_t r;
+	uint64_t s;
+
+	for (r = 0, s = 1, x = 0; x != lmax; x++) {
+		if ((a >> (2 * x)) & 1)
+			r = mbin_xor3_64(s, r);
+		if ((a >> (2 * x)) & 2) {
+			r = mbin_xor3_64(s, r);
+			r = mbin_xor3_64(s, r);
+		}
+		s = mbin_xor3_mul_mod_any_64(s, b, mod);
+	}
+	return (r);
+}
+
+uint64_t
 mbin_xor3_qubic_64(uint64_t x)
 {
 	uint64_t r = 0;
@@ -1884,6 +1904,26 @@ mbin_xor4_exp_mod_any_32(uint32_t x, uint32_t y, uint32_t p)
 			r = mbin_xor4_mul_mod_any_32(r, x, p);
 		x = mbin_xor4_mul_mod_any_32(x, x, p);
 		y /= 2;
+	}
+	return (r);
+}
+
+uint32_t
+mbin_xor4_multiply_plain_32(uint32_t a, uint32_t b, uint32_t mod)
+{
+	uint8_t lmax = mbin_sumbits32(mbin_msb32(mod) - 1ULL) / 2;
+	uint8_t x;
+	uint32_t r;
+	uint32_t s;
+
+	for (r = 0, s = 1, x = 0; x != lmax; x++) {
+		if ((a >> (2 * x)) & 1)
+			r = mbin_xor4_32(s, r);
+		if ((a >> (2 * x)) & 2) {
+			r = mbin_xor4_32(s, r);
+			r = mbin_xor4_32(s, r);
+		}
+		s = mbin_xor4_mul_mod_any_32(s, b, mod);
 	}
 	return (r);
 }
