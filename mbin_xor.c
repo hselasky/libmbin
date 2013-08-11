@@ -598,16 +598,28 @@ mbin_xor2_sliced_exp_64(uint64_t x, uint64_t y,
 uint8_t
 mbin_xor2_is_mirror_64(uint64_t x)
 {
-	uint8_t end = mbin_sumbits64(mbin_msb64(x) - 1ULL);
-	uint8_t a, b, c;
+	uint8_t end;
+	uint64_t rev;
+	uint64_t mask;
+	uint8_t found;
 
-	for (a = 0; a != (end / 2); a++) {
-		b = (x >> a) & 1;
-		c = (x >> (end - a)) & 1;
-		if (b != c)
-			return (0);
+	found = 0;
+
+	while (x > 1) {
+		mask = mbin_lsb64(x) - 1ULL;
+		end = mbin_sumbits64(mask);
+		x >>= end;
+		mask = mbin_msb64(x) - 1ULL;
+		end = mbin_sumbits64(mask);
+		rev = mbin_bitrev64(x << (63 - end));
+
+		if (rev != x)
+			break;
+		found++;
+
+		x >>= ((end + 1) / 2);
 	}
-	return (1);
+	return (found);
 }
 
 uint64_t
