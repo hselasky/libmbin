@@ -351,6 +351,7 @@ mbin_xor2_divide_plain_64(uint64_t rem, uint64_t div,
 		}
 		value[x] = (rem >> x) & 1;
 	}
+top:
 	for (x = 0; x != lmax; x++) {
 		m = mbin_lsb64(table[x]);
 		for (y = 0; y != lmax; y++) {
@@ -362,21 +363,31 @@ mbin_xor2_divide_plain_64(uint64_t rem, uint64_t div,
 			}
 		}
 	}
-
+	for (x = 0; x != lmax; x++) {
+		m = mbin_lsb64(table[x]);
+		if (table[x] != m) {
+			for (y = 0; y != lmax; y++) {
+				table[x] &= ~m;
+			}
+			goto top;
+		}
+	}
 	if (psolved)
 		*psolved = 1;
 
 	/* gather solution */
 
 	for (u = 0, x = 0; x != lmax; x++) {
-		if (table[x]) {
-			if (value[x]) {
+		if (value[x]) {
+			if (table[x]) {
+				/* store solution bit */
 				y = mbin_sumbits64(table[x] - 1ULL);
 				u |= 1ULL << y;
+			} else {
+				/* equation set has no solution */
+				if (psolved)
+					*psolved = 0;
 			}
-		} else {
-			if (psolved)
-				*psolved = 0;
 		}
 	}
 	return (u);
