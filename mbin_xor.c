@@ -325,6 +325,30 @@ mbin_xor2_multiply_plain_64(uint64_t a, uint64_t b, uint64_t mod)
 	return (r);
 }
 
+/*
+ * Symmetric version of function above
+ */
+uint64_t
+mbin_xor2_mul_plain_symmetric_64(uint64_t x, uint64_t y, uint64_t mod)
+{
+	uint64_t retval = 0;
+	uint8_t a;
+	uint8_t b;
+	uint8_t max;
+
+	max = mbin_sumbits64(mbin_msb64(mod) - 1);
+
+	for (a = 0; a != max; a++) {
+		for (b = 0; b != max; b++) {
+			if ((x >> a) & (y >> b) & 1) {
+				retval ^=
+				    mbin_xor2_exp_mod_any_64(2, a * b, mod);
+			}
+		}
+	}
+	return (retval);
+}
+
 uint64_t
 mbin_xor2_divide_plain_64(uint64_t rem, uint64_t div,
     uint64_t mod, uint8_t *psolved)
@@ -881,6 +905,25 @@ mbin_xor2_mod_64(uint64_t x, uint64_t div)
 
 	x >>= n;
 
+	return (x);
+}
+
+uint64_t
+mbin_xor2_mod_simple_64(uint64_t x, uint64_t div)
+{
+	uint64_t msb = mbin_msb64(div);
+	uint8_t n;
+	uint8_t shift;
+
+	if (x < msb)
+		return (x);
+
+	shift = 63 - mbin_sumbits64(msb - 1);
+
+	for (n = shift; n != (uint8_t)-1; n--) {
+		if (x & (msb << n))
+			x ^= (div << n);
+	}
 	return (x);
 }
 
