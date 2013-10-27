@@ -339,11 +339,13 @@ mbin_xor2_mul_plain_symmetric_64(uint64_t x, uint64_t y, uint64_t mod)
 	max = mbin_sumbits64(mbin_msb64(mod) - 1);
 
 	for (a = 0; a != max; a++) {
+		if (((x >> a) & 1) == 0)
+			continue;
 		for (b = 0; b != max; b++) {
-			if ((x >> a) & (y >> b) & 1) {
-				retval ^=
-				    mbin_xor2_exp_mod_any_64(2, a * b, mod);
-			}
+			if (((y >> b) & 1) == 0)
+				continue;
+			retval ^=
+			    mbin_xor2_exp_mod_any_64(2, a * b, mod);
 		}
 	}
 	return (retval);
