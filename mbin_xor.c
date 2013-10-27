@@ -372,6 +372,30 @@ mbin_xor2_square_plain_64(uint64_t x, uint64_t mod)
 	return (retval);
 }
 
+/*
+ * Negative function
+ */
+uint64_t
+mbin_xor2_negate_plain_64(uint64_t x, uint64_t mod)
+{
+	uint64_t bias;
+	uint8_t max;
+
+	/* compute the maximum power of the polyom we are using */
+	max = mbin_sumbits64(mbin_msb64(mod) - 1);
+
+	/* compute bias for negation */
+	bias = mbin_xor2_exp_mod_any_64(2, max - 1, mod);
+
+	/* multiply bias into result before negation */
+	x = mbin_xor2_mul_mod_any_64(x, bias, mod);
+
+	/* negation value */
+	x = mbin_bitrev64(x << (64 - max));
+
+	return (x);
+}
+
 uint64_t
 mbin_xor2_divide_plain_64(uint64_t rem, uint64_t div,
     uint64_t mod, uint8_t *psolved)
