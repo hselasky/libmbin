@@ -122,18 +122,33 @@ mbin_log_table_gen_32(uint32_t *pt)
 	uint32_t s;
 	uint32_t x;
 
+	/* Set the known entries and starting point: */
 	pt[d - 1] = 1 << (d - 1);
 	pt[0] = 0;
 
 	for (k = d - 2; k != 1; k--) {
+
+		/*
+		 * Compute the squared of the two bit factor "x". The
+		 * square yields a doubling of the logarithmic value,
+		 * which we divide in the end:
+		 */
 		x = 1 + (1 << k);
 		x += (x << k);
+
+		/*
+		 * Compute the logarithm for the value "x". We can
+		 * observe that only previously computed logarithmic
+		 * values are needed for this computation:
+		 */
 		for (j = k + 1, s = 0; x != 1; j++) {
 			if (x & (1 << j)) {
 				x += x << j;
 				s += pt[j];
 			}
 		}
+
+		/* Store result, and divide by two */
 		pt[k] = -(s >> 1);
 	}
 }
