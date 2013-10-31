@@ -680,6 +680,7 @@ uint64_t mbin_xor2_mul_mod_64(uint64_t, uint64_t, uint8_t);
 uint64_t mbin_xor2_mul_mod_any_64(uint64_t, uint64_t, uint64_t);
 uint32_t mbin_xor2_mul_mod_any_32(uint32_t, uint32_t, uint32_t);
 uint64_t mbin_xor2_mod_64(uint64_t, uint64_t);
+uint64_t mbin_xor2_mod_128(uint64_t, uint64_t, uint64_t);
 uint64_t mbin_xor2_mod_simple_64(uint64_t, uint64_t);
 uint32_t mbin_xor2_mod_32(uint32_t, uint32_t);
 uint64_t mbin_xor2_div_64(uint64_t, uint64_t);
@@ -693,6 +694,7 @@ uint64_t mbin_xor2_faculty_64(uint64_t);
 uint64_t mbin_xor2_coeff_64(int64_t, int64_t);
 uint64_t mbin_xor2_gcd_64(uint64_t, uint64_t);
 void	mbin_xor2_gcd_extended_64(uint64_t, uint64_t, uint64_t *, uint64_t *);
+void	mbin_xor2_generate_plain_64(uint8_t, uint64_t *, uint64_t *);
 
 void	mbin_xor_print_mat_32(const uint32_t *, uint32_t, uint8_t);
 

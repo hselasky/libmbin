@@ -396,6 +396,39 @@ mbin_xor2_negate_plain_64(uint64_t x, uint64_t mod)
 	return (x);
 }
 
+/*
+ * Polynom generator
+ */
+void
+mbin_xor2_generate_plain_64(uint8_t size, uint64_t *poly, uint64_t *lin_mod)
+{
+	uint64_t x = 3;
+	uint64_t y = 1;
+	uint16_t a;
+	uint16_t b;
+
+	for (a = 3;; a += 2) {
+		/* figure out next prime */
+		if (a != 3) {
+			for (b = 3; b != a; b += 2) {
+				if ((a % b) == 0)
+					break;
+			}
+			if (b != a)
+				continue;
+		}
+		/* see if end */
+		if (!size--) {
+			*poly = x;
+			*lin_mod = y;
+			break;
+		}
+		/* accumulate */
+		x = mbin_xor2_mul_64(x, (1ULL << a) - 1ULL);
+		y *= a;
+	}
+}
+
 uint64_t
 mbin_xor2_divide_plain_64(uint64_t rem, uint64_t div,
     uint64_t mod, uint8_t *psolved)
@@ -882,7 +915,8 @@ uint64_t
 mbin_xor2_mul_mod_any_64(uint64_t x, uint64_t y, uint64_t mod)
 {
 	uint64_t temp[4];
-	uint64_t r = 0;
+	uint64_t rl = 0;
+	uint64_t rh = 0;
 	uint8_t n;
 
 	/* optimise */
@@ -891,11 +925,15 @@ mbin_xor2_mul_mod_any_64(uint64_t x, uint64_t y, uint64_t mod)
 	temp[2] = 2 * x;
 	temp[3] = x ^ (2 * x);
 
-	for (n = 0; n != 64; n += 2) {
-		r ^= temp[y & 3] << n;
+	rl ^= temp[y & 3];
+	y /= 4;
+
+	for (n = 2; n != 64; n += 2) {
+		rl ^= temp[y & 3] << n;
+		rh ^= temp[y & 3] >> (64 - n);
 		y /= 4;
 	}
-	return (mbin_xor2_mod_64(r, mod));
+	return (mbin_xor2_mod_128(rh, rl, mod));
 }
 
 uint32_t
@@ -916,6 +954,24 @@ mbin_xor2_mul_mod_any_32(uint32_t x, uint32_t y, uint32_t mod)
 		y /= 4;
 	}
 	return (mbin_xor2_mod_32(r, mod));
+}
+
+uint64_t
+mbin_xor2_mod_128(uint64_t rh, uint64_t rl, uint64_t mod)
+{
+	if (rh != 0) {
+		uint64_t msb = mbin_msb64(mod);
+		uint8_t x;
+
+		rh = mbin_xor2_mod_64(rh, mod);
+		for (x = 0; x != 64; x++) {
+			rh <<= 1;
+			if (rh & msb)
+				rh ^= mod;
+		}
+		rl ^= rh;
+	}
+	return (mbin_xor2_mod_64(rl, mod));
 }
 
 uint64_t
