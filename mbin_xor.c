@@ -373,22 +373,22 @@ mbin_xor2_square_plain_64(uint64_t x, uint64_t mod)
 }
 
 /*
- * Negative function
+ * Negate function which works with polynoms that are mirrored.
  */
 uint64_t
 mbin_xor2_negate_plain_64(uint64_t x, uint64_t mod)
 {
-	uint64_t bias;
 	uint8_t max;
 
+#if 0
+	if (mbin_xor2_is_mirror_64(mod) == 0)
+		return (0);
+#endif
 	/* compute the maximum power of the polyom we are using */
 	max = mbin_sumbits64(mbin_msb64(mod) - 1);
 
-	/* compute bias for negation */
-	bias = mbin_xor2_exp_mod_any_64(2, max - 1, mod);
-
 	/* multiply bias into result before negation */
-	x = mbin_xor2_mul_mod_any_64(x, bias, mod);
+	x = mbin_xor2_mul_mod_any_64(x, (1ULL << (max - 1)), mod);
 
 	/* negation value */
 	x = mbin_bitrev64(x << (64 - max));
@@ -427,6 +427,26 @@ mbin_xor2_generate_plain_64(uint8_t size, uint64_t *poly, uint64_t *lin_mod)
 		x = mbin_xor2_mul_64(x, (1ULL << a) - 1ULL);
 		y *= a;
 	}
+}
+
+/* Returns zero if the polynom is reciprocal */
+uint64_t
+mbin_xor2_is_reciprocal_plain_64(uint64_t mod)
+{
+	uint64_t rem = 0;
+	uint8_t x;
+
+	for (x = 0; x != 64; x++) {
+		uint64_t y;
+
+		if (!(mod & (1ULL << x)))
+			continue;
+
+		y = mbin_xor2_exp_mod_any_64(2, x, mod);
+		y = mbin_xor2_negate_plain_64(y, mod);
+		rem ^= y;
+	}
+	return (rem);
 }
 
 uint64_t
