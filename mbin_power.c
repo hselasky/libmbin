@@ -499,3 +499,34 @@ mbin_sin_b2_odd_64(uint64_t x)
 	}
 	return (s);
 }
+
+/* This function computes a linear value from a set of modular values */
+void
+mbin_lin_by_mod(uint32_t *ptr, const uint32_t *mod, uint32_t n)
+{
+	uint32_t x;
+	uint32_t y;
+
+	for (x = 0; x != n; x++) {
+		for (y = x + 1; y != n; y++) {
+			ptr[y] = ((mod[y] + ptr[y] - ptr[x]) *
+			    mbin_power_mod_32(mod[x],
+			    mod[y] - 2, mod[y])) % mod[y];
+		}
+	}
+}
+
+/* This function compute the modular values from a linear value */
+void
+mbin_mod_by_lin(uint32_t *ptr, const uint32_t *mod, uint32_t n)
+{
+	uint32_t x;
+	uint32_t y;
+
+	for (x = n - 1U; x != -1U; x--) {
+		for (y = x + 1; y != n; y++) {
+			ptr[y] = ((ptr[y] * mod[x]) +
+			    ptr[x]) % mod[y];
+		}
+	}
+}

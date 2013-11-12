@@ -287,6 +287,8 @@ uint32_t mbin_inv_odd_non_linear_32(uint32_t val, uint32_t mod);
 uint32_t mbin_inv_odd_prime_32(uint32_t val, uint32_t mod);
 uint64_t mbin_cos_b2_odd_64(uint64_t x);
 uint64_t mbin_sin_b2_odd_64(uint64_t x);
+void	mbin_lin_by_mod(uint32_t *, const uint32_t *, uint32_t);
+void	mbin_mod_by_lin(uint32_t *, const uint32_t *, uint32_t);
 
 void	mbin_log_table_gen_32(uint32_t *pt);
 uint32_t mbin_log_32(uint32_t r, uint32_t x);
