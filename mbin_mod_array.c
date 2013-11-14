@@ -27,6 +27,8 @@
 
 #include "math_bin.h"
 
+#define	U64(x) ((uint64_t)(x))
+
 /* This function creates a mod array */
 void
 mbin_moda_create_32(uint32_t *mod, const uint32_t n)
@@ -58,9 +60,9 @@ mbin_lina_by_moda_slow_32(uint32_t *ptr, const uint32_t *mod, const uint32_t n)
 
 	for (x = 0; x != n; x++) {
 		for (y = x + 1; y != n; y++) {
-			ptr[y] = ((mod[y] + ptr[y] - ptr[x]) *
-			    mbin_power_mod_32(mod[x],
-			    mod[y] - 2, mod[y])) % mod[y];
+			ptr[y] = (U64(U64(mod[y]) + U64(ptr[y]) - U64(ptr[x])) *
+			    U64(mbin_power_mod_32(mod[x],
+			    mod[y] - 2, mod[y]))) % U64(mod[y]);
 		}
 	}
 }
@@ -74,8 +76,8 @@ mbin_moda_by_lina_slow_32(uint32_t *ptr, const uint32_t *mod, const uint32_t n)
 
 	for (x = n - 1U; x != -1U; x--) {
 		for (y = x + 1; y != n; y++) {
-			ptr[y] = ((ptr[y] * mod[x]) +
-			    ptr[x]) % mod[y];
+			ptr[y] = ((U64(ptr[y]) * U64(mod[x])) +
+			    U64(ptr[x])) % U64(mod[y]);
 		}
 	}
 }
@@ -107,7 +109,7 @@ mbin_moda_mul_32(const uint32_t *pa, const uint32_t *pb, uint32_t *pc,
 	uint32_t x;
 
 	for (x = 0; x != n; x++)
-		pc[x] = (pa[x] + pb[x]) % mod[x];
+		pc[x] = (U64(pa[x]) * U64(pb[x])) % U64(mod[x]);
 }
 
 /* NOTE: multiplicative inverse "division" */
@@ -118,7 +120,7 @@ mbin_moda_div_32(const uint32_t *pa, const uint32_t *pb, uint32_t *pc,
 	uint32_t x;
 
 	for (x = 0; x != n; x++)
-		pc[x] = (pa[x] * mbin_power_mod_32(pb[x], mod[x] - 2, mod[x])) % mod[x];
+		pc[x] = (U64(pa[x]) * U64(mbin_power_mod_32(pb[x], mod[x] - 2, mod[x]))) % U64(mod[x]);
 }
 
 /* compute leading value */
