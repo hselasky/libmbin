@@ -52,6 +52,7 @@ SRCS+=  mbin_greycode.c
 SRCS+=  mbin_logic.c
 SRCS+=  mbin_lsb.c
 SRCS+=  mbin_msb.c
+SRCS+=  mbin_mod_array.c
 SRCS+=  mbin_mul.c
 SRCS+=  mbin_recode.c
 SRCS+=  mbin_sos.c
@@ -62,7 +63,7 @@ SRCS+=  mbin_swm.c
 SRCS+=  mbin_transform.c
 SRCS+=  mbin_vector.c
 SRCS+=  mbin_xor.c
-	
+
 INCS=	math_bin.h math_bin_wrapper.h
 
 MKLINT=		no

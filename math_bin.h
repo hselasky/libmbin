@@ -287,8 +287,6 @@ uint32_t mbin_inv_odd_non_linear_32(uint32_t val, uint32_t mod);
 uint32_t mbin_inv_odd_prime_32(uint32_t val, uint32_t mod);
 uint64_t mbin_cos_b2_odd_64(uint64_t x);
 uint64_t mbin_sin_b2_odd_64(uint64_t x);
-void	mbin_lin_by_mod(uint32_t *, const uint32_t *, uint32_t);
-void	mbin_mod_by_lin(uint32_t *, const uint32_t *, uint32_t);
 
 void	mbin_log_table_gen_32(uint32_t *pt);
 uint32_t mbin_log_32(uint32_t r, uint32_t x);
@@ -756,6 +754,17 @@ typedef uint32_t (mbin_baseN_32_t)(uint32_t, uint32_t);
 
 void	mbin_baseN_xform_32(uint32_t *, uint8_t, uint8_t, uint8_t, mbin_baseN_32_t *);
 void	mbin_xor2_power_mod_xform_64(uint64_t *, uint32_t, uint64_t, uint8_t);
+
+/* Mod array prototypes */
+void	mbin_moda_create_32(uint32_t *, const uint32_t);
+void	mbin_lina_by_moda_slow_32(uint32_t *, const uint32_t *, const uint32_t);
+void	mbin_moda_by_lina_slow_32(uint32_t *, const uint32_t *, const uint32_t);
+void	mbin_moda_add_32(const uint32_t *, const uint32_t *, uint32_t *, const uint32_t *, const uint32_t);
+void	mbin_moda_sub_32(const uint32_t *, const uint32_t *, uint32_t *, const uint32_t *, const uint32_t);
+void	mbin_moda_mul_32(const uint32_t *, const uint32_t *, uint32_t *, const uint32_t *, const uint32_t);
+void	mbin_moda_div_32(const uint32_t *, const uint32_t *, uint32_t *, const uint32_t *, const uint32_t);
+uint32_t mbin_leading_by_lina_32(const uint32_t *, const uint32_t *, const uint32_t);
+void	mbin_lina_by_leading_32(uint32_t, uint32_t *, const uint32_t *, const uint32_t);
 
 __END_DECLS
 
