@@ -758,6 +758,8 @@ void	mbin_xor2_power_mod_xform_64(uint64_t *, uint32_t, uint64_t, uint8_t);
 /* Mod array prototypes */
 void	mbin_moda_create_32(uint32_t *, const uint32_t);
 void	mbin_lina_by_moda_slow_32(uint32_t *, const uint32_t *, const uint32_t);
+void	mbin_mod_table_create(const uint32_t *, uint32_t *, const uint32_t);
+void	mbin_lina_by_moda_lookup_32(uint32_t *, const uint32_t *, const uint32_t *, const uint32_t);
 void	mbin_moda_by_lina_slow_32(uint32_t *, const uint32_t *, const uint32_t);
 void	mbin_moda_add_32(const uint32_t *, const uint32_t *, uint32_t *, const uint32_t *, const uint32_t);
 void	mbin_moda_sub_32(const uint32_t *, const uint32_t *, uint32_t *, const uint32_t *, const uint32_t);

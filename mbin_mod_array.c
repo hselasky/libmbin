@@ -67,6 +67,35 @@ mbin_lina_by_moda_slow_32(uint32_t *ptr, const uint32_t *mod, const uint32_t n)
 	}
 }
 
+void
+mbin_mod_table_create(const uint32_t *mod, uint32_t *table, const uint32_t n)
+{
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+
+	for (z = x = 0; x != n; x++) {
+		for (y = x + 1; y != n; y++) {
+			table[z++] = mbin_power_mod_32(mod[x], mod[y] - 2, mod[y]);
+		}
+	}
+}
+
+void
+mbin_lina_by_moda_lookup_32(uint32_t *ptr, const uint32_t *mod, const uint32_t *table, const uint32_t n)
+{
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+
+	for (z = x = 0; x != n; x++) {
+		for (y = x + 1; y != n; y++) {
+			ptr[y] = (U64(U64(mod[y]) + U64(ptr[y]) - U64(ptr[x])) *
+			    U64(table[z++])) % U64(mod[y]);
+		}
+	}
+}
+
 /* This function compute the modular values from a linear value */
 void
 mbin_moda_by_lina_slow_32(uint32_t *ptr, const uint32_t *mod, const uint32_t n)
