@@ -89,7 +89,7 @@ mbin_moda_add_32(const uint32_t *pa, const uint32_t *pb, uint32_t *pc,
 	uint32_t x;
 
 	for (x = 0; x != n; x++)
-		pc[x] = (pa[x] + pb[x]) % mod[x];
+		pc[x] = (U64(pa[x]) + U64(pb[x])) % U64(mod[x]);
 }
 
 void
@@ -99,7 +99,7 @@ mbin_moda_sub_32(const uint32_t *pa, const uint32_t *pb, uint32_t *pc,
 	uint32_t x;
 
 	for (x = 0; x != n; x++)
-		pc[x] = (mod[x] + pa[x] - pb[x]) % mod[x];
+		pc[x] = (U64(mod[x]) + U64(pa[x]) - U64(pb[x])) % U64(mod[x]);
 }
 
 void
