@@ -148,8 +148,45 @@ mbin_moda_div_32(const uint32_t *pa, const uint32_t *pb, uint32_t *pc,
 {
 	uint32_t x;
 
+	for (x = 0; x != n; x++) {
+		pc[x] = (U64(pa[x]) * U64(mbin_power_mod_32(pb[x],
+		    mod[x] - 2, mod[x]))) % U64(mod[x]);
+	}
+}
+
+/* compute power */
+void
+mbin_moda_power_32(const uint32_t *pa, uint32_t *pc,
+    const uint32_t *mod, const uint32_t power, const uint32_t n)
+{
+	uint32_t x;
+
 	for (x = 0; x != n; x++)
-		pc[x] = (U64(pa[x]) * U64(mbin_power_mod_32(pb[x], mod[x] - 2, mod[x]))) % U64(mod[x]);
+		pc[x] = mbin_power_mod_32(pa[x], power, mod[x]);
+}
+
+uint8_t
+mbin_mod_is_square_32(const uint32_t x, const uint32_t mod)
+{
+	uint32_t y;
+
+	for (y = 0; y != mod; y++) {
+		if (((U64(y) * U64(y)) % U64(mod)) == x)
+			return (1);
+	}
+	return (0);
+}
+
+uint8_t
+mbin_moda_is_square_32(const uint32_t *pa, const uint32_t *mod,
+    const uint32_t n)
+{
+	uint32_t x;
+	for (x = 0; x != n; x++) {
+		if (!mbin_mod_is_square_32(pa[x], mod[x]))
+			return (0);
+	}
+	return (1);
 }
 
 /* compute leading value */

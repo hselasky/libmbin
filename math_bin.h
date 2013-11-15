@@ -765,6 +765,9 @@ void	mbin_moda_add_32(const uint32_t *, const uint32_t *, uint32_t *, const uint
 void	mbin_moda_sub_32(const uint32_t *, const uint32_t *, uint32_t *, const uint32_t *, const uint32_t);
 void	mbin_moda_mul_32(const uint32_t *, const uint32_t *, uint32_t *, const uint32_t *, const uint32_t);
 void	mbin_moda_div_32(const uint32_t *, const uint32_t *, uint32_t *, const uint32_t *, const uint32_t);
+void	mbin_moda_power_32(const uint32_t *, uint32_t *, const uint32_t *, const uint32_t, const uint32_t);
+uint8_t	mbin_mod_is_square_32(const uint32_t, const uint32_t);
+uint8_t	mbin_moda_is_square_32(const uint32_t *, const uint32_t *, const uint32_t);
 uint32_t mbin_leading_by_lina_32(const uint32_t *, const uint32_t *, const uint32_t);
 void	mbin_lina_by_leading_32(uint32_t, uint32_t *, const uint32_t *, const uint32_t);
 
