@@ -182,6 +182,7 @@ mbin_moda_is_square_32(const uint32_t *pa, const uint32_t *mod,
     const uint32_t n)
 {
 	uint32_t x;
+
 	for (x = 0; x != n; x++) {
 		if (!mbin_mod_is_square_32(pa[x], mod[x]))
 			return (0);
@@ -214,4 +215,69 @@ mbin_lina_by_leading_32(uint32_t x, uint32_t *ptr, const uint32_t *mod, const ui
 		ptr[y] = x % mod[y];
 		x /= mod[y];
 	}
+}
+
+/*========================================================================*
+ * XOR2 - mod array
+ *========================================================================*/
+static void
+mbin_xor2_moda_next_mod_64(uint64_t *pmod, uint64_t k, uint64_t *plen)
+{
+	uint64_t mod = *pmod;
+	uint64_t len;
+	uint64_t gcd;
+
+	while (1) {
+		len = mbin_xor2_mod_len_slow_64(2, mod);
+
+		if (mbin_msb64(mod / 2) != mbin_msb64(len)) {
+			mod += 2;
+			continue;
+		}
+		gcd = mbin_gcd_64(k, len);
+
+		if (gcd != 1 || gcd == len) {
+			mod += 2;
+			continue;
+		}
+		break;
+	}
+	*pmod = mod;
+	*plen = len;
+}
+
+void
+mbin_xor2_moda_create_32(uint32_t *mod, const uint32_t start, const uint32_t n)
+{
+	uint32_t x;
+	uint64_t y;
+	uint64_t k = 1;
+	uint64_t len;
+
+	for (y = start | 1, x = 0; x != n; x++) {
+		mbin_xor2_moda_next_mod_64(&y, k, &len);
+		mod[x] = y;
+		k *= len;
+		y += 2;
+	}
+}
+
+void
+mbin_xor2_moda_mul_32(const uint32_t *pa, const uint32_t *pb, uint32_t *pc,
+    const uint32_t *mod, const uint32_t n)
+{
+	uint32_t x;
+
+	for (x = 0; x != n; x++)
+		pc[x] = mbin_xor2_mul_mod_any_32(pa[x], pb[x], mod[x]);
+}
+
+void
+mbin_xor2_moda_power_32(const uint32_t *pa, uint32_t *pc,
+    const uint32_t *mod, const uint32_t power, const uint32_t n)
+{
+	uint32_t x;
+
+	for (x = 0; x != n; x++)
+		pc[x] = mbin_xor2_exp_mod_any_32(pa[x], power, mod[x]);
 }

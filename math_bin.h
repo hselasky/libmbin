@@ -287,6 +287,7 @@ uint32_t mbin_inv_odd_non_linear_32(uint32_t val, uint32_t mod);
 uint32_t mbin_inv_odd_prime_32(uint32_t val, uint32_t mod);
 uint64_t mbin_cos_b2_odd_64(uint64_t x);
 uint64_t mbin_sin_b2_odd_64(uint64_t x);
+uint64_t mbin_gcd_64(uint64_t, uint64_t);
 
 void	mbin_log_table_gen_32(uint32_t *pt);
 uint32_t mbin_log_32(uint32_t r, uint32_t x);
@@ -680,6 +681,7 @@ uint64_t mbin_xor2_mul_64(uint64_t, uint64_t);
 uint64_t mbin_xor2_mul_mod_64(uint64_t, uint64_t, uint8_t);
 uint64_t mbin_xor2_mul_mod_any_64(uint64_t, uint64_t, uint64_t);
 uint32_t mbin_xor2_mul_mod_any_32(uint32_t, uint32_t, uint32_t);
+uint64_t mbin_xor2_mod_len_slow_64(uint64_t, uint64_t);
 uint64_t mbin_xor2_mod_64(uint64_t, uint64_t);
 uint64_t mbin_xor2_mod_128(uint64_t, uint64_t, uint64_t);
 uint64_t mbin_xor2_mod_simple_64(uint64_t, uint64_t);
@@ -770,6 +772,11 @@ uint8_t	mbin_mod_is_square_32(const uint32_t, const uint32_t);
 uint8_t	mbin_moda_is_square_32(const uint32_t *, const uint32_t *, const uint32_t);
 uint32_t mbin_leading_by_lina_32(const uint32_t *, const uint32_t *, const uint32_t);
 void	mbin_lina_by_leading_32(uint32_t, uint32_t *, const uint32_t *, const uint32_t);
+
+/* XOR2 mod array prototypes */
+void	mbin_xor2_moda_create_32(uint32_t *, const uint32_t, const uint32_t);
+void	mbin_xor2_moda_mul_32(const uint32_t *, const uint32_t *, uint32_t *, const uint32_t *, const uint32_t);
+void	mbin_xor2_moda_power_32(const uint32_t *, uint32_t *, const uint32_t *, const uint32_t, const uint32_t);
 
 __END_DECLS
 

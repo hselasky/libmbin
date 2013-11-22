@@ -499,3 +499,19 @@ mbin_sin_b2_odd_64(uint64_t x)
 	}
 	return (s);
 }
+
+/* greatest common divisor, Euclid equation */
+uint64_t
+mbin_gcd_64(uint64_t a, uint64_t b)
+{
+	uint64_t an;
+	uint64_t bn;
+
+	while (b != 0) {
+		an = b;
+		bn = a % b;
+		a = an;
+		b = bn;
+	}
+	return (a);
+}

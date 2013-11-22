@@ -956,24 +956,33 @@ mbin_xor2_mul_mod_any_64(uint64_t x, uint64_t y, uint64_t mod)
 	return (mbin_xor2_mod_128(rh, rl, mod));
 }
 
+uint64_t
+mbin_xor2_mod_len_slow_64(uint64_t base, uint64_t mod)
+{
+	uint64_t x, y;
+	for (x = 1, y = 2; y != 1; x++)
+		y = mbin_xor2_mul_mod_any_64(y, base, mod);
+	return (x);
+}
+
 uint32_t
 mbin_xor2_mul_mod_any_32(uint32_t x, uint32_t y, uint32_t mod)
 {
-	uint32_t temp[4];
-	uint32_t r = 0;
+	uint64_t temp[4];
+	uint64_t r = 0;
 	uint8_t n;
 
 	/* optimise */
 	temp[0] = 0;
 	temp[1] = x;
-	temp[2] = 2 * x;
-	temp[3] = x ^ (2 * x);
+	temp[2] = 2ULL * (uint64_t)x;
+	temp[3] = x ^ (2ULL * (uint64_t)x);
 
 	for (n = 0; n != 32; n += 2) {
 		r ^= temp[y & 3] << n;
 		y /= 4;
 	}
-	return (mbin_xor2_mod_32(r, mod));
+	return (mbin_xor2_mod_64(r, mod));
 }
 
 uint64_t
