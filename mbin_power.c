@@ -515,3 +515,28 @@ mbin_gcd_64(uint64_t a, uint64_t b)
 	}
 	return (a);
 }
+
+uint64_t
+mbin_factor_slow_64(uint64_t x)
+{
+	uint64_t limit;
+	uint64_t y;
+
+	if (x <= 1)
+		return (0);
+	if (!(x & 1))
+		return (2);
+
+	limit = (mbin_sqrt_64(x) + 4) | 1;
+
+	if (limit > x)
+		limit = x;
+	if (limit < 3)
+		limit = 3;
+
+	for (y = 3; y != limit; y += 2) {
+		if ((x % y) == 0)
+			return (y);
+	}
+	return (0);
+}

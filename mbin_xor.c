@@ -1159,7 +1159,7 @@ mbin_xor2_bit_reduce_mod_64(uint64_t x, uint8_t p)
 }
 
 uint64_t
-mbin_xor2_factor_slow(uint64_t x)
+mbin_xor2_factor_slow_64(uint64_t x)
 {
 	uint64_t y;
 	uint64_t z;
@@ -1673,7 +1673,7 @@ mbin_xor3_mul_mod_any_64(uint64_t x, uint64_t y, uint64_t p)
 }
 
 uint64_t
-mbin_xor3_factor_slow(uint64_t x)
+mbin_xor3_factor_slow_64(uint64_t x)
 {
 	uint64_t y;
 	uint64_t z;
