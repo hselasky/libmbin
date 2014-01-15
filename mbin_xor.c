@@ -491,7 +491,7 @@ top:
 		m = mbin_lsb64(table[x]);
 		if (table[x] != m) {
 			for (y = 0; y != lmax; y++) {
-				table[x] &= ~m;
+				table[y] &= ~m;
 			}
 			goto top;
 		}
