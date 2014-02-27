@@ -114,7 +114,7 @@ static const uint32_t mbin_log_32_table[32] = {
  */
 
 void
-mbin_log_table_gen_32(uint32_t *pt)
+mbin_log_table_gen_32(uint32_t *pt, uint32_t factor)
 {
 	const uint32_t d = 32;		/* number of bits */
 	uint32_t j;
@@ -150,6 +150,12 @@ mbin_log_table_gen_32(uint32_t *pt)
 
 		/* Store result, and divide by two */
 		pt[k] = -(s >> 1);
+
+		/* XOR factor */
+		if (factor & 1)
+			pt[k] ^= (1U << 31);
+
+		factor >>= 1;
 	}
 }
 
@@ -198,6 +204,49 @@ mbin_power_odd_32(uint32_t rem, uint32_t base, uint32_t exp)
 			rem = -rem;
 	}
 	return (mbin_exp_32(rem, mbin_log_32(0, base) * exp));
+}
+
+uint32_t
+mbin_log_table_32(uint32_t r, const uint32_t *table, uint32_t x)
+{
+	uint8_t n;
+
+	for (n = 2; n != 32; n++) {
+		if (x & (1 << n)) {
+			x = x + (x << n);
+			r -= table[n];
+		}
+	}
+	return (r);
+}
+
+uint32_t
+mbin_exp_table_32(uint32_t r, const uint32_t *table, uint32_t x)
+{
+	uint8_t n;
+
+	for (n = 2; n != 32; n++) {
+		if (x & (1 << n)) {
+			r = r + (r << n);
+			x -= table[n];
+		}
+	}
+	return (r);
+}
+
+uint32_t
+mbin_power_odd_table_32(uint32_t rem, const uint32_t *table,
+    uint32_t base, uint32_t exp)
+{
+	if (base & 2) {
+		/* divider is considered negative */
+		base = -base;
+		/* check if result should be negative */
+		if (exp & 1)
+			rem = -rem;
+	}
+	return (mbin_exp_table_32(rem, table,
+	    mbin_log_table_32(0, table, base) * exp));
 }
 
 uint64_t

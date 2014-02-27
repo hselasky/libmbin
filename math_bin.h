@@ -288,8 +288,10 @@ uint32_t mbin_inv_odd_prime_32(uint32_t val, uint32_t mod);
 uint64_t mbin_cos_b2_odd_64(uint64_t x);
 uint64_t mbin_sin_b2_odd_64(uint64_t x);
 uint64_t mbin_gcd_64(uint64_t, uint64_t);
-
-void	mbin_log_table_gen_32(uint32_t *pt);
+void	mbin_log_table_gen_32(uint32_t *, uint32_t);
+uint32_t mbin_log_table_32(uint32_t, const uint32_t *, uint32_t);
+uint32_t mbin_exp_table_32(uint32_t, const uint32_t *, uint32_t);
+uint32_t mbin_power_odd_table_32(uint32_t, const uint32_t *, uint32_t, uint32_t);
 uint32_t mbin_log_32(uint32_t r, uint32_t x);
 uint32_t mbin_exp_32(uint32_t r, uint32_t x);
 uint32_t mbin_power_odd_32(uint32_t rem, uint32_t base, uint32_t exp);
