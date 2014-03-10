@@ -302,6 +302,102 @@ mbin_xor2_compute_exp_64(uint64_t base, uint64_t exp, uint64_t mod)
 	return (m);
 }
 
+uint64_t
+mbin_xor2_mul_table_64(uint64_t a, uint64_t b, const uint64_t *table,
+    uint64_t n)
+{
+	uint64_t x, y, r;
+
+	r = 0;
+
+	for (x = 0; x != n; x++) {
+		if (!((a >> x) & 1))
+			continue;
+		for (y = 0; y != n; y++) {
+			if (!((b >> y) & 1))
+				continue;
+			r ^= table[x + (y * n)];
+		}
+	}
+	return (r);
+}
+
+int
+mbin_xor2_mul_table_init_64(uint64_t n, const uint64_t *input /* 2*n */ ,
+    uint64_t *output /* n**2 */ )
+{
+	const uint64_t words = ((n * n) + 63) / 64;
+	uint64_t bitmap[n * n][words];
+	uint64_t value[n * n];
+	uint64_t x, y, u, t, m;
+
+	memset(bitmap, 0, sizeof(bitmap));
+	memset(value, 0, sizeof(value));
+	memset(output, 0, sizeof(output[0]) * n * n);
+
+	for (x = 0; x != n; x++) {
+		for (y = 0; y != n; y++) {
+			value[x + (y * n)] = input[x + y];
+
+			for (t = 0; t != n; t++) {
+				for (u = 0; u != n; u++) {
+					if ((input[x] >> t) & (input[y] >> u) & 1) {
+						uint64_t off = t + (u * n);
+
+						bitmap[x + (y * n)][off / 64] |= (1ULL << (off % 64));
+					}
+				}
+			}
+		}
+	}
+
+	for (x = 0; x != (n * n); x++) {
+		for (y = 0; y != words; y++) {
+			if (bitmap[x][y] == 0)
+				continue;
+			m = mbin_lsb64(bitmap[x][y]);
+
+			for (u = 0; u != (n * n); u++) {
+				if (u == x)
+					continue;
+				if (bitmap[u][y] & m) {
+					for (t = 0; t != words; t++)
+						bitmap[u][t] ^= bitmap[x][t];
+					value[u] ^= value[x];
+				}
+			}
+			break;
+		}
+		if (y == words)
+			return (-1);
+	}
+
+	for (x = 0; x != (n * n); x++) {
+		for (u = y = 0; y != words; y++) {
+			u += mbin_sumbits64(bitmap[x][y]);
+		}
+		if (u != 1) {
+			return (-1);
+		}
+		for (y = 0; y != words; y++) {
+			if (bitmap[x][y] == 0)
+				continue;
+			m = mbin_sumbits64(mbin_lsb64(bitmap[x][y]) - 1ULL) + (y * 64);
+			output[m] = value[x];
+			break;
+		}
+	}
+	return (0);
+}
+
+uint64_t
+mbin_xor2_step_fwd_64(uint64_t x, uint64_t mask)
+{
+	uint64_t m = (mbin_msb64(mask) << 1) - 1ULL;
+
+	return (((x << 1) | (mbin_sumbits64(x & mask) & 1)) & m);
+}
+
 /*
  * Example:
  * mod=0xa41825, base=2, len=2520
@@ -960,6 +1056,7 @@ uint64_t
 mbin_xor2_mod_len_slow_64(uint64_t base, uint64_t mod)
 {
 	uint64_t x, y;
+
 	for (x = 1, y = 2; y != 1; x++)
 		y = mbin_xor2_mul_mod_any_64(y, base, mod);
 	return (x);
