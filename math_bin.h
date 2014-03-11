@@ -784,6 +784,16 @@ void	mbin_xor2_moda_create_32(uint32_t *, const uint32_t, const uint32_t);
 void	mbin_xor2_moda_mul_32(const uint32_t *, const uint32_t *, uint32_t *, const uint32_t *, const uint32_t);
 void	mbin_xor2_moda_power_32(const uint32_t *, uint32_t *, const uint32_t *, const uint32_t, const uint32_t);
 
+/* Filter prototypes */
+typedef void (mbin_filter_d_fn_t) (double *, uint32_t, void *);
+
+int mbin_filter_table_d(uint32_t, const double *, double *);
+int mbin_filter_table_alloc_d(uint32_t, mbin_filter_d_fn_t *, void *, double **);
+void mbin_filter_table_free_d(double *);
+void mbin_filter_mul_d(const double *, const double *, double *, const double *, uint32_t);
+void mbin_filter_exp_d(const double *, uint64_t, double *, const double *, uint32_t);
+void mbin_filter_impulse_d(double *, uint32_t);
+
 __END_DECLS
 
 #endif					/* _MATH_BIN_H_ */
