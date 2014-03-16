@@ -72,29 +72,32 @@ mbin_filter_table_d(uint32_t n, const double *input, double *output)
 			m = bitmap[x][y];
 			if (m == 0.0)
 				continue;
-
-			for (u = 0; u != s; u++)
-				bitmap[x][u] /= m;
-			for (u = 0; u != n; u++)
-				value[x][n] /= m;
-
-			bitmap[x][y] = 1.0;
-
-			for (u = 0; u != s; u++) {
-				if (u == x)
-					continue;
-				m = bitmap[u][y];
-				if (m == 0.0)
-					continue;
-				for (t = 0; t != s; t++)
-					bitmap[u][t] -= bitmap[x][t] * m;
-				for (t = 0; t != n; t++)
-					value[u][t] -= value[x][t] * m;
-
-				bitmap[u][y] = 0.0;
-			}
 			break;
 		}
+		if (y == s)
+			return (-1);
+
+		for (u = 0; u != s; u++)
+			bitmap[x][u] /= m;
+		for (u = 0; u != n; u++)
+			value[x][u] /= m;
+
+		bitmap[x][y] = 1.0;
+
+		for (u = 0; u != s; u++) {
+			if (u == x)
+				continue;
+			m = bitmap[u][y];
+			if (m == 0.0)
+				continue;
+			for (t = 0; t != s; t++)
+				bitmap[u][t] -= bitmap[x][t] * m;
+			for (t = 0; t != n; t++)
+				value[u][t] -= value[x][t] * m;
+
+			bitmap[u][y] = 0.0;
+		}
+
 		if (y == s)
 			return (-1);
 	}
@@ -124,16 +127,14 @@ mbin_filter_table_alloc_d(uint32_t n, mbin_filter_d_fn_t *fn, void *arg, double 
 	double value[n];
 	uint32_t x;
 
-	mbin_filter_impulse_d(value, n);
-
 	*ppout = malloc(sizeof(double) * n * n * n);
 
 	if (*ppout == NULL)
 		return (-1);
 
 	for (x = 0; x != 2 * n; x++) {
+		fn(value, x, n, arg);
 		memcpy(input[x], value, sizeof(value));
-		fn(value, n, arg);
 	}
 
 	if (mbin_filter_table_d(n, input[0], *ppout) != 0) {
@@ -175,14 +176,15 @@ mbin_filter_mul_d(const double *a, const double *b, double *c,
 
 void
 mbin_filter_exp_d(const double *base, uint64_t exp,
-    double *c, const double *ptable, uint32_t n)
+    double *c, mbin_filter_d_fn_t *fn, void *arg,
+    const double *ptable, uint32_t n)
 {
 	double d[n];
 	double e[n];
 
 	memcpy(d, base, sizeof(d));
 
-	mbin_filter_impulse_d(c, n);
+	fn(c, 0, n, arg);
 
 	while (1) {
 		if (exp & 1) {
@@ -204,4 +206,186 @@ mbin_filter_impulse_d(double *ptr, uint32_t n)
 {
 	memset(ptr, 0, sizeof(ptr[0]) * n);
 	ptr[0] = 1.0;
+}
+
+#define	U64(m) ((uint64_t)(m))
+
+int
+mbin_filter_table_p_32(uint32_t n, const uint32_t mod,
+    const uint32_t *input, uint32_t *output)
+{
+	const uint32_t s = (n * n);
+	uint32_t bitmap[s][s];
+	uint32_t value[s][n];
+	uint32_t m;
+
+	uint32_t x;
+	uint32_t y;
+	uint32_t u;
+	uint32_t t;
+
+	memset(bitmap, 0, sizeof(bitmap));
+	memset(value, 0, sizeof(value));
+	memset(output, 0, sizeof(output[0]) * s * n);
+
+
+	/* build equation set */
+	for (x = 0; x != n; x++) {
+		for (y = 0; y != n; y++) {
+			memcpy(value[x + (y * n)],
+			    input + ((x + y) * n), sizeof(value[0]));
+
+			for (t = 0; t != n; t++) {
+				for (u = 0; u != n; u++) {
+					bitmap[x + (y * n)][t + (u * n)] =
+					    (U64(input[t + (x * n)]) *
+					    U64(input[u + (y * n)])) % U64(mod);
+				}
+			}
+		}
+	}
+
+	/* solve equation set */
+	for (x = 0; x != s; x++) {
+		for (y = 0; y != s; y++) {
+			m = bitmap[x][y];
+			if (m == 0)
+				continue;
+			break;
+		}
+		if (y == s)
+			return (-1);
+
+		m = mbin_power_mod_32(m, mod - 2, mod);
+
+		for (u = 0; u != s; u++)
+			bitmap[x][u] = (U64(bitmap[x][u]) * U64(m)) % U64(mod);
+		for (u = 0; u != n; u++)
+			value[x][u] = (U64(value[x][u]) * U64(m)) % U64(mod);
+
+		for (u = 0; u != s; u++) {
+			if (u == x)
+				continue;
+			m = bitmap[u][y];
+			if (m == 0)
+				continue;
+			for (t = 0; t != s; t++) {
+				bitmap[u][t] = (U64(mod) + U64(bitmap[u][t]) -
+				    ((U64(bitmap[x][t]) * U64(m)) % U64(mod))) % U64(mod);
+			}
+			for (t = 0; t != n; t++) {
+				value[u][t] = (U64(mod) + U64(value[u][t]) -
+				    ((U64(value[x][t]) * U64(m)) % U64(mod))) % U64(mod);
+			}
+		}
+		if (y == s)
+			return (-1);
+	}
+
+	/* sort solution */
+	for (x = 0; x != s; x++) {
+		for (u = y = 0; y != s; y++)
+			u += (bitmap[x][y] != 0);
+
+		if (u != 1)
+			return (-1);
+
+		for (y = 0; y != s; y++) {
+			if (bitmap[x][y] == 0)
+				continue;
+			memcpy(output + (y * n), value[x], sizeof(value[0]));
+			break;
+		}
+	}
+	return (0);
+}
+
+int
+mbin_filter_table_alloc_p_32(uint32_t n, uint32_t mod, mbin_filter_p_32_fn_t *fn, void *arg, uint32_t **ppout)
+{
+	uint32_t input[2 * n][n];
+	uint32_t value[n];
+	uint32_t x;
+
+	*ppout = malloc(sizeof(uint32_t) * n * n * n);
+
+	if (*ppout == NULL)
+		return (-1);
+
+	for (x = 0; x != 2 * n; x++) {
+		fn(value, x, n, mod, arg);
+		memcpy(input[x], value, sizeof(value));
+	}
+
+	if (mbin_filter_table_p_32(n, mod, input[0], *ppout) != 0) {
+		free(*ppout);
+		return (-1);
+	}
+	return (0);
+}
+
+void
+mbin_filter_table_free_p_32(uint32_t *pout)
+{
+	free(pout);
+}
+
+void
+mbin_filter_mul_p_32(const uint32_t *a, const uint32_t *b, uint32_t *c,
+    const uint32_t *table, uint32_t mod, uint32_t n)
+{
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+
+	memset(c, 0, sizeof(c[0]) * n);
+
+	for (x = 0; x != n; x++) {
+		for (y = 0; y != n; y++) {
+			uint32_t f = (U64(a[x]) * U64(b[y])) % U64(mod);
+
+			if (f == 0)
+				continue;
+
+			uint32_t off = (x * n) + (y * n * n);
+
+			for (z = 0; z != n; z++) {
+				c[z] = (U64(c[z]) + U64(table[off + z]) * U64(f)) % U64(mod);
+			}
+		}
+	}
+}
+
+void
+mbin_filter_exp_p_32(const uint32_t *base, uint64_t exp,
+    uint32_t *c, mbin_filter_p_32_fn_t *fn, void *arg,
+    const uint32_t *ptable, uint32_t n, uint32_t mod)
+{
+	uint32_t d[n];
+	uint32_t e[n];
+
+	memcpy(d, base, sizeof(d));
+
+	fn(c, 0, n, mod, arg);
+
+	while (1) {
+		if (exp & 1) {
+			mbin_filter_mul_p_32(c, d, e, ptable, mod, n);
+			memcpy(c, e, sizeof(c[0]) * n);
+		}
+		/* get next exponent bit, if any */
+		if ((exp /= 2) == 0)
+			break;
+
+		/* square */
+		mbin_filter_mul_p_32(d, d, e, ptable, mod, n);
+		memcpy(d, e, sizeof(d));
+	}
+}
+
+void
+mbin_filter_impulse_p_32(uint32_t *ptr, uint32_t n)
+{
+	memset(ptr, 0, sizeof(ptr[0]) * n);
+	ptr[0] = 1;
 }

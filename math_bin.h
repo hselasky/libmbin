@@ -661,7 +661,7 @@ uint64_t mbin_xor2_exp3_mod_64(uint64_t, uint64_t, uint8_t);
 void	mbin_xor2_compute_inverse_table_64(struct mbin_xor2_pair_64, struct mbin_xor2_pair_64, uint64_t *, uint8_t);
 uint64_t mbin_xor2_compute_div_64(uint64_t, uint64_t, uint64_t, uint64_t *);
 uint64_t mbin_xor2_compute_exp_64(uint64_t, uint64_t, uint64_t);
-int mbin_xor2_mul_table_init_64(uint64_t, const uint64_t *, uint64_t *);
+int	mbin_xor2_mul_table_init_64(uint64_t, const uint64_t *, uint64_t *);
 uint64_t mbin_xor2_mul_table_64(uint64_t, uint64_t, const uint64_t *, uint64_t);
 uint64_t mbin_xor2_step_fwd_64(uint64_t, uint64_t);
 uint64_t mbin_xor2_compute_inverse_64(uint64_t, const uint64_t *, uint8_t);
@@ -785,14 +785,22 @@ void	mbin_xor2_moda_mul_32(const uint32_t *, const uint32_t *, uint32_t *, const
 void	mbin_xor2_moda_power_32(const uint32_t *, uint32_t *, const uint32_t *, const uint32_t, const uint32_t);
 
 /* Filter prototypes */
-typedef void (mbin_filter_d_fn_t) (double *, uint32_t, void *);
+typedef void (mbin_filter_d_fn_t)(double *, uint32_t, uint32_t, void *);
+typedef void (mbin_filter_p_32_fn_t)(uint32_t *, uint32_t, uint32_t, uint32_t, void *);
 
-int mbin_filter_table_d(uint32_t, const double *, double *);
-int mbin_filter_table_alloc_d(uint32_t, mbin_filter_d_fn_t *, void *, double **);
-void mbin_filter_table_free_d(double *);
-void mbin_filter_mul_d(const double *, const double *, double *, const double *, uint32_t);
-void mbin_filter_exp_d(const double *, uint64_t, double *, const double *, uint32_t);
-void mbin_filter_impulse_d(double *, uint32_t);
+int	mbin_filter_table_d(uint32_t, const double *, double *);
+int	mbin_filter_table_alloc_d(uint32_t, mbin_filter_d_fn_t *, void *, double **);
+void	mbin_filter_table_free_d(double *);
+void	mbin_filter_mul_d(const double *, const double *, double *, const double *, uint32_t);
+void	mbin_filter_exp_d(const double *, uint64_t, double *, mbin_filter_d_fn_t *, void *, const double *, uint32_t);
+void	mbin_filter_impulse_d(double *, uint32_t);
+
+int	mbin_filter_table_p_32(uint32_t, const uint32_t, const uint32_t *, uint32_t *);
+int	mbin_filter_table_alloc_p_32(uint32_t, uint32_t, mbin_filter_p_32_fn_t *, void *, uint32_t **);
+void	mbin_filter_table_free_p_32(uint32_t *);
+void	mbin_filter_mul_p_32(const uint32_t *, const uint32_t *, uint32_t *, const uint32_t *, uint32_t, uint32_t);
+void	mbin_filter_exp_p_32(const uint32_t *, uint64_t, uint32_t *, mbin_filter_p_32_fn_t *, void *, const uint32_t *, uint32_t, uint32_t);
+void	mbin_filter_impulse_p_32(uint32_t *, uint32_t);
 
 __END_DECLS
 
