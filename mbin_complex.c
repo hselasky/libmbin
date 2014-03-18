@@ -44,17 +44,12 @@ mbin_div_complex_double(struct mbin_complex_double a,
     struct mbin_complex_double b)
 {
 	struct mbin_complex_double temp;
-	struct mbin_complex_double c;
 	double div;
 
-	c = b;
-	c.y = -c.y;
+	div = b.x * b.x + b.y * b.y;
 
-	div = c.x * c.x + c.y * c.y;
-
-	temp = mbin_mul_complex_double(a, c);
-	temp.x /= div;
-	temp.y /= div;
+	temp.x = ((a.x * b.x) + (a.y * b.y)) / div;
+	temp.y = ((a.y * b.x) - (a.x * b.y)) / div;
 
 	return (temp);
 }

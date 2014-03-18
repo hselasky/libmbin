@@ -524,15 +524,15 @@ uint32_t mbin_count_tab_32(uint32_t *pcomp);
 
 uint32_t mbin_coeff_32(int32_t n, int32_t x);
 
-struct mbin_complex_32 {
+typedef struct mbin_complex_32 {
 	int32_t	x;
 	int32_t	y;
-};
+} mbin_c32_t;
 
-struct mbin_complex_double {
+typedef struct mbin_complex_double {
 	double	x;
 	double	y;
-};
+} mbin_cd_t;
 
 /* Fast version of transforms */
 
@@ -786,7 +786,9 @@ void	mbin_xor2_moda_power_32(const uint32_t *, uint32_t *, const uint32_t *, con
 
 /* Filter prototypes */
 typedef void (mbin_filter_d_fn_t)(double *, uint32_t, uint32_t, void *);
+typedef void (mbin_filter_cd_fn_t)(mbin_cd_t *, uint32_t, uint32_t, void *);
 typedef void (mbin_filter_p_32_fn_t)(uint32_t *, uint32_t, uint32_t, uint32_t, void *);
+typedef void (mbin_xor2_filter_p_64_fn_t)(uint64_t *, uint64_t, uint64_t, uint64_t, void *);
 
 int	mbin_filter_table_d(uint32_t, const double *, double *);
 int	mbin_filter_table_alloc_d(uint32_t, mbin_filter_d_fn_t *, void *, double **);
@@ -801,6 +803,20 @@ void	mbin_filter_table_free_p_32(uint32_t *);
 void	mbin_filter_mul_p_32(const uint32_t *, const uint32_t *, uint32_t *, const uint32_t *, uint32_t, uint32_t);
 void	mbin_filter_exp_p_32(const uint32_t *, uint64_t, uint32_t *, mbin_filter_p_32_fn_t *, void *, const uint32_t *, uint32_t, uint32_t);
 void	mbin_filter_impulse_p_32(uint32_t *, uint32_t);
+
+int	mbin_xor2_filter_table_p_64(uint64_t, const uint64_t, const uint64_t *input, uint64_t *output);
+int	mbin_xor2_filter_table_alloc_p_64(uint64_t, uint64_t, mbin_xor2_filter_p_64_fn_t *, void *, uint64_t **);
+void	mbin_xor2_filter_table_free_p_64(uint64_t *);
+void	mbin_xor2_filter_mul_p_64(const uint64_t *, const uint64_t *, uint64_t *, const uint64_t *, uint64_t, uint64_t);
+void	mbin_xor2_filter_exp_p_64(const uint64_t *, uint64_t, uint64_t *, mbin_xor2_filter_p_64_fn_t *, void *, const uint64_t *, uint64_t, uint64_t);
+void	mbin_xor2_filter_impulse_p_64(uint64_t *, uint64_t);
+
+int	mbin_filter_table_cd(uint32_t, const mbin_cd_t *, mbin_cd_t *);
+int	mbin_filter_table_alloc_cd(uint32_t, mbin_filter_cd_fn_t *, void *, mbin_cd_t **);
+void	mbin_filter_table_free_cd(mbin_cd_t *);
+void	mbin_filter_mul_cd(const mbin_cd_t *, const mbin_cd_t *, mbin_cd_t *, const mbin_cd_t *, uint32_t);
+void	mbin_filter_exp_cd(const mbin_cd_t *, uint64_t, mbin_cd_t *, mbin_filter_cd_fn_t *, void *, const mbin_cd_t *, uint32_t);
+void	mbin_filter_impulse_cd(mbin_cd_t *, uint32_t);
 
 __END_DECLS
 
