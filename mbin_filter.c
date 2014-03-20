@@ -65,7 +65,7 @@ mbin_filter_table_d(uint32_t n, const double *input, double *output)
 			}
 		}
 	}
-
+repeat:
 	/* solve equation set */
 	for (x = 0; x != s; x++) {
 		for (y = 0; y != s; y++) {
@@ -74,7 +74,7 @@ mbin_filter_table_d(uint32_t n, const double *input, double *output)
 				break;
 		}
 		if (y == s)
-			return (-1);
+			continue;
 
 		for (u = 0; u != s; u++)
 			bitmap[x][u] /= m;
@@ -103,9 +103,28 @@ mbin_filter_table_d(uint32_t n, const double *input, double *output)
 		for (u = y = 0; y != s; y++)
 			u += (bitmap[x][y] != 0.0);
 
-		if (u != 1)
+		if (u != 1) {
+			if (u == 0) {
+				for (y = 0; y != n; y++) {
+					if (value[x][y] != 0.0)
+						return (-1);
+				}
+				continue;
+			}
+			for (u = y = 0; y != s; y++) {
+				u += (bitmap[x][y] != 0.0);
+				if (u == 2) {
+					/*
+					 * more than one variable, set to
+					 * zero
+					 */
+					for (x = 0; x != s; x++)
+						bitmap[x][y] = 0.0;
+					goto repeat;
+				}
+			}
 			return (-1);
-
+		}
 		for (y = 0; y != s; y++) {
 			if (bitmap[x][y] == 0.0)
 				continue;
@@ -240,7 +259,7 @@ mbin_filter_table_p_32(uint32_t n, const uint32_t mod,
 			}
 		}
 	}
-
+repeat:
 	/* solve equation set */
 	for (x = 0; x != s; x++) {
 		for (y = 0; y != s; y++) {
@@ -281,9 +300,28 @@ mbin_filter_table_p_32(uint32_t n, const uint32_t mod,
 		for (u = y = 0; y != s; y++)
 			u += (bitmap[x][y] != 0);
 
-		if (u != 1)
+		if (u != 1) {
+			if (u == 0) {
+				for (y = 0; y != n; y++) {
+					if (value[x][y] != 0)
+						return (-1);
+				}
+				continue;
+			}
+			for (u = y = 0; y != s; y++) {
+				u += (bitmap[x][y] != 0);
+				if (u == 2) {
+					/*
+					 * more than one variable, set to
+					 * zero
+					 */
+					for (x = 0; x != s; x++)
+						bitmap[x][y] = 0;
+					goto repeat;
+				}
+			}
 			return (-1);
-
+		}
 		for (y = 0; y != s; y++) {
 			if (bitmap[x][y] == 0)
 				continue;
@@ -418,7 +456,7 @@ mbin_xor2_filter_table_p_64(uint64_t n, const uint64_t p,
 			}
 		}
 	}
-
+repeat:
 	/* solve equation set */
 	for (x = 0; x != s; x++) {
 		for (y = 0; y != s; y++) {
@@ -460,9 +498,28 @@ mbin_xor2_filter_table_p_64(uint64_t n, const uint64_t p,
 		for (u = y = 0; y != s; y++)
 			u += (bitmap[x][y] != 0);
 
-		if (u != 1)
+		if (u != 1) {
+			if (u == 0) {
+				for (y = 0; y != n; y++) {
+					if (value[x][y] != 0)
+						return (-1);
+				}
+				continue;
+			}
+			for (u = y = 0; y != s; y++) {
+				u += (bitmap[x][y] != 0);
+				if (u == 2) {
+					/*
+					 * more than one variable, set to
+					 * zero
+					 */
+					for (x = 0; x != s; x++)
+						bitmap[x][y] = 0;
+					goto repeat;
+				}
+			}
 			return (-1);
-
+		}
 		for (y = 0; y != s; y++) {
 			if (bitmap[x][y] == 0)
 				continue;
@@ -596,7 +653,7 @@ mbin_filter_table_cd(uint32_t n, const mbin_cd_t *input, mbin_cd_t *output)
 			}
 		}
 	}
-
+repeat:
 	/* solve equation set */
 	for (x = 0; x != s; x++) {
 		for (y = 0; y != s; y++) {
@@ -647,11 +704,24 @@ mbin_filter_table_cd(uint32_t n, const mbin_cd_t *input, mbin_cd_t *output)
 		if (u != 1) {
 			if (u == 0) {
 				for (y = 0; y != n; y++) {
-					if (value[x][y].x != 0.0 || value[x][y].y != 0.0) {
+					if (value[x][y].x != 0.0 || value[x][y].y != 0.0)
 						return (-1);
-					}
 				}
 				continue;
+			}
+			for (u = y = 0; y != s; y++) {
+				u += (bitmap[x][y].x != 0.0 || bitmap[x][y].y != 0.0);
+				if (u == 2) {
+					/*
+					 * more than one variable, set to
+					 * zero
+					 */
+					for (x = 0; x != s; x++) {
+						bitmap[x][y].x = 0.0;
+						bitmap[x][y].y = 0.0;
+					}
+					goto repeat;
+				}
 			}
 			return (-1);
 		}
