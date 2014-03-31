@@ -142,7 +142,7 @@ mbin_filter_table_alloc_d(uint32_t n, mbin_filter_d_fn_t *fn, void *arg, double 
 	double value[n];
 	uint32_t x;
 
-	*ppout = malloc(sizeof(double) * n * n * n);
+	*ppout = malloc(sizeof(double) * (n * n * n + n));
 
 	if (*ppout == NULL)
 		return (-1);
@@ -150,6 +150,8 @@ mbin_filter_table_alloc_d(uint32_t n, mbin_filter_d_fn_t *fn, void *arg, double 
 	for (x = 0; x != 2 * n; x++) {
 		fn(value, x, n, arg);
 		memcpy(input[x], value, sizeof(value));
+		if (x == 0)
+			memcpy(*ppout + (n * n * n), value, sizeof(value));
 	}
 
 	if (mbin_filter_table_d(n, input[0], *ppout) != 0) {
@@ -191,15 +193,13 @@ mbin_filter_mul_d(const double *a, const double *b, double *c,
 
 void
 mbin_filter_exp_d(const double *base, uint64_t exp,
-    double *c, mbin_filter_d_fn_t *fn, void *arg,
-    const double *ptable, uint32_t n)
+    double *c, const double *ptable, uint32_t n)
 {
 	double d[n];
 	double e[n];
 
 	memcpy(d, base, sizeof(d));
-
-	fn(c, 0, n, arg);
+	memcpy(c, ptable + (n * n * n), sizeof(d));
 
 	while (1) {
 		if (exp & 1) {
@@ -339,7 +339,7 @@ mbin_filter_table_alloc_p_32(uint32_t n, uint32_t mod, mbin_filter_p_32_fn_t *fn
 	uint32_t value[n];
 	uint32_t x;
 
-	*ppout = malloc(sizeof(uint32_t) * n * n * n);
+	*ppout = malloc(sizeof(uint32_t) * (n * n * n + n));
 
 	if (*ppout == NULL)
 		return (-1);
@@ -347,6 +347,8 @@ mbin_filter_table_alloc_p_32(uint32_t n, uint32_t mod, mbin_filter_p_32_fn_t *fn
 	for (x = 0; x != 2 * n; x++) {
 		fn(value, x, n, mod, arg);
 		memcpy(input[x], value, sizeof(value));
+		if (x == 0)
+			memcpy(*ppout + (n * n * n), value, sizeof(value));
 	}
 
 	if (mbin_filter_table_p_32(n, mod, input[0], *ppout) != 0) {
@@ -390,15 +392,13 @@ mbin_filter_mul_p_32(const uint32_t *a, const uint32_t *b, uint32_t *c,
 
 void
 mbin_filter_exp_p_32(const uint32_t *base, uint64_t exp,
-    uint32_t *c, mbin_filter_p_32_fn_t *fn, void *arg,
-    const uint32_t *ptable, uint32_t n, uint32_t mod)
+    uint32_t *c, const uint32_t *ptable, uint32_t n, uint32_t mod)
 {
 	uint32_t d[n];
 	uint32_t e[n];
 
 	memcpy(d, base, sizeof(d));
-
-	fn(c, 0, n, mod, arg);
+	memcpy(c, ptable + (n * n * n), sizeof(d));
 
 	while (1) {
 		if (exp & 1) {
@@ -537,7 +537,7 @@ mbin_xor2_filter_table_alloc_p_64(uint64_t n, uint64_t mod, mbin_xor2_filter_p_6
 	uint64_t value[n];
 	uint64_t x;
 
-	*ppout = malloc(sizeof(uint64_t) * n * n * n);
+	*ppout = malloc(sizeof(uint64_t) * (n * n * n + n));
 
 	if (*ppout == NULL)
 		return (-1);
@@ -545,6 +545,8 @@ mbin_xor2_filter_table_alloc_p_64(uint64_t n, uint64_t mod, mbin_xor2_filter_p_6
 	for (x = 0; x != 2 * n; x++) {
 		fn(value, x, n, mod, arg);
 		memcpy(input[x], value, sizeof(value));
+		if (x == 0)
+			memcpy(*ppout + (n * n * n), value, sizeof(value));
 	}
 
 	if (mbin_xor2_filter_table_p_64(n, mod, input[0], *ppout) != 0) {
@@ -588,15 +590,13 @@ mbin_xor2_filter_mul_p_64(const uint64_t *a, const uint64_t *b, uint64_t *c,
 
 void
 mbin_xor2_filter_exp_p_64(const uint64_t *base, uint64_t exp,
-    uint64_t *c, mbin_xor2_filter_p_64_fn_t *fn, void *arg,
-    const uint64_t *ptable, uint64_t n, uint64_t mod)
+    uint64_t *c, const uint64_t *ptable, uint64_t n, uint64_t mod)
 {
 	uint64_t d[n];
 	uint64_t e[n];
 
 	memcpy(d, base, sizeof(d));
-
-	fn(c, 0, n, mod, arg);
+	memcpy(c, ptable + (n * n * n), sizeof(d));
 
 	while (1) {
 		if (exp & 1) {
@@ -742,7 +742,7 @@ mbin_filter_table_alloc_cd(uint32_t n, mbin_filter_cd_fn_t *fn, void *arg, mbin_
 	mbin_cd_t value[n];
 	uint32_t x;
 
-	*ppout = malloc(sizeof(mbin_cd_t) * n * n * n);
+	*ppout = malloc(sizeof(mbin_cd_t) * (n * n * n + n));
 
 	if (*ppout == NULL)
 		return (-1);
@@ -750,6 +750,8 @@ mbin_filter_table_alloc_cd(uint32_t n, mbin_filter_cd_fn_t *fn, void *arg, mbin_
 	for (x = 0; x != 2 * n; x++) {
 		fn(value, x, n, arg);
 		memcpy(input[x], value, sizeof(value));
+		if (x == 0)
+			memcpy(*ppout + (n * n * n), value, sizeof(value));
 	}
 
 	if (mbin_filter_table_cd(n, input[0], *ppout) != 0) {
@@ -794,15 +796,13 @@ mbin_filter_mul_cd(const mbin_cd_t *a, const mbin_cd_t *b, mbin_cd_t *c,
 
 void
 mbin_filter_exp_cd(const mbin_cd_t *base, uint64_t exp,
-    mbin_cd_t *c, mbin_filter_cd_fn_t *fn, void *arg,
-    const mbin_cd_t *ptable, uint32_t n)
+    mbin_cd_t *c, const mbin_cd_t *ptable, uint32_t n)
 {
 	mbin_cd_t d[n];
 	mbin_cd_t e[n];
 
 	memcpy(d, base, sizeof(d));
-
-	fn(c, 0, n, arg);
+	memcpy(c, ptable + (n * n * n), sizeof(d));
 
 	while (1) {
 		if (exp & 1) {
