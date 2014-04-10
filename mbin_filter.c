@@ -64,8 +64,11 @@ mbin_filter_table_d(uint32_t n, const double *input, double *output)
 
 			for (k = t = 0; t != n; t++) {
 				for (u = t; u != n; u++, k++) {
-					bitmap[j][k] = input[t + (x * n)] *
-					    input[u + (y * n)];
+					bitmap[j][k] =
+					  (input[t + (x * n)] *
+					   input[u + (y * n)]) + 
+					  (input[t + (y * n)] *
+					   input[u + (x * n)]);
 				}
 			}
 		}
@@ -196,7 +199,7 @@ mbin_filter_mul_d(const double *a, const double *b, double *c,
 
 	for (x = 0; x != n; x++) {
 		for (y = x; y != n; y++) {
-			double f = a[x] * b[y];
+			double f = (a[x] * b[y]) + (b[x] * a[y]);
 
 			if (f == 0.0) {
 				table += n;
