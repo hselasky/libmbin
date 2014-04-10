@@ -66,9 +66,9 @@ mbin_filter_table_d(uint32_t n, const double *input, double *output)
 				for (u = t; u != n; u++, k++) {
 					bitmap[j][k] =
 					  (input[t + (x * n)] *
-					   input[u + (y * n)]) + 
-					  (input[t + (y * n)] *
-					   input[u + (x * n)]);
+					   input[u + (y * n)]) +
+					  (input[u + (x * n)] *
+					   input[t + (y * n)]);
 				}
 			}
 		}
