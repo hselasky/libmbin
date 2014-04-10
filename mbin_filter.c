@@ -34,32 +34,37 @@
 
 #include "math_bin.h"
 
+#define	MBIN_FILTER_SIZE(n) ((((n) * (n)) + (n)) / 2)
+
 int
 mbin_filter_table_d(uint32_t n, const double *input, double *output)
 {
-	const uint32_t s = (n * n);
+	const uint32_t s = MBIN_FILTER_SIZE(n);
 	double bitmap[s][s];
 	double value[s][n];
+	uint8_t clean[s];
 	double m;
 
 	uint32_t x;
 	uint32_t y;
 	uint32_t u;
 	uint32_t t;
+	uint32_t j;
+	uint32_t k;
 
 	memset(bitmap, 0, sizeof(bitmap));
 	memset(value, 0, sizeof(value));
 	memset(output, 0, sizeof(output[0]) * s * n);
+	memset(clean, 0, sizeof(clean));
 
 	/* build equation set */
-	for (x = 0; x != n; x++) {
-		for (y = 0; y != n; y++) {
-			memcpy(value[x + (y * n)], input + ((x + y) * n), sizeof(value[0]));
+	for (j = x = 0; x != n; x++) {
+		for (y = x; y != n; y++, j++) {
+			memcpy(value[j], input + ((x + y) * n), sizeof(value[0]));
 
-			for (t = 0; t != n; t++) {
-				for (u = 0; u != n; u++) {
-					bitmap[x + (y * n)]
-					    [t + (u * n)] = input[t + (x * n)] *
+			for (k = t = 0; t != n; t++) {
+				for (u = t; u != n; u++, k++) {
+					bitmap[j][k] = input[t + (x * n)] *
 					    input[u + (y * n)];
 				}
 			}
@@ -68,6 +73,12 @@ mbin_filter_table_d(uint32_t n, const double *input, double *output)
 repeat:
 	/* solve equation set */
 	for (x = 0; x != s; x++) {
+
+		if (clean[x] != 0)
+			continue;
+
+		clean[x] = 1;
+
 		for (y = 0; y != s; y++) {
 			m = bitmap[x][y];
 			if (m != 0.0)
@@ -95,6 +106,7 @@ repeat:
 				value[u][t] -= value[x][t] * m;
 
 			bitmap[u][y] = 0.0;
+			clean[u] = 0;
 		}
 	}
 
@@ -118,8 +130,12 @@ repeat:
 					 * more than one variable, set to
 					 * zero
 					 */
-					for (x = 0; x != s; x++)
+					for (x = 0; x != s; x++) {
+						if (bitmap[x][y] == 0.0)
+							continue;
 						bitmap[x][y] = 0.0;
+						clean[x] = 0;
+					}
 					goto repeat;
 				}
 			}
@@ -138,11 +154,12 @@ repeat:
 int
 mbin_filter_table_alloc_d(uint32_t n, mbin_filter_d_fn_t *fn, void *arg, double **ppout)
 {
+	const uint32_t s = MBIN_FILTER_SIZE(n);
 	double input[2 * n][n];
 	double value[n];
 	uint32_t x;
 
-	*ppout = malloc(sizeof(double) * (n * n * n + n));
+	*ppout = malloc(sizeof(double) * ((s * n) + n));
 
 	if (*ppout == NULL)
 		return (-1);
@@ -151,7 +168,7 @@ mbin_filter_table_alloc_d(uint32_t n, mbin_filter_d_fn_t *fn, void *arg, double 
 		fn(value, x, n, arg);
 		memcpy(input[x], value, sizeof(value));
 		if (x == 0)
-			memcpy(*ppout + (n * n * n), value, sizeof(value));
+			memcpy(*ppout + (s * n), value, sizeof(value));
 	}
 
 	if (mbin_filter_table_d(n, input[0], *ppout) != 0) {
@@ -178,15 +195,17 @@ mbin_filter_mul_d(const double *a, const double *b, double *c,
 	memset(c, 0, sizeof(c[0]) * n);
 
 	for (x = 0; x != n; x++) {
-		for (y = 0; y != n; y++) {
+		for (y = x; y != n; y++) {
 			double f = a[x] * b[y];
 
-			if (f == 0.0)
+			if (f == 0.0) {
+				table += n;
 				continue;
-			uint32_t off = (x * n) + (y * n * n);
-
+			}
 			for (z = 0; z != n; z++)
-				c[z] += table[off + z] * f;
+				c[z] += table[z] * f;
+
+			table += n;
 		}
 	}
 }
@@ -195,11 +214,12 @@ void
 mbin_filter_exp_d(const double *base, uint64_t exp,
     double *c, const double *ptable, uint32_t n)
 {
+	const uint32_t s = MBIN_FILTER_SIZE(n);
 	double d[n];
 	double e[n];
 
 	memcpy(d, base, sizeof(d));
-	memcpy(c, ptable + (n * n * n), sizeof(d));
+	memcpy(c, ptable + (s * n), sizeof(d));
 
 	while (1) {
 		if (exp & 1) {
