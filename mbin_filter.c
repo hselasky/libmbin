@@ -87,8 +87,13 @@ repeat:
 			if (m != 0.0)
 				break;
 		}
-		if (y == s)
+		if (y == s) {
+			for (y = 0; y != n; y++) {
+				if (value[x][y] != 0.0)
+					return (-1);
+			}
 			continue;
+		}
 
 		for (u = 0; u != s; u++)
 			bitmap[x][u] /= m;
@@ -249,13 +254,15 @@ mbin_filter_impulse_d(double *ptr, uint32_t n)
 #define	U64(m) ((uint64_t)(m))
 
 int
-mbin_filter_table_p_32(uint32_t n, const uint32_t mod,
+mbin_filter_table_p_32(uint32_t n, const uint32_t *pmod,
     const uint32_t *input, uint32_t *output)
 {
 	const uint32_t s = (n * n);
 	uint32_t bitmap[s][s];
 	uint32_t value[s][n];
+	uint32_t mod;
 	uint32_t m;
+	uint32_t k;
 
 	uint32_t x;
 	uint32_t y;
@@ -266,7 +273,6 @@ mbin_filter_table_p_32(uint32_t n, const uint32_t mod,
 	memset(value, 0, sizeof(value));
 	memset(output, 0, sizeof(output[0]) * s * n);
 
-
 	/* build equation set */
 	for (x = 0; x != n; x++) {
 		for (y = 0; y != n; y++) {
@@ -276,8 +282,7 @@ mbin_filter_table_p_32(uint32_t n, const uint32_t mod,
 			for (t = 0; t != n; t++) {
 				for (u = 0; u != n; u++) {
 					bitmap[x + (y * n)][t + (u * n)] =
-					    (U64(input[t + (x * n)]) *
-					    U64(input[u + (y * n)])) % U64(mod);
+					    U64(input[t + (x * n)]) * U64(input[u + (y * n)]);
 				}
 			}
 		}
@@ -291,15 +296,26 @@ repeat:
 				continue;
 			break;
 		}
-		if (y == s)
-			return (-1);
-
-		m = mbin_power_mod_32(m, mod - 2, mod);
-
-		for (u = 0; u != s; u++)
-			bitmap[x][u] = (U64(bitmap[x][u]) * U64(m)) % U64(mod);
-		for (u = 0; u != n; u++)
-			value[x][u] = (U64(value[x][u]) * U64(m)) % U64(mod);
+		if (y == s) {
+			for (y = 0; y != n; y++) {
+				if (value[x][y] != 0)
+					return (-1);
+			}
+			continue;
+		}
+		for (u = 0; u != s; u++) {
+			if (pmod[(u % n)] == pmod[(u / n)])
+				mod = pmod[(u % n)];
+			else
+				mod = pmod[(u % n)] * pmod[(u / n)];
+			k = mbin_power_mod_32(m, mod - 2, mod);
+			bitmap[x][u] = (U64(bitmap[x][u]) * U64(k)) % U64(mod);
+		}
+		for (u = 0; u != n; u++) {
+			mod = pmod[u];
+			k = mbin_power_mod_32(m, mod - 2, mod);
+			value[x][u] = (U64(value[x][u]) * U64(k)) % U64(pmod[u]);
+		}
 
 		for (u = 0; u != s; u++) {
 			if (u == x)
@@ -308,10 +324,17 @@ repeat:
 			if (m == 0)
 				continue;
 			for (t = 0; t != s; t++) {
+				uint32_t mod;
+				if (pmod[(t % n)] == pmod[(t / n)])
+					mod = pmod[(t % n)];
+				else
+					mod = pmod[(t % n)] * pmod[(t / n)];
+
 				bitmap[u][t] = (U64(mod) + U64(bitmap[u][t]) -
 				    ((U64(bitmap[x][t]) * U64(m)) % U64(mod))) % U64(mod);
 			}
 			for (t = 0; t != n; t++) {
+				uint32_t mod = pmod[t];
 				value[u][t] = (U64(mod) + U64(value[u][t]) -
 				    ((U64(value[x][t]) * U64(m)) % U64(mod))) % U64(mod);
 			}
@@ -356,7 +379,7 @@ repeat:
 }
 
 int
-mbin_filter_table_alloc_p_32(uint32_t n, uint32_t mod, mbin_filter_p_32_fn_t *fn, void *arg, uint32_t **ppout)
+mbin_filter_table_alloc_p_32(uint32_t n, const uint32_t *pmod, mbin_filter_p_32_fn_t *fn, void *arg, uint32_t **ppout)
 {
 	uint32_t input[2 * n][n];
 	uint32_t value[n];
@@ -368,13 +391,13 @@ mbin_filter_table_alloc_p_32(uint32_t n, uint32_t mod, mbin_filter_p_32_fn_t *fn
 		return (-1);
 
 	for (x = 0; x != 2 * n; x++) {
-		fn(value, x, n, mod, arg);
+		fn(value, x, n, pmod, arg);
 		memcpy(input[x], value, sizeof(value));
 		if (x == 0)
 			memcpy(*ppout + (n * n * n), value, sizeof(value));
 	}
 
-	if (mbin_filter_table_p_32(n, mod, input[0], *ppout) != 0) {
+	if (mbin_filter_table_p_32(n, pmod, input[0], *ppout) != 0) {
 		free(*ppout);
 		return (-1);
 	}
@@ -389,7 +412,7 @@ mbin_filter_table_free_p_32(uint32_t *pout)
 
 void
 mbin_filter_mul_p_32(const uint32_t *a, const uint32_t *b, uint32_t *c,
-    const uint32_t *table, uint32_t mod, uint32_t n)
+    const uint32_t *table, const uint32_t *pmod, uint32_t n)
 {
 	uint32_t x;
 	uint32_t y;
@@ -399,7 +422,7 @@ mbin_filter_mul_p_32(const uint32_t *a, const uint32_t *b, uint32_t *c,
 
 	for (x = 0; x != n; x++) {
 		for (y = 0; y != n; y++) {
-			uint32_t f = (U64(a[x]) * U64(b[y])) % U64(mod);
+			uint64_t f = U64(a[x]) * U64(b[y]);
 
 			if (f == 0)
 				continue;
@@ -407,7 +430,7 @@ mbin_filter_mul_p_32(const uint32_t *a, const uint32_t *b, uint32_t *c,
 			uint32_t off = (x * n) + (y * n * n);
 
 			for (z = 0; z != n; z++) {
-				c[z] = (U64(c[z]) + U64(table[off + z]) * U64(f)) % U64(mod);
+				c[z] = (U64(c[z]) + U64(table[off + z]) * f) % U64(pmod[z]);
 			}
 		}
 	}
@@ -415,7 +438,7 @@ mbin_filter_mul_p_32(const uint32_t *a, const uint32_t *b, uint32_t *c,
 
 void
 mbin_filter_exp_p_32(const uint32_t *base, uint64_t exp,
-    uint32_t *c, const uint32_t *ptable, uint32_t n, uint32_t mod)
+    uint32_t *c, const uint32_t *ptable, uint32_t n, const uint32_t *pmod)
 {
 	uint32_t d[n];
 	uint32_t e[n];
@@ -425,7 +448,7 @@ mbin_filter_exp_p_32(const uint32_t *base, uint64_t exp,
 
 	while (1) {
 		if (exp & 1) {
-			mbin_filter_mul_p_32(c, d, e, ptable, mod, n);
+			mbin_filter_mul_p_32(c, d, e, ptable, pmod, n);
 			memcpy(c, e, sizeof(c[0]) * n);
 		}
 		/* get next exponent bit, if any */
@@ -433,7 +456,7 @@ mbin_filter_exp_p_32(const uint32_t *base, uint64_t exp,
 			break;
 
 		/* square */
-		mbin_filter_mul_p_32(d, d, e, ptable, mod, n);
+		mbin_filter_mul_p_32(d, d, e, ptable, pmod, n);
 		memcpy(d, e, sizeof(d));
 	}
 }
@@ -488,8 +511,13 @@ repeat:
 				continue;
 			break;
 		}
-		if (y == s)
-			return (-1);
+		if (y == s) {
+			for (y = 0; y != n; y++) {
+				if (value[x][y] != 0)
+					return (-1);
+			}
+			continue;
+		}
 
 		if (m != 0)
 			m = mbin_xor2_neg_mod_64(m, p);
@@ -684,8 +712,13 @@ repeat:
 			if (m.x != 0.0 || m.y != 0.0)
 				break;
 		}
-		if (y == s)
+		if (y == s) {
+			for (y = 0; y != n; y++) {
+				if (value[x][y].x != 0.0 || value[x][y].y != 0.0)
+					return (-1);
+			}
 			continue;
+		}
 
 		for (u = 0; u != s; u++) {
 			bitmap[x][u] =
