@@ -31,13 +31,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "math_bin.h"
 
 #define	MBIN_FILTER_SIZE(n) ((((n) * (n)) + (n)) / 2)
 
 int
-mbin_filter_table_d(uint32_t n, const double *input, double *output)
+mbin_filter_table_d(uint32_t n, const double *input, double *output, double zero)
 {
 	const uint32_t sx = 2 * MBIN_FILTER_SIZE(n);
 	const uint32_t sy = MBIN_FILTER_SIZE(n);
@@ -83,12 +84,12 @@ repeat:
 
 		for (y = 0; y != sy; y++) {
 			m = bitmap[x][y];
-			if (m != 0.0)
+			if (fabs(m) > zero)
 				break;
 		}
 		if (y == sy) {
 			for (y = 0; y != n; y++) {
-				if (value[x][y] != 0.0)
+				if (fabs(value[x][y]) > zero)
 					return (-1);
 			}
 			continue;
@@ -105,7 +106,7 @@ repeat:
 			if (u == x)
 				continue;
 			m = bitmap[u][y];
-			if (m == 0.0)
+			if (fabs(m) <= zero)
 				continue;
 			for (t = 0; t != sy; t++)
 				bitmap[u][t] -= bitmap[x][t] * m;
@@ -120,25 +121,25 @@ repeat:
 	/* sort solution */
 	for (x = 0; x != sx; x++) {
 		for (u = y = 0; y != sy; y++)
-			u += (bitmap[x][y] != 0.0);
+			u += (fabs(bitmap[x][y]) > zero);
 
 		if (u != 1) {
 			if (u == 0) {
 				for (y = 0; y != n; y++) {
-					if (value[x][y] != 0.0)
+					if (fabs(value[x][y]) > zero)
 						return (-1);
 				}
 				continue;
 			}
 			for (u = y = 0; y != sy; y++) {
-				u += (bitmap[x][y] != 0.0);
+				u += (fabs(bitmap[x][y]) > zero);
 				if (u == 2) {
 					/*
 					 * more than one variable, set to
 					 * zero
 					 */
 					for (x = 0; x != sx; x++) {
-						if (bitmap[x][y] == 0.0)
+						if (fabs(bitmap[x][y]) <= zero)
 							continue;
 						bitmap[x][y] = 0.0;
 						clean[x] = 0;
@@ -149,7 +150,7 @@ repeat:
 			return (-1);
 		}
 		for (y = 0; y != sx; y++) {
-			if (bitmap[x][y] == 0.0)
+			if (fabs(bitmap[x][y]) <= zero)
 				continue;
 			memcpy(output + (y * n), value[x], sizeof(double) * n);
 			break;
@@ -159,7 +160,7 @@ repeat:
 }
 
 int
-mbin_filter_table_alloc_d(uint32_t n, mbin_filter_d_fn_t *fn, void *arg, double **ppout)
+mbin_filter_table_alloc_d(uint32_t n, mbin_filter_d_fn_t *fn, void *arg, double **ppout, double zero)
 {
 	const uint32_t s = MBIN_FILTER_SIZE(n);
 	double input[2 * n][n];
@@ -178,7 +179,7 @@ mbin_filter_table_alloc_d(uint32_t n, mbin_filter_d_fn_t *fn, void *arg, double 
 			memcpy(*ppout + (s * n), value, sizeof(value));
 	}
 
-	if (mbin_filter_table_d(n, input[0], *ppout) != 0) {
+	if (mbin_filter_table_d(n, input[0], *ppout, zero) != 0) {
 		free(*ppout);
 		return (-1);
 	}
@@ -286,9 +287,14 @@ mbin_filter_table_p_32(uint32_t n, const uint32_t mod,
 					c = u + (x * n);
 					d = t + (y * n);
 
-					bitmap[j][k] =
-					  ((U64(input[a]) * U64(input[b])) +
-					   (U64(input[c]) * U64(input[d]))) % U64(mod);
+					if (t == u) {
+						bitmap[j][k] =
+							(U64(input[a]) * U64(input[b])) % U64(mod);
+					} else {
+						bitmap[j][k] =
+							((U64(input[a]) * U64(input[b])) +
+							 (U64(input[c]) * U64(input[d]))) % U64(mod);
+					}
 				}
 			}
 		}
@@ -429,9 +435,13 @@ mbin_filter_mul_p_32(const uint32_t *pa, const uint32_t *pb, uint32_t *c,
 
 	for (x = 0; x != n; x++) {
 		for (y = x; y != n; y++) {
-			uint32_t f = (U64(pa[x]) * U64(pb[y]) +
-				      U64(pb[x]) * U64(pa[y])) % U64(mod);
-
+			uint32_t f;
+			if (x == y) {
+				f = (U64(pa[x]) * U64(pb[y])) % U64(mod);
+			} else {
+				f = (U64(pa[x]) * U64(pb[y]) +
+				     U64(pb[x]) * U64(pa[y])) % U64(mod);
+			}
 			if (f != 0) {
 				for (z = 0; z != n; z++)
 					c[z] = (U64(c[z]) + U64(table[z]) * f) % U64(mod);
@@ -478,45 +488,66 @@ int
 mbin_xor2_filter_table_p_64(uint64_t n, const uint64_t p,
     const uint64_t *input, uint64_t *output)
 {
-	const uint64_t s = (n * n);
-	uint64_t bitmap[s][s];
-	uint64_t value[s][n];
+	const uint32_t sx = 2 * MBIN_FILTER_SIZE(n);
+	const uint32_t sy = MBIN_FILTER_SIZE(n);
+	uint64_t bitmap[sx][sy];
+	uint64_t value[sx][n];
+	uint8_t clean[sx];
 	uint64_t m;
 
 	uint64_t x;
 	uint64_t y;
 	uint64_t u;
 	uint64_t t;
+	uint64_t k;
+	uint64_t j;
 
 	memset(bitmap, 0, sizeof(bitmap));
 	memset(value, 0, sizeof(value));
-	memset(output, 0, sizeof(output[0]) * s * n);
+	memset(output, 0, sizeof(output[0]) * sy * n);
+	memset(clean, 0, sizeof(clean));
 
 	/* build equation set */
-	for (x = 0; x != n; x++) {
-		for (y = 0; y != n; y++) {
-			memcpy(value[x + (y * n)],
-			    input + ((x + y) * n), sizeof(value[0]));
+	for (j = x = 0; x != n; x++) {
+		for (y = x; (x + y) != (2 * n); y++, j++) {
+			memcpy(value[j], input + ((x + y) * n), sizeof(uint64_t) * n);
 
-			for (t = 0; t != n; t++) {
-				for (u = 0; u != n; u++) {
-					bitmap[x + (y * n)][t + (u * n)] =
-					    mbin_xor2_mul_mod_64(input[t + (x * n)],
-					    input[u + (y * n)], p);
+			for (k = t = 0; t != n; t++) {
+				for (u = t; u != n; u++, k++) {
+					uint32_t a,b,c,d;
+
+					a = t + (x * n);
+					b = u + (y * n);
+					c = u + (x * n);
+					d = t + (y * n);
+
+					if (t == u) {
+						bitmap[j][k] = mbin_xor2_mul_mod_64(input[a], input[b], p);
+					} else {
+						bitmap[j][k] =
+						    mbin_xor2_mul_mod_64(input[a], input[b], p) ^
+						    mbin_xor2_mul_mod_64(input[c], input[d], p);
+					}
 				}
 			}
 		}
 	}
 repeat:
 	/* solve equation set */
-	for (x = 0; x != s; x++) {
-		for (y = 0; y != s; y++) {
+	for (x = 0; x != sx; x++) {
+
+		if (clean[x] != 0)
+			continue;
+
+		clean[x] = 1;
+
+		for (y = 0; y != sy; y++) {
 			m = bitmap[x][y];
 			if (m == 0)
 				continue;
 			break;
 		}
-		if (y == s) {
+		if (y == sy) {
 			for (y = 0; y != n; y++) {
 				if (value[x][y] != 0)
 					return (-1);
@@ -527,18 +558,18 @@ repeat:
 		if (m != 0)
 			m = mbin_xor2_neg_mod_64(m, p);
 
-		for (u = 0; u != s; u++)
+		for (u = 0; u != sy; u++)
 			bitmap[x][u] = mbin_xor2_mul_mod_64(bitmap[x][u], m, p);
 		for (u = 0; u != n; u++)
 			value[x][u] = mbin_xor2_mul_mod_64(value[x][u], m, p);
 
-		for (u = 0; u != s; u++) {
+		for (u = 0; u != sx; u++) {
 			if (u == x)
 				continue;
 			m = bitmap[u][y];
 			if (m == 0)
 				continue;
-			for (t = 0; t != s; t++) {
+			for (t = 0; t != sy; t++) {
 				bitmap[u][t] ^=
 				    mbin_xor2_mul_mod_64(bitmap[x][t], m, p);
 			}
@@ -546,12 +577,14 @@ repeat:
 				value[u][t] ^=
 				    mbin_xor2_mul_mod_64(value[x][t], m, p);
 			}
+			bitmap[u][y] = 0;
+			clean[u] = 0;
 		}
 	}
 
 	/* sort solution */
-	for (x = 0; x != s; x++) {
-		for (u = y = 0; y != s; y++)
+	for (x = 0; x != sx; x++) {
+		for (u = y = 0; y != sy; y++)
 			u += (bitmap[x][y] != 0);
 
 		if (u != 1) {
@@ -562,24 +595,28 @@ repeat:
 				}
 				continue;
 			}
-			for (u = y = 0; y != s; y++) {
+			for (u = y = 0; y != sy; y++) {
 				u += (bitmap[x][y] != 0);
 				if (u == 2) {
 					/*
 					 * more than one variable, set to
 					 * zero
 					 */
-					for (x = 0; x != s; x++)
+					for (x = 0; x != sx; x++) {
+						if (bitmap[x][y] == 0)
+							continue;
 						bitmap[x][y] = 0;
+						clean[x] = 0;
+					}
 					goto repeat;
 				}
 			}
 			return (-1);
 		}
-		for (y = 0; y != s; y++) {
+		for (y = 0; y != sx; y++) {
 			if (bitmap[x][y] == 0)
 				continue;
-			memcpy(output + (y * n), value[x], sizeof(value[0]));
+			memcpy(output + (y * n), value[x], sizeof(uint64_t) * n);
 			break;
 		}
 	}
@@ -589,11 +626,12 @@ repeat:
 int
 mbin_xor2_filter_table_alloc_p_64(uint64_t n, uint64_t mod, mbin_xor2_filter_p_64_fn_t *fn, void *arg, uint64_t **ppout)
 {
+	const uint32_t s = MBIN_FILTER_SIZE(n);
 	uint64_t input[2 * n][n];
 	uint64_t value[n];
 	uint64_t x;
 
-	*ppout = malloc(sizeof(uint64_t) * (n * n * n + n));
+	*ppout = malloc(sizeof(uint64_t) * ((n * s) + n));
 
 	if (*ppout == NULL)
 		return (-1);
@@ -602,7 +640,7 @@ mbin_xor2_filter_table_alloc_p_64(uint64_t n, uint64_t mod, mbin_xor2_filter_p_6
 		fn(value, x, n, mod, arg);
 		memcpy(input[x], value, sizeof(value));
 		if (x == 0)
-			memcpy(*ppout + (n * n * n), value, sizeof(value));
+			memcpy(*ppout + (s * n), value, sizeof(value));
 	}
 
 	if (mbin_xor2_filter_table_p_64(n, mod, input[0], *ppout) != 0) {
@@ -626,20 +664,24 @@ mbin_xor2_filter_mul_p_64(const uint64_t *a, const uint64_t *b, uint64_t *c,
 	uint64_t y;
 	uint64_t z;
 
-	memset(c, 0, sizeof(c[0]) * n);
+	memset(c, 0, sizeof(uint64_t) * n);
 
 	for (x = 0; x != n; x++) {
-		for (y = 0; y != n; y++) {
-			uint64_t f = mbin_xor2_mul_mod_64(a[x], b[y], p);
+		for (y = x; y != n; y++) {
+			uint64_t f;
 
-			if (f == 0)
-				continue;
-
-			uint64_t off = (x * n) + (y * n * n);
-
-			for (z = 0; z != n; z++) {
-				c[z] ^= mbin_xor2_mul_mod_64(table[off + z], f, p);
+			if (x == y) {
+				f = mbin_xor2_mul_mod_64(a[x], b[y], p);
+			} else {
+				f = mbin_xor2_mul_mod_64(a[x], b[y], p) ^
+				    mbin_xor2_mul_mod_64(b[x], a[y], p);
 			}
+			if (f != 0) {
+				for (z = 0; z != n; z++) {
+					c[z] ^= mbin_xor2_mul_mod_64(table[z], f, p);
+				}
+			}
+			table += n;
 		}
 	}
 }
@@ -648,11 +690,12 @@ void
 mbin_xor2_filter_exp_p_64(const uint64_t *base, uint64_t exp,
     uint64_t *c, const uint64_t *ptable, uint64_t n, uint64_t mod)
 {
+	const uint32_t s = MBIN_FILTER_SIZE(n);
 	uint64_t d[n];
 	uint64_t e[n];
 
 	memcpy(d, base, sizeof(d));
-	memcpy(c, ptable + (n * n * n), sizeof(d));
+	memcpy(c, ptable + (s * n), sizeof(d));
 
 	while (1) {
 		if (exp & 1) {
