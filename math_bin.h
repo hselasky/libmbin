@@ -514,13 +514,34 @@ void	mbin_fet_read_8(const uint8_t *, uint8_t *, uint32_t, uint32_t, uint32_t);
 
 /* Equation prototypes */
 
-uint32_t *mbin_compress_tab_32(const uint32_t *ptr, uint32_t last, uint32_t slice);
-void	mbin_expand_xor_tab_32(uint32_t *ptr, uint32_t *pcomp, uint32_t last, uint32_t slice);
-void	mbin_expand_add_tab_32(uint32_t *ptr, uint32_t *pcomp, uint32_t last, uint32_t slice);
-void	mbin_expand_sub_tab_32(uint32_t *ptr, uint32_t *pcomp, uint32_t last, uint32_t slice);
-uint32_t *mbin_foreach_tab_32(uint32_t *pcomp, uint32_t *ptr);
-void	mbin_free_tab_32(uint32_t *pcomp);
-uint32_t mbin_count_tab_32(uint32_t *pcomp);
+#define	MBIN_EQ_FILTER_SIZE(n) \
+	((((n) * (n)) + (n)) / 2)
+#define	MBIN_EQ_BIT_SET(ptr, n) \
+	(ptr)[(n) / 8] |= (1 << ((n) % 8));
+#define	MBIN_EQ_BIT_XOR(ptr, n) \
+	(ptr)[(n) / 8] ^= (1 << ((n) % 8));
+#define	MBIN_EQ_BIT_CLR(ptr, n) \
+	(ptr)[(n) / 8] &= ~(1 << ((n) % 8));
+#define	MBIN_EQ_BIT_GET(ptr, n) \
+	((ptr)[(n) / 8] & (1 << ((n) % 8)))
+
+struct mbin_eq_32;
+typedef TAILQ_HEAD(,mbin_eq_32) mbin_eq_head_32_t;
+
+struct mbin_eq_32 {
+	TAILQ_ENTRY(mbin_eq_32) entry;
+	uint32_t value;
+	uint32_t flags;
+	uint8_t *bitdata;
+};
+
+extern struct mbin_eq_32 * mbin_eq_alloc_32(uint32_t);
+extern void mbin_eq_free_32(mbin_eq_head_32_t *, struct mbin_eq_32 *);
+extern void mbin_eq_free_head_32(mbin_eq_head_32_t *);
+extern int mbin_eq_solve_32(const uint32_t *, const uint32_t, mbin_eq_head_32_t *);
+extern void mbin_eq_print_32(mbin_eq_head_32_t *, const uint32_t);
+
+/* */
 
 uint32_t mbin_coeff_32(int32_t n, int32_t x);
 
