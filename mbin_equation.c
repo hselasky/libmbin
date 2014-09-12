@@ -72,6 +72,8 @@ mbin_eq_solve_32(const uint32_t *func, const uint32_t size, mbin_eq_head_32_t *p
 	struct mbin_eq_32 *next;
 	uint32_t x, y, t, u, j;
 
+	total = ((total + 7) / 8) * 8;
+
 	TAILQ_INIT(phead);
 
 	for (x = 0; x != size; x++) {
@@ -104,9 +106,14 @@ repeat:
 
 		ptr->flags = 1;
 
-		for (y = 0; y != total; y++) {
-			if (MBIN_EQ_BIT_GET(ptr->bitdata, y))
-				break;
+		for (y = 0; y != total; y += 8) {
+			if (ptr->bitdata[y / 8] == 0)
+				continue;
+			for (; y != total; y++) {
+				if (MBIN_EQ_BIT_GET(ptr->bitdata, y))
+					break;
+			}
+			break;
 		}
 		if (y == total) {
 			if (ptr->value != 0)
@@ -119,10 +126,8 @@ repeat:
 				continue;
 			if (MBIN_EQ_BIT_GET(other->bitdata, y) == 0)
 				continue;
-			for (t = 0; t != total; t++) {
-				if (MBIN_EQ_BIT_GET(ptr->bitdata, t))
-					MBIN_EQ_BIT_XOR(other->bitdata, t);
-			}
+			for (t = 0; t != total; t += 8)
+				other->bitdata[t / 8] ^= ptr->bitdata[t / 8];
 			other->value ^= ptr->value;
 			other->flags = 0;
 		}
@@ -130,8 +135,8 @@ repeat:
 
 	/* sort solution */
 	TAILQ_FOREACH_SAFE(ptr, phead, entry, next) {
-		for (u = y = 0; y != total; y++)
-			u += (MBIN_EQ_BIT_GET(ptr->bitdata, y) != 0);
+		for (u = y = 0; y != total; y += 8)
+			u += mbin_sumbits8(ptr->bitdata[y / 8]);
 
 		if (u != 1) {
 			if (u == 0) {
