@@ -538,7 +538,7 @@ struct mbin_eq_32 {
 extern struct mbin_eq_32 * mbin_eq_alloc_32(uint32_t);
 extern void mbin_eq_free_32(mbin_eq_head_32_t *, struct mbin_eq_32 *);
 extern void mbin_eq_free_head_32(mbin_eq_head_32_t *);
-extern int mbin_eq_solve_32(const uint32_t *, const uint32_t, mbin_eq_head_32_t *);
+extern int mbin_eq_solve_32(const uint32_t *, const uint32_t, mbin_eq_head_32_t *, uint8_t);
 extern void mbin_eq_print_32(mbin_eq_head_32_t *, const uint32_t);
 
 /* */

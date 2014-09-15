@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <sysexits.h>
+#include <string.h>
 #include <err.h>
 
 #include "math_bin.h"
@@ -64,22 +65,23 @@ mbin_eq_free_head_32(mbin_eq_head_32_t *phead)
 }
 
 int
-mbin_eq_solve_32(const uint32_t *func, const uint32_t size, mbin_eq_head_32_t *phead)
+mbin_eq_solve_32(const uint32_t *func, const uint32_t size, mbin_eq_head_32_t *phead, uint8_t do_sub)
 {
-	uint32_t total = MBIN_EQ_FILTER_SIZE(size);
+	uint32_t total = ((MBIN_EQ_FILTER_SIZE(size) + 7) / 8) * 8;
 	struct mbin_eq_32 *ptr;
 	struct mbin_eq_32 *other;
 	struct mbin_eq_32 *next;
 	uint32_t x, y, t, u, j;
-
-	total = ((total + 7) / 8) * 8;
+	uint32_t used[total];
 
 	TAILQ_INIT(phead);
+
+	memset(used, 0, sizeof(used));
 
 	for (x = 0; x != size; x++) {
 		for (y = x; (x + y) != (2 * size); y++) {
 			ptr = mbin_eq_alloc_32(total);
-			ptr->value = func[x + y];
+			ptr->value = func[x + y] & (size - 1);
 			for (j = t = 0; t != size; t++) {
 				for (u = t; u != size; u++, j++) {
 					if (t == u) {
@@ -93,6 +95,8 @@ mbin_eq_solve_32(const uint32_t *func, const uint32_t size, mbin_eq_head_32_t *p
 					}
 				}
 			}
+			for (j = 0; j != total; j++)
+				used[j] += MBIN_EQ_BIT_GET(ptr->bitdata, j);
 			TAILQ_INSERT_TAIL(phead, ptr, entry);
 		}
 	}
@@ -101,19 +105,9 @@ repeat:
 	/* solve equation set */
 	TAILQ_FOREACH_SAFE(ptr, phead, entry, next) {
 
-		if (ptr->flags != 0)
-			continue;
-
-		ptr->flags = 1;
-
-		for (y = 0; y != total; y += 8) {
-			if (ptr->bitdata[y / 8] == 0)
-				continue;
-			for (; y != total; y++) {
-				if (MBIN_EQ_BIT_GET(ptr->bitdata, y))
-					break;
-			}
-			break;
+		for (y = 0; y != total; y++) {
+			if (used[y] != 1 && MBIN_EQ_BIT_GET(ptr->bitdata, y) != 0)
+				break;
 		}
 		if (y == total) {
 			if (ptr->value != 0)
@@ -121,14 +115,26 @@ repeat:
 			mbin_eq_free_32(phead, ptr);
 			continue;
 		}
+		ptr->flags = 1;
+
 		TAILQ_FOREACH(other, phead, entry) {
 			if (ptr == other)
 				continue;
 			if (MBIN_EQ_BIT_GET(other->bitdata, y) == 0)
 				continue;
-			for (t = 0; t != total; t += 8)
-				other->bitdata[t / 8] ^= ptr->bitdata[t / 8];
-			other->value ^= ptr->value;
+			for (t = 0; t != total; t++) {
+				if (MBIN_EQ_BIT_GET(ptr->bitdata, t) == 0)
+					continue;
+				used[t] -= MBIN_EQ_BIT_GET(other->bitdata, t);
+				MBIN_EQ_BIT_XOR(other->bitdata, t);
+				used[t] += MBIN_EQ_BIT_GET(other->bitdata, t);
+			}
+			if (do_sub) {
+				other->value -= ptr->value;
+				other->value &= size - 1;
+			} else {
+				other->value ^= ptr->value;
+			}
 			other->flags = 0;
 		}
 	}
@@ -155,6 +161,7 @@ repeat:
 					TAILQ_FOREACH(ptr, phead, entry) {
 						if (MBIN_EQ_BIT_GET(ptr->bitdata, y) == 0)
 							continue;
+						used[y] -= 1;
 						MBIN_EQ_BIT_CLR(ptr->bitdata, y);
 						ptr->flags = 0;
 					}
