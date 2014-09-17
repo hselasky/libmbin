@@ -65,153 +65,183 @@ mbin_eq_free_head_32(mbin_eq_head_32_t *phead)
 }
 
 int
-mbin_eq_solve_32(const uint32_t *func, const uint32_t size, mbin_eq_head_32_t *phead, uint8_t do_sub)
+mbin_eq_solve_32(const uint32_t *func_a, const uint32_t *func_b,
+    const uint32_t *func_r, const uint32_t size, mbin_eq_head_32_t *phead)
 {
 	uint32_t total = ((MBIN_EQ_FILTER_SIZE(size) + 7) / 8) * 8;
 	struct mbin_eq_32 *ptr;
 	struct mbin_eq_32 *other;
 	struct mbin_eq_32 *next;
+	mbin_eq_head_32_t thead;
 	uint32_t x, y, t, u, j;
-	uint32_t used[total];
 
 	TAILQ_INIT(phead);
 
-	memset(used, 0, sizeof(used));
+	TAILQ_INIT(&thead);
 
 	for (x = 0; x != size; x++) {
 		for (y = x; (x + y) != (2 * size); y++) {
 			ptr = mbin_eq_alloc_32(total);
-			ptr->value = func[x + y] & (size - 1);
+			ptr->value = func_r[x + y] & (size - 1);
 			for (j = t = 0; t != size; t++) {
-				for (u = t; u != size; u++, j++) {
-					if (t == u) {
-						if ((func[x] & t) == t && (func[y] & u) == u)
-							MBIN_EQ_BIT_SET(ptr->bitdata, j);
-					} else {
-						if ((func[x] & t) == t && (func[y] & u) == u)
-							MBIN_EQ_BIT_XOR(ptr->bitdata, j);
-						if ((func[y] & t) == t && (func[x] & u) == u)
-							MBIN_EQ_BIT_XOR(ptr->bitdata, j);
-					}
+				for (u = 0; u != size; u++, j++) {
+					if ((func_b[x] & t) == t && (func_a[y] & u) == u)
+						MBIN_EQ_BIT_SET(ptr->bitdata, j);
 				}
 			}
-			for (j = 0; j != total; j++)
-				used[j] += MBIN_EQ_BIT_GET(ptr->bitdata, j);
-			TAILQ_INSERT_TAIL(phead, ptr, entry);
+			TAILQ_INSERT_TAIL(&thead, ptr, entry);
 		}
 	}
 
-repeat:
 	/* solve equation set */
-	TAILQ_FOREACH_SAFE(ptr, phead, entry, next) {
 
-		for (y = 0; y != total; y++) {
-			if (used[y] != 1 && MBIN_EQ_BIT_GET(ptr->bitdata, y) != 0)
+	TAILQ_FOREACH_SAFE(ptr, &thead, entry, next) {
+
+		for (y = 0; y != total; y += 8) {
+			if (ptr->bitdata[y / 8] != 0) {
+				y += mbin_sumbits8(mbin_lsb8(ptr->bitdata[y / 8]) - 1);
 				break;
+			}
 		}
 		if (y == total) {
 			if (ptr->value != 0)
 				goto error;
-			mbin_eq_free_32(phead, ptr);
+			mbin_eq_free_32(&thead, ptr);
 			continue;
 		}
-		ptr->flags = 1;
-
-		TAILQ_FOREACH(other, phead, entry) {
+		TAILQ_FOREACH(other, &thead, entry) {
 			if (ptr == other)
 				continue;
 			if (MBIN_EQ_BIT_GET(other->bitdata, y) == 0)
 				continue;
-			for (t = 0; t != total; t++) {
-				if (MBIN_EQ_BIT_GET(ptr->bitdata, t) == 0)
-					continue;
-				used[t] -= MBIN_EQ_BIT_GET(other->bitdata, t);
-				MBIN_EQ_BIT_XOR(other->bitdata, t);
-				used[t] += MBIN_EQ_BIT_GET(other->bitdata, t);
-			}
-			if (do_sub) {
-				other->value -= ptr->value;
-				other->value &= size - 1;
-			} else {
-				other->value ^= ptr->value;
-			}
-			other->flags = 0;
+			for (t = 0; t != total; t += 8)
+				other->bitdata[t / 8] ^= ptr->bitdata[t / 8];
+			other->value ^= ptr->value;
 		}
 	}
 
 	/* sort solution */
-	TAILQ_FOREACH_SAFE(ptr, phead, entry, next) {
-		for (u = y = 0; y != total; y += 8)
-			u += mbin_sumbits8(ptr->bitdata[y / 8]);
-
-		if (u != 1) {
-			if (u == 0) {
-				if (ptr->value != 0)
-					goto error;
-				mbin_eq_free_32(phead, ptr);
-				continue;
-			}
-			for (u = y = 0; y != total; y++) {
-				u += (MBIN_EQ_BIT_GET(ptr->bitdata, y) != 0);
-				if (u == 2) {
-					/*
-					 * More than one variable, set
-					 * a variable to zero:
-					 */
-					TAILQ_FOREACH(ptr, phead, entry) {
-						if (MBIN_EQ_BIT_GET(ptr->bitdata, y) == 0)
-							continue;
-						used[y] -= 1;
-						MBIN_EQ_BIT_CLR(ptr->bitdata, y);
-						ptr->flags = 0;
-					}
-					goto repeat;
-				}
-			}
-			goto error;
+	TAILQ_FOREACH_SAFE(ptr, &thead, entry, next) {
+		if (ptr->value == 0) {
+			mbin_eq_free_32(&thead, ptr);
+			continue;
 		}
+		for (y = 0; y != total; y += 8) {
+			if (ptr->bitdata[y / 8] != 0) {
+				y += mbin_sumbits8(mbin_lsb8(ptr->bitdata[y / 8]) - 1);
+				break;
+			}
+		}
+		if (y == total)
+			goto error;
+
+		other = mbin_eq_alloc_32(32);
+		other->value = ptr->value;
+		*(uint32_t *)other->bitdata = y;
+		TAILQ_INSERT_TAIL(phead, other, entry);
 	}
+	mbin_eq_free_head_32(&thead);
 	return (0);
 
 error:
+	mbin_eq_free_head_32(&thead);
 	mbin_eq_free_head_32(phead);
 	return (-1);
+}
+
+static int
+mbin_eq_sort_compare(const void *pa, const void *pb)
+{
+	return (((struct mbin_eq_32 **)pa)[0][0].value -
+	    ((struct mbin_eq_32 **)pb)[0][0].value);
+}
+
+void
+mbin_eq_sort_by_value_32(mbin_eq_head_32_t *phead)
+{
+	struct mbin_eq_32 *ptr;
+	uint32_t c, x;
+
+	c = 0;
+	TAILQ_FOREACH(ptr, phead, entry)
+	    c++;
+
+	struct mbin_eq_32 *pptr[c];
+
+	c = 0;
+	TAILQ_FOREACH(ptr, phead, entry)
+	    pptr[c++] = ptr;
+
+	qsort(pptr, c, sizeof(void *), mbin_eq_sort_compare);
+
+	TAILQ_INIT(phead);
+
+	for (x = 0; x != c; x++)
+		TAILQ_INSERT_TAIL(phead, pptr[x], entry);
 }
 
 void
 mbin_eq_print_32(mbin_eq_head_32_t *phead, const uint32_t size)
 {
 	struct mbin_eq_32 *ptr;
-	uint32_t j, t, u, c;
+	uint32_t t, u, c;
 
 	c = 0;
 	TAILQ_FOREACH(ptr, phead, entry) {
-		if (ptr->value == 0)
-			continue;
-		for (j = t = 0; t != size; t++) {
-			for (u = t; u != size; u++, j++) {
-				if (MBIN_EQ_BIT_GET(ptr->bitdata, j) == 0)
-					continue;
-				if (t == u) {
-					mbin_print16_abc(t);
-					printf(" & ");
-					mbin_print16_abc(u);
-				} else {
-					printf("(");
-					mbin_print16_abc(t);
-					printf(" & ");
-					mbin_print16_abc(u);
-					printf(") ^ (");
-					mbin_print16_abc(u);
-					printf(" & ");
-					mbin_print16_abc(t);
-					printf(")");
-
-				}
-			}
-		}
-		printf(" = 0x%08x\n", ptr->value);
+		t = *(uint32_t *)ptr->bitdata % size;
+		u = *(uint32_t *)ptr->bitdata / size;
+		mbin_print16_abc(t);
+		printf(" & ");
+		mbin_print16_abc(u);
+		printf(" = 0x%08x; C=", ptr->value);
+		mbin_print16_abc(t & u);
+		if (t == u)
+			printf(" EQ");
+		printf("\n");
 		c++;
 	}
 	printf("Count = %d\n", c);
+}
+
+void
+mbin_eq_print_code_32(mbin_eq_head_32_t *phead, const uint32_t size, const char *name)
+{
+	struct mbin_eq_32 *ptr;
+	uint32_t t, u, c;
+
+	printf("uint32_t\n"
+	    "%s(uint32_t a, uint32_t b)\n"
+	    "{\n"
+	    "\t" "uint32_t r = 0;\n", name);
+
+	c = 0;
+	TAILQ_FOREACH(ptr, phead, entry) {
+		printf("\t" "if (");
+		t = *(uint32_t *)ptr->bitdata % size;
+		u = *(uint32_t *)ptr->bitdata / size;
+		printf("(((a & 0x%x) == 0x%x) & "
+		    "((b & 0x%x) == 0x%x))", t, t, u, u);
+		printf(") r ^= 0x%08x;\n", ptr->value);
+		c++;
+	}
+	printf("\t" "/* Count = %d */\n"
+	    "\t" "return (r & 0x%x);\n"
+	    "}\n", c, size - 1);
+}
+
+uint32_t
+mbin_eq_func_32(mbin_eq_head_32_t *phead, const uint32_t size,
+    const uint32_t a, const uint32_t b)
+{
+	struct mbin_eq_32 *ptr;
+	uint32_t t, u, r;
+
+	r = 0;
+	TAILQ_FOREACH(ptr, phead, entry) {
+		t = *(uint32_t *)ptr->bitdata % size;
+		u = *(uint32_t *)ptr->bitdata / size;
+		if (((a & t) == t) & ((b & u) == u))
+			r ^= ptr->value;
+	}
+	return (r & (size - 1));
 }
