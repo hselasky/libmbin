@@ -42,6 +42,8 @@ mbin_eq_alloc_32(uint32_t bits)
 	if (ptr == NULL)
 		errx(EX_SOFTWARE, "Out of memory");
 
+	memset(ptr, 0, size);
+
 	ptr->bitdata = (uint8_t *)(ptr + 1);
 
 	return (ptr);
