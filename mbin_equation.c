@@ -182,8 +182,14 @@ error:
 static int
 mbin_eq_sort_compare(const void *pa, const void *pb)
 {
-	return (((struct mbin_eq_32 **)pa)[0][0].value -
+	int32_t ret = (((struct mbin_eq_32 **)pa)[0][0].value -
 	    ((struct mbin_eq_32 **)pb)[0][0].value);
+
+	if (ret == 0) {
+		ret = *(uint32_t *)(((struct mbin_eq_32 **)pa)[0][0].bitdata) -
+		    *(uint32_t *)(((struct mbin_eq_32 **)pb)[0][0].bitdata);
+	}
+	return (ret < 0 ? -1 : (ret > 0 ? 1 : 0));
 }
 
 void
