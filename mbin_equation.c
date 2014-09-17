@@ -67,8 +67,8 @@ mbin_eq_free_head_32(mbin_eq_head_32_t *phead)
 }
 
 int
-mbin_eq_solve_32(const uint32_t *func_a, const uint32_t *func_b,
-    const uint32_t *func_r, const uint32_t size, mbin_eq_head_32_t *phead)
+mbin_eq_solve_32(mbin_eq_func_t *func_a, mbin_eq_func_t *func_b,
+    mbin_eq_func_t *func_r, const uint32_t size, mbin_eq_head_32_t *phead, const uint8_t op)
 {
 	uint32_t total = ((MBIN_EQ_FILTER_SIZE(size) + 7) / 8) * 8;
 	struct mbin_eq_32 *ptr;
@@ -82,12 +82,40 @@ mbin_eq_solve_32(const uint32_t *func_a, const uint32_t *func_b,
 	TAILQ_INIT(&thead);
 
 	for (x = 0; x != size; x++) {
+		uint32_t fx;
+		uint32_t fy;
+
+		fx = func_b(x) & (size - 1);
 		for (y = x; (x + y) != (2 * size); y++) {
+			fy = func_a(y) & (size - 1);
+
 			ptr = mbin_eq_alloc_32(total);
-			ptr->value = func_r[x + y] & (size - 1);
+
+			switch (op) {
+			case 0:
+				ptr->value = func_r(x + y) & (size - 1);
+				break;
+			case 1:
+				ptr->value = func_r(x * y) & (size - 1);
+				break;
+			case 2:
+				ptr->value = func_r(x ^ y) & (size - 1);
+				break;
+			case 3:
+				ptr->value = func_r(x & y) & (size - 1);
+				break;
+			case 4:
+				ptr->value = func_r(x | y) & (size - 1);
+				break;
+			case 5:
+				ptr->value = func_r(mbin_xor2_mul_64(x, y)) & (size - 1);
+				break;
+			default:
+				break;
+			}
 			for (j = t = 0; t != size; t++) {
 				for (u = 0; u != size; u++, j++) {
-					if ((func_b[x] & t) == t && (func_a[y] & u) == u)
+					if ((fx & t) == t && (fy & u) == u)
 						MBIN_EQ_BIT_SET(ptr->bitdata, j);
 				}
 			}
