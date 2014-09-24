@@ -72,6 +72,7 @@ mbin_eq_simplify_32(const uint32_t total, mbin_eq_head_32_t *phead)
 	struct mbin_eq_32 *ptr;
 	struct mbin_eq_32 *other;
 	struct mbin_eq_32 *next;
+	uint32_t x;
 	uint32_t y;
 
 	TAILQ_FOREACH_SAFE(ptr, phead, entry, next) {
@@ -93,8 +94,8 @@ mbin_eq_simplify_32(const uint32_t total, mbin_eq_head_32_t *phead)
 				continue;
 			if (MBIN_EQ_BIT_GET(other->bitdata, y) == 0)
 				continue;
-			for (y = 0; y != total; y += 8)
-				other->bitdata[y / 8] ^= ptr->bitdata[y / 8];
+			for (x = 0; x != total; x += 8)
+				other->bitdata[x / 8] ^= ptr->bitdata[x / 8];
 			other->value ^= ptr->value;
 		}
 	}
