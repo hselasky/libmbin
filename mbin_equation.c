@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2010 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2014 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -67,6 +67,43 @@ mbin_eq_free_head_32(mbin_eq_head_32_t *phead)
 }
 
 int
+mbin_eq_simplify_32(const uint32_t total, mbin_eq_head_32_t *phead)
+{
+	struct mbin_eq_32 *ptr;
+	struct mbin_eq_32 *other;
+	struct mbin_eq_32 *next;
+	uint32_t y;
+
+	TAILQ_FOREACH_SAFE(ptr, phead, entry, next) {
+
+		for (y = 0; y != total; y += 8) {
+			if (ptr->bitdata[y / 8] != 0) {
+				y += mbin_sumbits8(mbin_lsb8(ptr->bitdata[y / 8]) - 1);
+				break;
+			}
+		}
+		if (y == total) {
+			if (ptr->value != 0)
+				goto error;
+			mbin_eq_free_32(phead, ptr);
+			continue;
+		}
+		TAILQ_FOREACH(other, phead, entry) {
+			if (ptr == other)
+				continue;
+			if (MBIN_EQ_BIT_GET(other->bitdata, y) == 0)
+				continue;
+			for (y = 0; y != total; y += 8)
+				other->bitdata[y / 8] ^= ptr->bitdata[y / 8];
+			other->value ^= ptr->value;
+		}
+	}
+	return (0);
+error:
+	return (-1);
+}
+
+int
 mbin_eq_solve_32(mbin_eq_func_t *func_a, mbin_eq_func_t *func_b,
     mbin_eq_func_t *func_r, const uint32_t size, mbin_eq_head_32_t *phead, const uint8_t op)
 {
@@ -124,31 +161,8 @@ mbin_eq_solve_32(mbin_eq_func_t *func_a, mbin_eq_func_t *func_b,
 	}
 
 	/* solve equation set */
-
-	TAILQ_FOREACH_SAFE(ptr, &thead, entry, next) {
-
-		for (y = 0; y != total; y += 8) {
-			if (ptr->bitdata[y / 8] != 0) {
-				y += mbin_sumbits8(mbin_lsb8(ptr->bitdata[y / 8]) - 1);
-				break;
-			}
-		}
-		if (y == total) {
-			if (ptr->value != 0)
-				goto error;
-			mbin_eq_free_32(&thead, ptr);
-			continue;
-		}
-		TAILQ_FOREACH(other, &thead, entry) {
-			if (ptr == other)
-				continue;
-			if (MBIN_EQ_BIT_GET(other->bitdata, y) == 0)
-				continue;
-			for (t = 0; t != total; t += 8)
-				other->bitdata[t / 8] ^= ptr->bitdata[t / 8];
-			other->value ^= ptr->value;
-		}
-	}
+	if (mbin_eq_simplify_32(total, &thead) < 0)
+		goto error;
 
 	/* sort solution */
 	TAILQ_FOREACH_SAFE(ptr, &thead, entry, next) {
