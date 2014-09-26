@@ -613,18 +613,42 @@ top:
 	return (u);
 }
 
+uint8_t
+mbin_xor2_factor_fast_64(uint64_t rem, uint8_t p)
+{
+	int16_t stats[p];
+	uint8_t x;
+	uint8_t y;
+
+	memset(stats, 0, sizeof(stats));
+
+	/* collect statistics */
+	for (x = 0; x != p; x++) {
+		if (((rem >> x) & 1) == 0)
+			continue;
+		for (y = x + 1; y != p; y++) {
+			stats[y - x] += 2 * ((rem >> y) & 1) - 1;
+		}
+	}
+
+	/* find most hits */
+	for (x = y = 1; x < p; x++) {
+		if ((stats[x] + stats[p - x]) > (stats[y] + stats[p - y]))
+			y = x;
+	}
+	return (y);
+}
+
 uint64_t
 mbin_xor2_log3_mod_64(uint64_t x, uint8_t p)
 {
 	uint64_t mask;
 	uint64_t d2;
-	uint64_t y;
 	uint64_t z;
 	uint8_t pm;
 	uint8_t n;
 	uint8_t r;
 	uint8_t sbx;
-	uint8_t sby;
 	uint8_t ntable[p];
 
 	/* Check for NUL */
@@ -650,23 +674,15 @@ mbin_xor2_log3_mod_64(uint64_t x, uint8_t p)
 
 	/* Iterate until a solution is found */
 
-	sbx = mbin_sumbits64(x);
-
-	for (r = 1;;) {
+	while (1) {
+		sbx = mbin_sumbits64(x);
 		if (sbx >= (p - 2) || sbx <= 2)
 			break;
-		y = x ^ mbin_xor2_rol_mod_64(x, r, p);
-		sby = mbin_sumbits64(y);
-		if ((sby < (p / 2) && sby < sbx) ||
-		    (sby >= (p / 2) && sby >= sbx)) {
-			z += (1ULL << ntable[r]);
-			x = y;
-			sbx = sby;
-		} else {
-			r *= 2;
-			if (r >= p)
-				r -= p;
-		}
+		/* factor found - update */
+		r = mbin_xor2_factor_fast_64(x, p);
+
+		x = x ^ mbin_xor2_rol_mod_64(x, r, p);
+		z += (1ULL << ntable[r]);
 	}
 
 	if (sbx >= (p - 2))

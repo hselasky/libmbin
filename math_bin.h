@@ -723,6 +723,7 @@ uint64_t mbin_xor2_div_odd_64(uint64_t, uint64_t);
 uint64_t mbin_xor2_lin_mul_64(uint64_t, uint64_t, uint8_t);
 uint64_t mbin_xor2_bit_reduce_mod_64(uint64_t, uint8_t);
 uint64_t mbin_xor2_factor_slow_64(uint64_t);
+uint8_t	mbin_xor2_factor_fast_64(uint64_t, uint8_t);
 uint8_t	mbin_xor2_find_mod_64(uint32_t *);
 uint8_t	mbin_xor2_inv_mat_mod_any_32(uint32_t *, struct mbin_poly_32 *, uint32_t);
 uint64_t mbin_xor2_faculty_64(uint64_t);
