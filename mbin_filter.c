@@ -67,8 +67,8 @@ mbin_filter_table_d(uint32_t n, const double *input, double *output, double zero
 			for (k = t = 0; t != n; t++) {
 				for (u = t; u != n; u++, k++) {
 					bitmap[j][k] =
-					  ((input[t + (x * n)] * input[u + (y * n)]) +
-					  (input[u + (x * n)] * input[t + (y * n)]));
+					    ((input[t + (x * n)] * input[u + (y * n)]) +
+					    (input[u + (x * n)] * input[t + (y * n)]));
 				}
 			}
 		}
@@ -82,19 +82,18 @@ repeat:
 
 		clean[x] = 1;
 
-		for (y = 0; y != sy; y++) {
-			m = bitmap[x][y];
-			if (fabs(m) > zero)
-				break;
+		for (y = u = 0; u != sy; u++) {
+			if (fabs(bitmap[x][y]) < fabs(bitmap[x][u]))
+				y = u;
 		}
-		if (y == sy) {
+		m = bitmap[x][y];
+		if (fabs(m) <= zero) {
 			for (y = 0; y != n; y++) {
 				if (fabs(value[x][y]) > zero)
 					return (-1);
 			}
 			continue;
 		}
-
 		for (u = 0; u != sy; u++)
 			bitmap[x][u] /= m;
 		for (u = 0; u != n; u++)
@@ -280,7 +279,7 @@ mbin_filter_table_p_32(uint32_t n, const uint32_t mod,
 
 			for (k = t = 0; t != n; t++) {
 				for (u = t; u != n; u++, k++) {
-					uint32_t a,b,c,d;
+					uint32_t a, b, c, d;
 
 					a = t + (x * n);
 					b = u + (y * n);
@@ -289,11 +288,11 @@ mbin_filter_table_p_32(uint32_t n, const uint32_t mod,
 
 					if (t == u) {
 						bitmap[j][k] =
-							(U64(input[a]) * U64(input[b])) % U64(mod);
+						    (U64(input[a]) * U64(input[b])) % U64(mod);
 					} else {
 						bitmap[j][k] =
-							((U64(input[a]) * U64(input[b])) +
-							 (U64(input[c]) * U64(input[d]))) % U64(mod);
+						    ((U64(input[a]) * U64(input[b])) +
+						    (U64(input[c]) * U64(input[d]))) % U64(mod);
 					}
 				}
 			}
@@ -436,11 +435,12 @@ mbin_filter_mul_p_32(const uint32_t *pa, const uint32_t *pb, uint32_t *c,
 	for (x = 0; x != n; x++) {
 		for (y = x; y != n; y++) {
 			uint32_t f;
+
 			if (x == y) {
 				f = (U64(pa[x]) * U64(pb[y])) % U64(mod);
 			} else {
 				f = (U64(pa[x]) * U64(pb[y]) +
-				     U64(pb[x]) * U64(pa[y])) % U64(mod);
+				    U64(pb[x]) * U64(pa[y])) % U64(mod);
 			}
 			if (f != 0) {
 				for (z = 0; z != n; z++)
@@ -514,7 +514,7 @@ mbin_xor2_filter_table_p_64(uint64_t n, const uint64_t p,
 
 			for (k = t = 0; t != n; t++) {
 				for (u = t; u != n; u++, k++) {
-					uint32_t a,b,c,d;
+					uint32_t a, b, c, d;
 
 					a = t + (x * n);
 					b = u + (y * n);
@@ -554,7 +554,6 @@ repeat:
 			}
 			continue;
 		}
-
 		if (m != 0)
 			m = mbin_xor2_neg_mod_64(m, p);
 
@@ -767,7 +766,6 @@ repeat:
 			}
 			continue;
 		}
-
 		for (u = 0; u != s; u++) {
 			bitmap[x][u] =
 			    mbin_div_complex_double(bitmap[x][u], m);
