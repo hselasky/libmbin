@@ -180,39 +180,39 @@ mbin_fet_64_generate_fixup(const char *indent, uint8_t power, uint8_t arch)
 {
 	switch (arch) {
 	case FET_ARCH_AMD64:
-		printf(indent);
+		printf("%s", indent);
 		printf("asm(\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("\t" "\"movq %%1, %%%%rax;\"\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("\t" "\"rol $%u, %%%%rax;\"\n", 32 - power);
-		printf(indent);
+		printf("%s", indent);
 		printf("\t" "\"mov %%%%rax, %%%%rbx;\"\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("\t" "\"shr $32, %%%%rax;\"\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("\t" "\"sub %%%%rbx, %%%%rax;\"\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("\t" "\"movq %%%%rax, %%0;\"\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("\t" ": \"=m\" (data[x])\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("\t" ": \"m\" (data[x])\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("\t" ": \"memory\", \"rax\", \"rbx\"\n");
-		printf(indent);
+		printf("%s", indent);
 		printf(");\n");
 		break;
 	default:
-		printf(indent);
+		printf("%s", indent);
 		printf("uint64_t temp;\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("temp = data[x];\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("temp = (temp << %u) | (temp >> %u);\n", 32 - power, 32 + power);
-		printf(indent);
+		printf("%s", indent);
 		printf("temp = (uint32_t)((temp >> 32) - temp);\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("data[x] = temp;\n");
 		break;
 	}
@@ -331,30 +331,30 @@ mbin_fet_32_add_mul(const char *indent, const char *va,
 	switch (arch) {
 	case FET_ARCH_I386:
 	case FET_ARCH_AMD64:
-		printf(indent);
+		printf("%s", indent);
 		printf("asm(\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("\t" "\"mul %%2\\n\"\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("\t" "\"add %%%%edx, %%0\\n\"\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("\t" "\"adc $0, %%0\\n\"\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("\t" "\"add %%3, %%0\\n\"\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("\t" "\"adc $0, %%0\\n\" :\n");
-		printf(indent);
+		printf("%s", indent);
 		printf("\t" "\"=a\" (%s) : \n", vr);
-		printf(indent);
+		printf("%s", indent);
 		printf("\t" "\"a\" (%s), \"%s\" (%s), \"r\" (%s) : \"%%edx\");\n", vb, "r", vc, va);
 		break;
 	default:			/* generic */
-		printf(indent);
+		printf("%s", indent);
 		printf("%s = ((uint64_t)(uint32_t)%s) + (((uint64_t)(uint32_t)%s) * "
 		    "((uint64_t)(uint32_t)%s));\n", vr, va, vb, vc);
-		printf(indent);
+		printf("%s", indent);
 		printf("%s = (uint32_t)%s + (%s >> 32);\n", vr, vr, vr);
-		printf(indent);
+		printf("%s", indent);
 		printf("%s = (uint32_t)%s + (%s >> 32);\n", vr, vr, vr);
 		break;
 	}
@@ -367,79 +367,79 @@ mbin_fet_32_generate_r2(uint32_t step, uint32_t max, uint8_t arch)
 
 	indent = "\t";
 
-	printf(indent);
+	printf("%s", indent);
 	printf("do {\n");
 
 	indent = "\t\t";
 
-	printf(indent);
+	printf("%s", indent);
 	printf("enum { FET_MAX = 0x%x, FET_STEP = 0x%x };\n", max, step);
-	printf(indent);
+	printf("%s", indent);
 	printf("\n");
 
-	printf(indent);
+	printf("%s", indent);
 	printf("const uint32_t *pk0 = fet_%d_32_table;\n", max);
-	printf(indent);
+	printf("%s", indent);
 	printf("\n");
 
-	printf(indent);
+	printf("%s", indent);
 	printf("for (y = 0; y != FET_MAX; y += 2 * FET_STEP) {\n");
 
 	indent = "\t\t\t";
 
-	printf(indent);
+	printf("%s", indent);
 	printf("uint32_t k0 = pk0[0];\n");
-	printf(indent);
+	printf("%s", indent);
 	printf("uint32_t k1 = pk0[1];\n");
-	printf(indent);
+	printf("%s", indent);
 	printf("pk0 += 2;\n");
 
-	printf(indent);
+	printf("%s", indent);
 	printf("for (x = 0; x != FET_STEP; x++) {\n");
 
 	indent = "\t\t\t\t";
 
-	printf(indent);
+	printf("%s", indent);
 	printf("uint32_t t0;\n");
-	printf(indent);
+	printf("%s", indent);
 	printf("uint32_t t1;\n");
 	if (arch == FET_ARCH_GENERIC) {
-		printf(indent);
+		printf("%s", indent);
 		printf("uint64_t temp;\n");
 	} else {
-		printf(indent);
+		printf("%s", indent);
 		printf("uint32_t temp;\n");
 	}
-	printf(indent);
+	printf("%s", indent);
 	printf("\n");
-	printf(indent);
+	printf("%s", indent);
 	printf("t0 = data[y + x];\n");
-	printf(indent);
+	printf("%s", indent);
 	printf("t1 = data[y + x + FET_STEP];\n");
-	printf(indent);
+	printf("%s", indent);
 	printf("\n");
 	mbin_fet_32_add_mul(indent, "t0", "t1", "k0", "temp", arch);
-	printf(indent);
+	printf("%s", indent);
 	printf("data[y + x] = temp;\n");
-	printf(indent);
+	printf("%s", indent);
 	printf("\n");
 	mbin_fet_32_add_mul(indent, "t0", "t1", "k1", "temp", arch);
-	printf(indent);
+	printf("%s", indent);
 	printf("data[y + x + FET_STEP] = temp;\n");
 
 	indent = "\t\t\t";
 
-	printf(indent);
+	printf("%s", indent);
 	printf("}\n");
 
 	indent = "\t\t";
 
-	printf(indent);
+	printf("%s", indent);
 	printf("}\n");
 
 	indent = "\t";
 
-	printf(indent);
+	printf("%s", indent);
 	printf("} while (0);\n");
 }
 
