@@ -67,7 +67,7 @@ mbin_eq_free_head_32(mbin_eq_head_32_t *phead)
 }
 
 int
-mbin_eq_simplify_32(const uint32_t total, mbin_eq_head_32_t *phead)
+mbin_eq_simplify_32(uint32_t total, mbin_eq_head_32_t *phead)
 {
 	struct mbin_eq_32 *ptr;
 	struct mbin_eq_32 *other;
@@ -75,13 +75,19 @@ mbin_eq_simplify_32(const uint32_t total, mbin_eq_head_32_t *phead)
 	uint32_t x;
 	uint32_t y;
 
+	/* round up */
+	total += (-total) & 7;
+
 	TAILQ_FOREACH_SAFE(ptr, phead, entry, next) {
 
 		for (y = 0; y != total; y += 8) {
-			if (ptr->bitdata[y / 8] != 0) {
-				y += mbin_sumbits8(mbin_lsb8(ptr->bitdata[y / 8]) - 1);
-				break;
+			if (ptr->bitdata[y / 8] == 0)
+				continue;
+			for (; y != total; y++) {
+				if (MBIN_EQ_BIT_GET(ptr->bitdata, y) != 0)
+					break;
 			}
+			break;
 		}
 		if (y == total) {
 			if (ptr->value != 0)
@@ -105,7 +111,40 @@ error:
 }
 
 int
-mbin_eq_solve_32(mbin_eq_func_t *func_a, mbin_eq_func_t *func_b,
+mbin_eq_solve_32(uint32_t total, mbin_eq_head_32_t *phead)
+{
+	struct mbin_eq_32 *ptr;
+	uint32_t x;
+	uint32_t y;
+
+	/* round up */
+	total += (-total) & 7;
+
+repeat:
+	if (mbin_eq_simplify_32(total, phead))
+		return (-1);
+
+	TAILQ_FOREACH(ptr, phead, entry) {
+		for (x = y = 0; x != total; x++) {
+			if (ptr->bitdata[x / 8] == 0) {
+				x |= 7;
+				continue;
+			}
+			if (MBIN_EQ_BIT_GET(ptr->bitdata, x) == 0)
+				continue;
+			if (++y == 2) {
+				TAILQ_FOREACH(ptr, phead, entry) {
+					MBIN_EQ_BIT_CLR(ptr->bitdata, x);
+				}
+				goto repeat;
+			}
+		}
+	}
+	return (0);
+}
+
+int
+mbin_eq_solve_func_32(mbin_eq_func_t *func_a, mbin_eq_func_t *func_b,
     mbin_eq_func_t *func_r, const uint32_t size, mbin_eq_head_32_t *phead, const uint8_t op)
 {
 	uint32_t total = ((MBIN_EQ_FILTER_SIZE(size) + 7) / 8) * 8;
@@ -194,6 +233,79 @@ error:
 	return (-1);
 }
 
+int
+mbin_eq_solve_table_32(const uint32_t *table, const uint32_t ltotal,
+    uint32_t valmask, uint32_t usedmask, mbin_eq_head_32_t *phead)
+{
+	struct mbin_eq_32 *ptr;
+	struct mbin_eq_32 *tmp;
+	mbin_eq_head_32_t rhead;
+	uint32_t total = 1 << ltotal;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	uint32_t fwdmap[total];
+	uint32_t revmap[total];
+
+	TAILQ_INIT(&rhead);
+	TAILQ_INIT(phead);
+
+	z = 0;
+#if 0
+	for (y = 0; y != total; y++) {
+		fwdmap[y] = y;
+		revmap[y] = y;
+	}
+#else
+	/* build variable map */
+	for (x = 0; x != ltotal + 1; x++) {
+		for (y = 0; y != total; y++) {
+			if (mbin_sumbits32(y) == x) {
+				fwdmap[y] = z;
+				revmap[z] = y;
+				z++;
+			}
+		}
+	}
+#endif
+	/* build equation */
+	for (x = 0; x != total; x++) {
+		if ((table[x] & usedmask) == 0)
+			continue;
+		ptr = mbin_eq_alloc_32(total);
+		for (y = 0; y != total; y++) {
+			if ((x & y) == y)
+				MBIN_EQ_BIT_SET(ptr->bitdata, fwdmap[y]);
+		}
+		ptr->value = (table[x] & valmask) ? 1 : 0;
+		TAILQ_INSERT_TAIL(phead, ptr, entry);
+	}
+	if (mbin_eq_solve_32(total, phead)) {
+		mbin_eq_free_head_32(phead);
+		return (-1);
+	}
+	TAILQ_FOREACH(ptr, phead, entry) {
+		if (ptr->value == 0)
+			continue;
+		for (x = 0; x != total; x += 8) {
+			if (ptr->bitdata[x / 8] == 0)
+				continue;
+			for (; x != total; x++) {
+				if (MBIN_EQ_BIT_GET(ptr->bitdata, x))
+					break;
+			}
+			tmp = mbin_eq_alloc_32(32);
+			tmp->value = 1;
+			*(uint32_t *)tmp->bitdata = revmap[x];
+			TAILQ_INSERT_TAIL(&rhead, tmp, entry);
+			break;
+		}
+	}
+	mbin_eq_free_head_32(phead);
+	TAILQ_CONCAT(phead, &rhead, entry);
+	return (0);
+}
+
 static int
 mbin_eq_sort_compare(const void *pa, const void *pb)
 {
@@ -232,7 +344,7 @@ mbin_eq_sort_by_value_32(mbin_eq_head_32_t *phead)
 }
 
 void
-mbin_eq_print_32(mbin_eq_head_32_t *phead, const uint32_t size)
+mbin_eq_print_func_32(mbin_eq_head_32_t *phead, const uint32_t size)
 {
 	struct mbin_eq_32 *ptr;
 	uint32_t t, u, c;
@@ -252,6 +364,22 @@ mbin_eq_print_32(mbin_eq_head_32_t *phead, const uint32_t size)
 		c++;
 	}
 	printf("Count = %d\n", c);
+}
+
+void
+mbin_eq_print_32(mbin_eq_head_32_t *phead, uint32_t total)
+{
+	struct mbin_eq_32 *ptr;
+	uint32_t y = 0;
+
+	TAILQ_FOREACH(ptr, phead, entry) {
+		if (ptr->value == 0)
+			continue;
+		mbin_print16_abc(*(uint32_t *)ptr->bitdata);
+		printf(" ^\n");
+		y++;
+	}
+	printf("Count = %d\n", (int)y);
 }
 
 void
