@@ -116,6 +116,7 @@ mbin_eq_solve_32(uint32_t total, mbin_eq_head_32_t *phead)
 	struct mbin_eq_32 *ptr;
 	uint32_t x;
 	uint32_t y;
+	uint32_t z;
 
 	/* round up */
 	total += (-total) & 7;
@@ -125,19 +126,20 @@ repeat:
 		return (-1);
 
 	TAILQ_FOREACH(ptr, phead, entry) {
-		for (x = y = 0; x != total; x++) {
+		for (z = x = y = 0; x != total; x++) {
 			if (ptr->bitdata[x / 8] == 0) {
 				x |= 7;
 				continue;
 			}
 			if (MBIN_EQ_BIT_GET(ptr->bitdata, x) == 0)
 				continue;
-			if (++y == 2) {
-				TAILQ_FOREACH(ptr, phead, entry) {
-					MBIN_EQ_BIT_CLR(ptr->bitdata, x);
-				}
-				goto repeat;
-			}
+			if (++y > 1)
+				z = x;
+		}
+		if (z != 0) {
+			TAILQ_FOREACH(ptr, phead, entry)
+				MBIN_EQ_BIT_CLR(ptr->bitdata, z);
+			goto repeat;
 		}
 	}
 	return (0);
