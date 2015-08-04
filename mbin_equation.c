@@ -80,14 +80,13 @@ mbin_eq_simplify_32(uint32_t total, mbin_eq_head_32_t *phead)
 
 	TAILQ_FOREACH_SAFE(ptr, phead, entry, next) {
 
-		for (y = 0; y != total; y += 8) {
-			if (ptr->bitdata[y / 8] == 0)
+		for (y = 0; y != total; y++) {
+			if (ptr->bitdata[y / 8] == 0) {
+				y |= 7;
 				continue;
-			for (; y != total; y++) {
-				if (MBIN_EQ_BIT_GET(ptr->bitdata, y) != 0)
-					break;
 			}
-			break;
+			if (MBIN_EQ_BIT_GET(ptr->bitdata, y) != 0)
+				break;
 		}
 		if (y == total) {
 			if (ptr->value != 0)
@@ -116,17 +115,15 @@ mbin_eq_solve_32(uint32_t total, mbin_eq_head_32_t *phead)
 	struct mbin_eq_32 *ptr;
 	uint32_t x;
 	uint32_t y;
-	uint32_t z;
 
 	/* round up */
 	total += (-total) & 7;
 
-repeat:
 	if (mbin_eq_simplify_32(total, phead))
 		return (-1);
 
 	TAILQ_FOREACH(ptr, phead, entry) {
-		for (z = x = y = 0; x != total; x++) {
+		for (x = y = 0; x != total; x++) {
 			if (ptr->bitdata[x / 8] == 0) {
 				x |= 7;
 				continue;
@@ -134,12 +131,7 @@ repeat:
 			if (MBIN_EQ_BIT_GET(ptr->bitdata, x) == 0)
 				continue;
 			if (++y > 1)
-				z = x;
-		}
-		if (z != 0) {
-			TAILQ_FOREACH(ptr, phead, entry)
-				MBIN_EQ_BIT_CLR(ptr->bitdata, z);
-			goto repeat;
+				MBIN_EQ_BIT_CLR(ptr->bitdata, x);
 		}
 	}
 	return (0);
