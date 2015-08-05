@@ -360,8 +360,55 @@ mbin_eq_print_func_32(mbin_eq_head_32_t *phead, const uint32_t size)
 	printf("Count = %d\n", c);
 }
 
+static int
+mbin_eq_sort_compare_32(const void *_pa, const void *_pb)
+{
+	struct mbin_eq_32 *pa = *(void **)_pa;
+	struct mbin_eq_32 *pb = *(void **)_pb;
+	int32_t diff = *(uint32_t *)pa->bitdata - *(uint32_t *)pb->bitdata;
+
+	if (diff < 0)
+		return (-1);
+	else if (diff > 0)
+		return (1);
+	else
+		return (0);
+}
+
 void
-mbin_eq_print_32(mbin_eq_head_32_t *phead, uint32_t total)
+mbin_eq_sort_32(mbin_eq_head_32_t *phead)
+{
+	struct mbin_eq_32 **array;
+	struct mbin_eq_32 *ptr;
+	uint32_t y;
+
+	y = 0;
+	TAILQ_FOREACH(ptr, phead, entry)
+	    y++;
+
+	if (y == 0)
+		return;
+
+	array = malloc(y * sizeof(array[0]));
+	if (array == NULL)
+		return;
+
+	y = 0;
+	TAILQ_FOREACH(ptr, phead, entry)
+	    array[y++] = ptr;
+
+	qsort(array, y, sizeof(array[0]), mbin_eq_sort_compare_32);
+
+	TAILQ_INIT(phead);
+
+	while (y--)
+		TAILQ_INSERT_HEAD(phead, array[y], entry);
+
+	free(array);
+}
+
+void
+mbin_eq_print_32(mbin_eq_head_32_t *phead)
 {
 	struct mbin_eq_32 *ptr;
 	uint32_t y = 0;
