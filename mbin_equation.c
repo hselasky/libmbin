@@ -228,52 +228,56 @@ error:
 }
 
 int
-mbin_eq_solve_table_32(const uint32_t *table, const uint32_t ltotal,
-    uint32_t valmask, uint32_t usedmask, mbin_eq_head_32_t *phead)
+mbin_eq_solve_table_32(const uint32_t *xtable,
+    const uint32_t *ytable, uint32_t max, uint32_t ltotal,
+    uint32_t lorder, uint32_t valmask, mbin_eq_head_32_t *phead)
 {
 	struct mbin_eq_32 *ptr;
 	struct mbin_eq_32 *tmp;
 	mbin_eq_head_32_t rhead;
-	uint32_t total = 1 << ltotal;
+	uint32_t *bitmap;
+	uint32_t *array;
+	uint32_t total;
 	uint32_t x;
 	uint32_t y;
 	uint32_t z;
-	uint32_t fwdmap[total];
-	uint32_t revmap[total];
 
 	TAILQ_INIT(&rhead);
 	TAILQ_INIT(phead);
 
-	z = 0;
-#if 0
-	for (y = 0; y != total; y++) {
-		fwdmap[y] = y;
-		revmap[y] = y;
+	if (lorder > ltotal)
+		lorder = ltotal;
+
+	array = alloca((lorder + 1) * sizeof(array[0]));
+
+	/* compute number of bits needed */
+	for (total = x = 0; x <= lorder; x++) {
+		array[x] = total;
+		total += mbin_coeff_32(ltotal, x);
 	}
-#else
+
+	bitmap = alloca(total * sizeof(bitmap[0]));
+
 	/* build variable map */
-	for (x = 0; x != ltotal + 1; x++) {
-		for (y = 0; y != total; y++) {
-			if (mbin_sumbits32(y) == x) {
-				fwdmap[y] = z;
-				revmap[z] = y;
-				z++;
-			}
-		}
+	x = 1 << ltotal;
+	for (y = 0; y != x; y++) {
+		z = mbin_sumbits32(y);
+		if (z <= lorder)
+			bitmap[array[z]++] = y;
 	}
-#endif
+
 	/* build equation */
-	for (x = 0; x != total; x++) {
-		if ((table[x] & usedmask) == 0)
-			continue;
+	for (x = 0; x != max; x++) {
 		ptr = mbin_eq_alloc_32(total);
 		for (y = 0; y != total; y++) {
-			if ((x & y) == y)
-				MBIN_EQ_BIT_SET(ptr->bitdata, fwdmap[y]);
+			if ((xtable[x] & bitmap[y]) == bitmap[y])
+				MBIN_EQ_BIT_SET(ptr->bitdata, y);
 		}
-		ptr->value = (table[x] & valmask) ? 1 : 0;
+		ptr->value = (ytable[x] & valmask) ? 1 : 0;
 		TAILQ_INSERT_TAIL(phead, ptr, entry);
 	}
+
+	/* solve equation */
 	if (mbin_eq_solve_32(total, phead)) {
 		mbin_eq_free_head_32(phead);
 		return (-1);
@@ -290,7 +294,7 @@ mbin_eq_solve_table_32(const uint32_t *table, const uint32_t ltotal,
 			}
 			tmp = mbin_eq_alloc_32(32);
 			tmp->value = 1;
-			*(uint32_t *)tmp->bitdata = revmap[x];
+			*(uint32_t *)tmp->bitdata = bitmap[x];
 			TAILQ_INSERT_TAIL(&rhead, tmp, entry);
 			break;
 		}
@@ -416,7 +420,7 @@ mbin_eq_print_32(mbin_eq_head_32_t *phead)
 	TAILQ_FOREACH(ptr, phead, entry) {
 		if (ptr->value == 0)
 			continue;
-		mbin_print16_abc(*(uint32_t *)ptr->bitdata);
+		mbin_print32_abc(*(uint32_t *)ptr->bitdata);
 		printf(" ^\n");
 		y++;
 	}
