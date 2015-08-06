@@ -248,12 +248,21 @@ mbin_eq_solve_table_32(const uint32_t *xtable,
 	if (lorder > ltotal)
 		lorder = ltotal;
 
-	array = alloca((lorder + 1) * sizeof(array[0]));
+	/* allocate offset array */
+	x = (ltotal + 1) * sizeof(array[0]);
+	array = alloca(x);
+	memset(array, 255, x); 
 
 	/* compute number of bits needed */
 	for (total = x = 0; x <= lorder; x++) {
-		array[x] = total;
-		total += mbin_coeff_32(ltotal, x);
+		if (array[x] == -1U) {
+			array[x] = total;
+			total += mbin_coeff_32(ltotal, x);
+		}
+		if (array[ltotal - x] == -1U) {
+			array[ltotal - x] = total;
+			total += mbin_coeff_32(ltotal, ltotal - x);
+		}
 	}
 
 	bitmap = alloca(total * sizeof(bitmap[0]));
@@ -262,8 +271,9 @@ mbin_eq_solve_table_32(const uint32_t *xtable,
 	x = 1 << ltotal;
 	for (y = 0; y != x; y++) {
 		z = mbin_sumbits32(y);
-		if (z <= lorder)
-			bitmap[array[z]++] = y;
+		if (array[z] == -1U)
+			continue;
+		bitmap[array[z]++] = y;
 	}
 
 	/* build equation */
