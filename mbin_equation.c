@@ -230,7 +230,7 @@ error:
 int
 mbin_eq_solve_table_32(const uint32_t *xtable,
     const uint32_t *ytable, uint32_t max, uint32_t ltotal,
-    uint32_t lorder, uint32_t valmask, mbin_eq_head_32_t *phead)
+    int32_t lorder, uint32_t valmask, mbin_eq_head_32_t *phead)
 {
 	struct mbin_eq_32 *ptr;
 	struct mbin_eq_32 *tmp;
@@ -241,9 +241,17 @@ mbin_eq_solve_table_32(const uint32_t *xtable,
 	uint32_t x;
 	uint32_t y;
 	uint32_t z;
+	uint8_t higher;
 
 	TAILQ_INIT(&rhead);
 	TAILQ_INIT(phead);
+
+	if (lorder < 0) {
+		higher = 1;
+		lorder = -lorder;
+	} else {
+		higher = 0;
+	}
 
 	if (lorder > ltotal)
 		lorder = ltotal;
@@ -259,7 +267,7 @@ mbin_eq_solve_table_32(const uint32_t *xtable,
 			array[x] = total;
 			total += mbin_coeff_32(ltotal, x);
 		}
-		if (array[ltotal - x] == -1U) {
+		if (array[ltotal - x] == -1U && higher != 0) {
 			array[ltotal - x] = total;
 			total += mbin_coeff_32(ltotal, ltotal - x);
 		}

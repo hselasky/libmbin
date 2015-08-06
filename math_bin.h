@@ -543,7 +543,7 @@ extern void mbin_eq_sort_by_value_32(mbin_eq_head_32_t *);
 extern int mbin_eq_simplify_32(uint32_t, mbin_eq_head_32_t *);
 extern int mbin_eq_solve_32(uint32_t, mbin_eq_head_32_t *);
 extern int mbin_eq_solve_func_32(mbin_eq_func_t *, mbin_eq_func_t *, mbin_eq_func_t *, const uint32_t, mbin_eq_head_32_t *, const uint8_t);
-extern int mbin_eq_solve_table_32(const uint32_t *, const uint32_t *, uint32_t, uint32_t, uint32_t, uint32_t, mbin_eq_head_32_t *);
+extern int mbin_eq_solve_table_32(const uint32_t *, const uint32_t *, uint32_t, uint32_t, int32_t, uint32_t, mbin_eq_head_32_t *);
 extern void mbin_eq_sort_32(mbin_eq_head_32_t *);
 extern void mbin_eq_print_32(mbin_eq_head_32_t *);
 extern void mbin_eq_print_func_32(mbin_eq_head_32_t *, const uint32_t);
