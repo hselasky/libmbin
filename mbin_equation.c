@@ -259,7 +259,7 @@ mbin_eq_solve_table_32(const uint32_t *xtable,
 	/* allocate offset array */
 	x = (ltotal + 1) * sizeof(array[0]);
 	array = alloca(x);
-	memset(array, 255, x); 
+	memset(array, 255, x);
 
 	/* compute number of bits needed */
 	for (total = x = 0; x <= lorder; x++) {
@@ -443,6 +443,88 @@ mbin_eq_print_32(mbin_eq_head_32_t *phead)
 		y++;
 	}
 	printf("Count = %d\n", (int)y);
+}
+
+static void
+mbin_eq_print_factored_sub_32(struct mbin_eq_32 **array, uint32_t max, uint32_t mask)
+{
+	uint32_t stats[32];
+	struct mbin_eq_32 *temp[max];
+	uint32_t value;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	uint8_t any = 0;
+
+	while (1) {
+		memset(stats, 0, sizeof(stats));
+
+		for (x = 0; x != max; x++) {
+			if (array[x] == NULL)
+				continue;
+			value = *(uint32_t *)array[x]->bitdata;
+			for (z = 0; z != 32; z++) {
+				if ((mask >> z) & 1)
+					continue;
+				if ((value >> z) & 1)
+					stats[z]++;
+			}
+		}
+		for (x = z = 0; z != 32; z++) {
+			if (stats[z] > stats[x])
+				x = z;
+		}
+		if (stats[x] == 0) {
+			if (any)
+				printf(")");
+			return;
+		}
+		if (!any) {
+			printf("(");
+			any = 1;
+		} else {
+			printf("^");
+		}
+		for (z = y = 0; y != max; y++) {
+			if (array[y] == NULL)
+				continue;
+			value = *(uint32_t *)array[y]->bitdata;
+			if ((value >> x) & 1) {
+				temp[z++] = array[y];
+				array[y] = NULL;
+			}
+		}
+		mbin_print32_abc(1 << x);
+		mbin_eq_print_factored_sub_32(temp, z, mask | (1 << x));
+	}
+}
+
+void
+mbin_eq_print_factored_32(mbin_eq_head_32_t *phead)
+{
+	struct mbin_eq_32 *ptr;
+	struct mbin_eq_32 **array;
+	uint32_t y = 0;
+
+	TAILQ_FOREACH(ptr, phead, entry) {
+		if (ptr->value == 0)
+			continue;
+		y++;
+	}
+
+	if (y == 0)
+		return;
+
+	array = alloca(sizeof(array[0]) * y);
+
+	y = 0;
+	TAILQ_FOREACH(ptr, phead, entry) {
+		if (ptr->value == 0)
+			continue;
+		array[y++] = ptr;
+	}
+
+	mbin_eq_print_factored_sub_32(array, y, 0);
 }
 
 void
