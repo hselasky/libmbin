@@ -227,10 +227,31 @@ error:
 	return (-1);
 }
 
+uint32_t
+mbin_eq_solve_table_func_and_32(const uint32_t x, const uint32_t y)
+{
+	return ((x & y) == y);
+}
+
+uint32_t
+mbin_eq_solve_table_func_or_32(const uint32_t x, const uint32_t y)
+{
+	return ((x | y) == y);
+}
+
+uint32_t
+mbin_eq_solve_table_func_gte_32(const uint32_t x, const uint32_t y)
+{
+	uint32_t mask = mbin_msb32(y);
+
+	return ((x & (2 * mask - 1)) >= y);
+}
+
 int
 mbin_eq_solve_table_32(const uint32_t *xtable,
     const uint32_t *ytable, uint32_t max, uint32_t ltotal,
-    int32_t lorder, uint32_t valmask, mbin_eq_head_32_t *phead)
+    int32_t lorder, uint32_t valmask, mbin_eq_head_32_t *phead,
+    mbin_eq_table_func_t *func)
 {
 	struct mbin_eq_32 *ptr;
 	struct mbin_eq_32 *tmp;
@@ -242,6 +263,9 @@ mbin_eq_solve_table_32(const uint32_t *xtable,
 	uint32_t y;
 	uint32_t z;
 	uint8_t higher;
+
+	if (func == NULL)
+		func = &mbin_eq_solve_table_func_and_32;
 
 	TAILQ_INIT(&rhead);
 	TAILQ_INIT(phead);
@@ -288,7 +312,7 @@ mbin_eq_solve_table_32(const uint32_t *xtable,
 	for (x = 0; x != max; x++) {
 		ptr = mbin_eq_alloc_32(total);
 		for (y = 0; y != total; y++) {
-			if ((xtable[x] & bitmap[y]) == bitmap[y])
+			if (func(xtable[x], bitmap[y]))
 				MBIN_EQ_BIT_SET(ptr->bitdata, y);
 		}
 		ptr->value = (ytable[x] & valmask) ? 1 : 0;

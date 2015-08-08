@@ -517,11 +517,11 @@ void	mbin_fet_read_8(const uint8_t *, uint8_t *, uint32_t, uint32_t, uint32_t);
 #define	MBIN_EQ_FILTER_SIZE(n) \
 	((n) * (n))
 #define	MBIN_EQ_BIT_SET(ptr, n) \
-	(ptr)[(n) / 16] |= (1 << ((n) % 16));
+	(ptr)[(n) / 16] |= (1 << ((n) % 16))
 #define	MBIN_EQ_BIT_XOR(ptr, n) \
-	(ptr)[(n) / 16] ^= (1 << ((n) % 16));
+	(ptr)[(n) / 16] ^= (1 << ((n) % 16))
 #define	MBIN_EQ_BIT_CLR(ptr, n) \
-	(ptr)[(n) / 16] &= ~(1 << ((n) % 16));
+	(ptr)[(n) / 16] &= ~(1 << ((n) % 16))
 #define	MBIN_EQ_BIT_GET(ptr, n) \
 	((ptr)[(n) / 16] & (1 << ((n) % 16)))
 
@@ -543,7 +543,11 @@ extern void mbin_eq_sort_by_value_32(mbin_eq_head_32_t *);
 extern int mbin_eq_simplify_32(uint32_t, mbin_eq_head_32_t *);
 extern int mbin_eq_solve_32(uint32_t, mbin_eq_head_32_t *);
 extern int mbin_eq_solve_func_32(mbin_eq_func_t *, mbin_eq_func_t *, mbin_eq_func_t *, const uint32_t, mbin_eq_head_32_t *, const uint8_t);
-extern int mbin_eq_solve_table_32(const uint32_t *, const uint32_t *, uint32_t, uint32_t, int32_t, uint32_t, mbin_eq_head_32_t *);
+typedef uint32_t mbin_eq_table_func_t(const uint32_t, const uint32_t);
+extern mbin_eq_table_func_t mbin_eq_solve_table_func_and_32;
+extern mbin_eq_table_func_t mbin_eq_solve_table_func_or_32;
+extern mbin_eq_table_func_t mbin_eq_solve_table_func_gte_32;
+extern int mbin_eq_solve_table_32(const uint32_t *, const uint32_t *, uint32_t, uint32_t, int32_t, uint32_t, mbin_eq_head_32_t *, mbin_eq_table_func_t *);
 extern void mbin_eq_sort_32(mbin_eq_head_32_t *);
 extern void mbin_eq_print_factored_32(mbin_eq_head_32_t *);
 extern void mbin_eq_print_32(mbin_eq_head_32_t *);
