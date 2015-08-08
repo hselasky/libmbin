@@ -36,7 +36,7 @@ struct mbin_eq_32 *
 mbin_eq_alloc_32(uint32_t bits)
 {
 	struct mbin_eq_32 *ptr;
-	size_t size = sizeof(struct mbin_eq_32) + ((bits + 7) / 8);
+	size_t size = sizeof(struct mbin_eq_32) + (2 * ((bits + 15) / 16));
 
 	ptr = malloc(size);
 	if (ptr == NULL)
@@ -44,7 +44,7 @@ mbin_eq_alloc_32(uint32_t bits)
 
 	memset(ptr, 0, size);
 
-	ptr->bitdata = (uint8_t *)(ptr + 1);
+	ptr->bitdata = (uint16_t *)(ptr + 1);
 
 	return (ptr);
 }
@@ -76,12 +76,12 @@ mbin_eq_simplify_32(uint32_t total, mbin_eq_head_32_t *phead)
 	uint32_t y;
 
 	/* round up */
-	total += (-total) & 7;
+	total += (-total) & 15;
 
 	TAILQ_FOREACH_SAFE(ptr, phead, entry, next) {
 
 		for (y = 0; y != total; y++) {
-			if (ptr->bitdata[y / 8] == 0) {
+			if (ptr->bitdata[y / 16] == 0) {
 				y |= 7;
 				continue;
 			}
@@ -99,8 +99,8 @@ mbin_eq_simplify_32(uint32_t total, mbin_eq_head_32_t *phead)
 				continue;
 			if (MBIN_EQ_BIT_GET(other->bitdata, y) == 0)
 				continue;
-			for (x = 0; x != total; x += 8)
-				other->bitdata[x / 8] ^= ptr->bitdata[x / 8];
+			for (x = 0; x != total; x += 16)
+				other->bitdata[x / 16] ^= ptr->bitdata[x / 16];
 			other->value ^= ptr->value;
 		}
 	}
@@ -117,15 +117,15 @@ mbin_eq_solve_32(uint32_t total, mbin_eq_head_32_t *phead)
 	uint32_t y;
 
 	/* round up */
-	total += (-total) & 7;
+	total += (-total) & 15;
 
 	if (mbin_eq_simplify_32(total, phead))
 		return (-1);
 
 	TAILQ_FOREACH(ptr, phead, entry) {
 		for (x = y = 0; x != total; x++) {
-			if (ptr->bitdata[x / 8] == 0) {
-				x |= 7;
+			if (ptr->bitdata[x / 16] == 0) {
+				x |= 15;
 				continue;
 			}
 			if (MBIN_EQ_BIT_GET(ptr->bitdata, x) == 0)
@@ -204,9 +204,9 @@ mbin_eq_solve_func_32(mbin_eq_func_t *func_a, mbin_eq_func_t *func_b,
 			mbin_eq_free_32(&thead, ptr);
 			continue;
 		}
-		for (y = 0; y != total; y += 8) {
-			if (ptr->bitdata[y / 8] != 0) {
-				y += mbin_sumbits8(mbin_lsb8(ptr->bitdata[y / 8]) - 1);
+		for (y = 0; y != total; y += 16) {
+			if (ptr->bitdata[y / 16] != 0) {
+				y += mbin_sumbits16(mbin_lsb16(ptr->bitdata[y / 16]) - 1);
 				break;
 			}
 		}
@@ -303,8 +303,8 @@ mbin_eq_solve_table_32(const uint32_t *xtable,
 	TAILQ_FOREACH(ptr, phead, entry) {
 		if (ptr->value == 0)
 			continue;
-		for (x = 0; x != total; x += 8) {
-			if (ptr->bitdata[x / 8] == 0)
+		for (x = 0; x != total; x += 16) {
+			if (ptr->bitdata[x / 16] == 0)
 				continue;
 			for (; x != total; x++) {
 				if (MBIN_EQ_BIT_GET(ptr->bitdata, x))

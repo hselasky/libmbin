@@ -517,13 +517,13 @@ void	mbin_fet_read_8(const uint8_t *, uint8_t *, uint32_t, uint32_t, uint32_t);
 #define	MBIN_EQ_FILTER_SIZE(n) \
 	((n) * (n))
 #define	MBIN_EQ_BIT_SET(ptr, n) \
-	(ptr)[(n) / 8] |= (1 << ((n) % 8));
+	(ptr)[(n) / 16] |= (1 << ((n) % 16));
 #define	MBIN_EQ_BIT_XOR(ptr, n) \
-	(ptr)[(n) / 8] ^= (1 << ((n) % 8));
+	(ptr)[(n) / 16] ^= (1 << ((n) % 16));
 #define	MBIN_EQ_BIT_CLR(ptr, n) \
-	(ptr)[(n) / 8] &= ~(1 << ((n) % 8));
+	(ptr)[(n) / 16] &= ~(1 << ((n) % 16));
 #define	MBIN_EQ_BIT_GET(ptr, n) \
-	((ptr)[(n) / 8] & (1 << ((n) % 8)))
+	((ptr)[(n) / 16] & (1 << ((n) % 16)))
 
 struct mbin_eq_32;
 typedef TAILQ_HEAD(,mbin_eq_32) mbin_eq_head_32_t;
@@ -532,7 +532,7 @@ struct mbin_eq_32 {
 	TAILQ_ENTRY(mbin_eq_32) entry;
 	uint32_t value;
 	uint32_t flags;
-	uint8_t *bitdata;
+	uint16_t *bitdata;
 };
 
 typedef uint32_t mbin_eq_func_t(const uint32_t);
