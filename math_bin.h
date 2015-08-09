@@ -555,6 +555,26 @@ extern void mbin_eq_print_func_32(mbin_eq_head_32_t *, const uint32_t);
 extern void mbin_eq_print_code_32(mbin_eq_head_32_t *, const uint32_t, const char *);
 extern uint32_t mbin_eq_func_32(mbin_eq_head_32_t *, const uint32_t, const uint32_t, const uint32_t);
 
+/* Equation float prototypes */
+
+struct mbin_eq_f32;
+typedef TAILQ_HEAD(,mbin_eq_f32) mbin_eq_head_f32_t;
+
+struct mbin_eq_f32 {
+	TAILQ_ENTRY(mbin_eq_f32) entry;
+	float value;
+	float *fdata;
+};
+
+extern struct mbin_eq_f32 * mbin_eq_alloc_f32(uint32_t);
+extern void mbin_eq_free_f32(mbin_eq_head_f32_t *, struct mbin_eq_f32 *);
+extern void mbin_eq_free_head_f32(mbin_eq_head_f32_t *);
+extern int mbin_eq_simplify_f32(uint32_t, mbin_eq_head_f32_t *, float);
+extern int mbin_eq_solve_f32(uint32_t, mbin_eq_head_f32_t *, float);
+extern int mbin_eq_solve_table_f32(const uint32_t *, const float *, uint32_t, uint32_t, int32_t, mbin_eq_head_f32_t *, mbin_eq_table_func_t *, float);
+extern void mbin_eq_sort_f32(mbin_eq_head_f32_t *);
+extern void mbin_eq_print_f32(mbin_eq_head_f32_t *);
+
 /* */
 
 uint32_t mbin_coeff_32(int32_t n, int32_t x);
