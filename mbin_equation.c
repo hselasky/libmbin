@@ -82,7 +82,7 @@ mbin_eq_simplify_32(uint32_t total, mbin_eq_head_32_t *phead)
 
 		for (y = 0; y != total; y++) {
 			if (ptr->bitdata[y / 16] == 0) {
-				y |= 7;
+				y |= 15;
 				continue;
 			}
 			if (MBIN_EQ_BIT_GET(ptr->bitdata, y) != 0)
