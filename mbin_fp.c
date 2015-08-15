@@ -34,10 +34,10 @@ static uint32_t mod_prime = 0;
 static uint32_t mod_off = 0;
 
 void
-mbin_fp_set_modulus32(uint32_t prime, uint32_t mod_off)
+mbin_fp_set_modulus32(uint32_t _prime, uint32_t _mod_off)
 {
-	mod_prime = prime;
-	mod_off = mod_off;
+	mod_prime = _prime;
+	mod_off = _mod_off;
 }
 
 static mbin_fp_t
