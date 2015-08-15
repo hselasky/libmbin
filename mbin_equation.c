@@ -327,7 +327,7 @@ mbin_eq_solve_table_32(const uint32_t *xtable,
 	TAILQ_FOREACH(ptr, phead, entry) {
 		if (ptr->value == 0)
 			continue;
-		for (x = 0; x != total; x += 16) {
+		for (x = 0; x < total; x += 16) {
 			if (ptr->bitdata[x / 16] == 0)
 				continue;
 			for (; x != total; x++) {
