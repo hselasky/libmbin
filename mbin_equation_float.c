@@ -80,11 +80,12 @@ mbin_eq_simplify_f32(uint32_t total, mbin_eq_head_f32_t *phead, float zero)
 	TAILQ_FOREACH_SAFE(ptr, phead, entry, next) {
 
 		for (y = 0; y != total; y++) {
-			if (ptr->fdata[y] != 0.0)
+			if (fabsf(ptr->fdata[y]) > zero)
 				break;
+			ptr->fdata[y] = 0.0;
 		}
 		if (y == total) {
-			if (fabs(ptr->value) > zero)
+			if (fabsf(ptr->value) > zero)
 				goto error;
 			mbin_eq_free_f32(phead, ptr);
 			continue;
@@ -211,7 +212,7 @@ mbin_eq_solve_table_f32(const uint32_t *xtable,
 		return (-1);
 	}
 	TAILQ_FOREACH(ptr, phead, entry) {
-		if (fabs(ptr->value) <= zero)
+		if (fabsf(ptr->value) <= zero)
 			continue;
 		for (x = 0; x != total; x++) {
 			if (ptr->fdata[x] != 0.0)
@@ -237,9 +238,9 @@ mbin_eq_sort_compare_f32(const void *pa, const void *pb)
 	uint32_t ia = *(uint32_t *)(((struct mbin_eq_f32 **)pa)[0][0].fdata);
 	uint32_t ib = *(uint32_t *)(((struct mbin_eq_f32 **)pb)[0][0].fdata);
 
-	if (fabs(fa) > fabs(fb))
+	if (fabsf(fa) > fabsf(fb))
 		return (1);
-	else if (fabs(fa) < fabs(fb))
+	else if (fabsf(fa) < fabsf(fb))
 		return (-1);
 	if (ia > ib)
 		return (1);
