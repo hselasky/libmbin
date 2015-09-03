@@ -33,11 +33,11 @@
 
 #include "math_bin.h"
 
-struct mbin_eq_d32 *
-mbin_eq_alloc_d32(uint32_t bits)
+struct mbin_eq_d64 *
+mbin_eq_alloc_d64(uint32_t bits)
 {
-	struct mbin_eq_d32 *ptr;
-	size_t size = sizeof(struct mbin_eq_d32) + (sizeof(double) * bits);
+	struct mbin_eq_d64 *ptr;
+	size_t size = sizeof(struct mbin_eq_d64) + (sizeof(double) * bits);
 
 	ptr = malloc(size);
 	if (ptr == NULL)
@@ -51,7 +51,7 @@ mbin_eq_alloc_d32(uint32_t bits)
 }
 
 void
-mbin_eq_free_d32(mbin_eq_head_d32_t *phead, struct mbin_eq_d32 *ptr)
+mbin_eq_free_d64(mbin_eq_head_d64_t *phead, struct mbin_eq_d64 *ptr)
 {
 	if (ptr->entry.tqe_prev != NULL)
 		TAILQ_REMOVE(phead, ptr, entry);
@@ -59,20 +59,20 @@ mbin_eq_free_d32(mbin_eq_head_d32_t *phead, struct mbin_eq_d32 *ptr)
 }
 
 void
-mbin_eq_free_head_d32(mbin_eq_head_d32_t *phead)
+mbin_eq_free_head_d64(mbin_eq_head_d64_t *phead)
 {
-	struct mbin_eq_d32 *ptr;
+	struct mbin_eq_d64 *ptr;
 
 	while ((ptr = TAILQ_FIRST(phead)))
-		mbin_eq_free_d32(phead, ptr);
+		mbin_eq_free_d64(phead, ptr);
 }
 
 int
-mbin_eq_simplify_d32(uint32_t total, mbin_eq_head_d32_t *phead, double zero)
+mbin_eq_simplify_d64(uint32_t total, mbin_eq_head_d64_t *phead, double zero)
 {
-	struct mbin_eq_d32 *ptr;
-	struct mbin_eq_d32 *other;
-	struct mbin_eq_d32 *next;
+	struct mbin_eq_d64 *ptr;
+	struct mbin_eq_d64 *other;
+	struct mbin_eq_d64 *next;
 	double temp;
 	uint32_t x;
 	uint32_t y;
@@ -87,7 +87,7 @@ mbin_eq_simplify_d32(uint32_t total, mbin_eq_head_d32_t *phead, double zero)
 		if (y == total) {
 			if (fabs(ptr->value) > zero)
 				goto error;
-			mbin_eq_free_d32(phead, ptr);
+			mbin_eq_free_d64(phead, ptr);
 			continue;
 		}
 		temp = ptr->fdata[y];
@@ -114,13 +114,13 @@ error:
 }
 
 int
-mbin_eq_solve_d32(uint32_t total, mbin_eq_head_d32_t *phead, double zero)
+mbin_eq_solve_d64(uint32_t total, mbin_eq_head_d64_t *phead, double zero)
 {
-	struct mbin_eq_d32 *ptr;
+	struct mbin_eq_d64 *ptr;
 	uint32_t x;
 	uint32_t y;
 
-	if (mbin_eq_simplify_d32(total, phead, zero))
+	if (mbin_eq_simplify_d64(total, phead, zero))
 		return (-1);
 
 	TAILQ_FOREACH(ptr, phead, entry) {

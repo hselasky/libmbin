@@ -577,20 +577,20 @@ extern void mbin_eq_print_f32(mbin_eq_head_f32_t *);
 
 /* Equation double prototypes */
 
-struct mbin_eq_d32;
-typedef TAILQ_HEAD(,mbin_eq_d32) mbin_eq_head_d32_t;
+struct mbin_eq_d64;
+typedef TAILQ_HEAD(,mbin_eq_d64) mbin_eq_head_d64_t;
 
-struct mbin_eq_d32 {
-	TAILQ_ENTRY(mbin_eq_d32) entry;
+struct mbin_eq_d64 {
+	TAILQ_ENTRY(mbin_eq_d64) entry;
 	double value;
 	double *fdata;
 };
 
-extern struct mbin_eq_d32 * mbin_eq_alloc_d32(uint32_t);
-extern void mbin_eq_free_d32(mbin_eq_head_d32_t *, struct mbin_eq_d32 *);
-extern void mbin_eq_free_head_d32(mbin_eq_head_d32_t *);
-extern int mbin_eq_simplify_d32(uint32_t, mbin_eq_head_d32_t *, double);
-extern int mbin_eq_solve_d32(uint32_t, mbin_eq_head_d32_t *, double);
+extern struct mbin_eq_d64 * mbin_eq_alloc_d64(uint32_t);
+extern void mbin_eq_free_d64(mbin_eq_head_d64_t *, struct mbin_eq_d64 *);
+extern void mbin_eq_free_head_d64(mbin_eq_head_d64_t *);
+extern int mbin_eq_simplify_d64(uint32_t, mbin_eq_head_d64_t *, double);
+extern int mbin_eq_solve_d64(uint32_t, mbin_eq_head_d64_t *, double);
 
 /* */
 
