@@ -589,3 +589,35 @@ mbin_factor_slow_64(uint64_t x)
 	}
 	return (0);
 }
+
+uint64_t
+mbin_factor_slower_64(uint64_t x)
+{
+	uint64_t a;
+	uint64_t b;
+	uint64_t c;
+	uint64_t d;
+
+	if (x <= 1)
+		return (0);
+	if (!(x & 1))
+		return (2);
+
+	d = mbin_sqrt_64(x);
+	c = d * d;
+	b = 0;
+	a = x;
+
+	while (a != c) {
+		a += (2 * b + 1);
+		b++;
+		while (a > c) {
+			c += (2 * d + 1);
+			d++;
+		}
+	}
+	b += d;
+	if (b < x)
+		return (b);
+	return (0);
+}

@@ -299,6 +299,7 @@ uint32_t mbin_exp_non_linear_32(uint32_t f, uint32_t x);
 uint64_t mbin_log_non_linear_64(uint64_t a);
 uint64_t mbin_exp_non_linear_64(uint64_t a, uint64_t d);
 uint64_t mbin_factor_slow_64(uint64_t x);
+uint64_t mbin_factor_slower_64(uint64_t x);
 
 uint32_t mbin_parse32_abc(const char *ptr, const char *end);
 void	mbin_parse32_add(const char *ptr, uint32_t *ptable, uint32_t mask);
