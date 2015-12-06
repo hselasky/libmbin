@@ -36,7 +36,7 @@ mbin_sumbits64(uint64_t val)
 	val += val >> 8;
 	val += val >> 16;
 	val += val >> 32;
-	return (val & 63);
+	return (val & 127);
 }
 
 uint8_t
@@ -57,7 +57,7 @@ mbin_sumbits32(uint32_t val)
 	val = ((val & (15U * 0x10101010U)) / 16U) + (val & (15U * 0x01010101U));
 	val += val >> 8;
 	val += val >> 16;
-	return (val & 31);
+	return (val & 63);
 #endif
 }
 
