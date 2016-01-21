@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008-2013 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008-2016 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -404,6 +404,18 @@ void	mbin_base23_mul_32(uint32_t, uint32_t, struct mbin_base23_state32 *);
 
 uint32_t mbin_base23_to_linear(struct mbin_base23_state32 *);
 void	mbin_base23_from_linear(struct mbin_base23_state32 *, uint32_t);
+
+/* Base-P */
+
+uint32_t mbin_baseP_add_32(uint32_t, uint32_t);
+uint32_t mbin_baseP_negate_32(uint32_t);
+uint32_t mbin_baseP_sub_32(uint32_t, uint32_t);
+uint32_t mbin_baseP_exp_32(uint32_t, uint32_t);
+uint32_t mbin_baseP_is_negative_32(uint32_t);
+uint32_t mbin_baseP_multiply_32(uint32_t, uint32_t);
+uint32_t mbin_base_2toP_32(uint32_t);
+uint32_t mbin_base_Pto2_32(uint32_t);
+int mbin_baseP_cmp_32(uint32_t, uint32_t);
 
 /* Expression prototypes */
 

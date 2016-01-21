@@ -20,6 +20,7 @@ SRCS+=	mbin_baseH.c
 SRCS+=	mbin_baseL.c
 SRCS+=	mbin_baseM.c
 SRCS+=	mbin_baseN.c
+SRCS+=	mbin_baseP.c
 SRCS+=	mbin_baseT.c
 SRCS+=	mbin_baseU.c
 SRCS+=	mbin_baseV.c
