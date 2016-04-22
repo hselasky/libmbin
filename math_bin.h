@@ -27,6 +27,7 @@
 #define	_MATH_BIN_H_
 
 #include <stdint.h>
+#include <sys/types.h>
 #include <sys/cdefs.h>
 #include <sys/queue.h>
 
@@ -903,6 +904,12 @@ void	mbin_filter_table_free_cd(mbin_cd_t *);
 void	mbin_filter_mul_cd(const mbin_cd_t *, const mbin_cd_t *, mbin_cd_t *, const mbin_cd_t *, uint32_t);
 void	mbin_filter_exp_cd(const mbin_cd_t *, uint64_t, mbin_cd_t *, const mbin_cd_t *, uint32_t);
 void	mbin_filter_impulse_cd(mbin_cd_t *, uint32_t);
+
+/* Sorting prototypes */
+
+typedef int mbin_cmp_t(const void *, const void *);
+void	mbin_sort_xform(void *, size_t, size_t, int, int, mbin_cmp_t *);
+void	mbin_sort(void *, size_t, size_t, mbin_cmp_t *);
 
 __END_DECLS
 
