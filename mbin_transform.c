@@ -709,6 +709,30 @@ mbin_forward_add_xform_32(uint32_t *ptr, uint8_t log2_max)
 }
 
 /*
+ * Additive transform forward and inverse
+ */
+void
+mbin_add_xform_32(uint32_t *ptr, uint8_t log2_max, int32_t tog, int32_t tt)
+{
+	const uint32_t max = 1U << log2_max;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	int32_t a;
+	int32_t b;
+
+	for (x = 2; x <= max; x *= 2) {
+		for (y = 0; y != max; y += x, tog *= tt) {
+			for (z = 0; z != (x / 2); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 2)];
+				ptr[y + z + (x / 2)] = b + tog * a;
+			}
+		}
+	}
+}
+
+/*
  * Inverse xor additive transform.
  *
  * f(x,y) = ((x & y) == y) ? 1 : 0;

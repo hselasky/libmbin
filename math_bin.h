@@ -642,6 +642,7 @@ void	mbin_inverse_gte_mask_xform_32(uint32_t *, uint8_t);
 void	mbin_forward_gte_mask_xform_32(uint32_t *, uint8_t);
 void	mbin_inverse_xor_add_xform_32(uint32_t *, uint8_t, uint8_t);
 void	mbin_forward_xor_add_xform_32(uint32_t *, uint8_t, uint8_t);
+void	mbin_add_xform_32(uint32_t *, uint8_t, int32_t, int32_t);
 void	mbin_inverse_add_xform_32(uint32_t *, uint8_t);
 void	mbin_forward_add_xform_32(uint32_t *, uint8_t);
 void	mbin_xor3_mod_inverse_add_xform_64(uint64_t *, uint64_t, uint64_t, uint8_t);
