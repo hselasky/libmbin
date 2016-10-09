@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2001-2011 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2001-2016 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -317,6 +317,33 @@ mbin_sqrt_odd_32(uint32_t x)
 	}
 
 	x = (((int32_t)x) >> 1) | 1;
+
+	return (x);
+}
+
+uint64_t
+mbin_sqrt_odd_64(uint64_t x)
+{
+	uint64_t m;
+	uint8_t s;
+
+	/* All input numbers are assumed to be (x & 7) = 1. */
+
+	x = -x - 0x555555555555555FULL;
+
+	if (x & 7)
+		return (0);		/* not a square number */
+
+	for (s = 3; s != 64; s++) {
+		m = (1ULL << s);
+
+		if (x & m)
+			x += (x & (m - 8ULL)) << (s - 2);
+		else
+			x += (~x & (m - 8ULL)) << (s - 2);
+	}
+
+	x = (((int64_t)x) >> 1) | 1ULL;
 
 	return (x);
 }
