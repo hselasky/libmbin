@@ -910,7 +910,9 @@ void	mbin_filter_impulse_cd(mbin_cd_t *, uint32_t);
 /* Sorting prototypes */
 
 typedef int mbin_cmp_t(const void *, const void *);
-void	mbin_sort_xform(void *, size_t, size_t, int, int, mbin_cmp_t *);
+int	mbin_sort_xform(void *, size_t, size_t, mbin_cmp_t *);
+size_t	mbin_sort_index(size_t, size_t);
+void	mbin_sort_reorder(void *, size_t, size_t);
 void	mbin_sort(void *, size_t, size_t, mbin_cmp_t *);
 
 __END_DECLS

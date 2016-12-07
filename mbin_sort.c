@@ -29,9 +29,10 @@
 
 /* a variant of bitonic sorting */
 
-void
-mbin_sort_xform(void *ptr, size_t n, size_t es, int tog, int tt, mbin_cmp_t *fn)
+int
+mbin_sort_xform(void *ptr, size_t n, size_t es, mbin_cmp_t *fn)
 {
+	int retval = 0;
 	size_t x, y, z;
 	char tmp[es];
 	char *pa;
@@ -39,19 +40,81 @@ mbin_sort_xform(void *ptr, size_t n, size_t es, int tog, int tt, mbin_cmp_t *fn)
 
 	/* sort array in toggle order */
 	for (x = 1; x != n; x *= 2) {
-		for (y = 0; y != n; y += (2 * x), tog *= tt) {
+		for (y = 0; y != n; y += (2 * x)) {
+			int tog = (mbin_sumbits64(y & -x) & 1) ? -1 : 1;
+
 			pa = (char *)ptr + y * es;
 			pb = pa + x * es;
 			for (z = 0; z != x; z++, pa += es, pb += es) {
 				if ((tog * fn(pa, pb)) > 0) {
 					/* swap */
-					memcpy(tmp, pa, sizeof(tmp));
-					memcpy(pa, pb, sizeof(tmp));
-					memcpy(pb, tmp, sizeof(tmp));
+					memcpy(tmp, pa, es);
+					memcpy(pa, pb, es);
+					memcpy(pb, tmp, es);
+					retval = 1;
 				}
 			}
 		}
 	}
+	return (retval);
+}
+
+size_t
+mbin_sort_index(size_t t, size_t n)
+{
+	size_t m;
+
+	for (m = 1; m != n; m *= 2ULL) {
+		if (t & m)
+			t ^= m - 1ULL;
+	}
+	return (t);
+}
+
+void
+mbin_sort_reorder(void *ptr, size_t n, size_t es)
+{
+#if 0
+	size_t x, y;
+	char copy[n][es];
+	char *pa;
+
+	memcpy(copy, ptr, sizeof(copy));
+
+	/* reorder array */
+	for (x = 0; x != n; x++) {
+		y = mbin_sort_index(x, n);
+		pa = (char *)ptr + y * es;
+		memcpy(pa, copy[x], es);
+	}
+#else
+	size_t x, y, z;
+	char tmp[2][es];
+	char bitmap[(n + 7) / 8];
+	char *pa;
+	char m;
+
+	memset(bitmap, 0, sizeof(bitmap));
+
+	/* reorder array */
+	for (x = 0; x != n; x++) {
+		if (bitmap[x / 8] & (1U << (x % 8)))
+			continue;
+		z = x;
+		pa = (char *)ptr + z * es;
+		memcpy(tmp[0], pa, es);
+		for (y = 0;; y++) {
+			z = mbin_sort_index(z, n);
+			m = (1U << (z % 8));
+			if (bitmap[z / 8] & m)
+				break;
+			bitmap[z / 8] |= m;
+			pa = (char *)ptr + z * es;
+			memcpy(tmp[~y & 1], pa, es);
+			memcpy(pa, tmp[y & 1], es);
+		}
+	}
+#endif
 }
 
 void
@@ -60,17 +123,8 @@ mbin_sort(void *ptr, size_t n, size_t es, mbin_cmp_t *fn)
 	if (n <= 1)
 		return;
 
-	while (1) {
-		size_t x;
+	while (mbin_sort_xform(ptr, n, es, fn))
+		;
 
-		for (x = 1; x != n; x++) {
-			if (fn((char *)ptr + x * es,
-			    (char *)ptr + x * es - es) < 0)
-				break;
-		}
-		if (x == n)
-			break;
-		mbin_sort_xform(ptr, n, es, 1, -1, fn);
-		mbin_sort_xform(ptr, n, es, 1, 1, fn);
-	}
+	mbin_sort_reorder(ptr, n, es);
 }
