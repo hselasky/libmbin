@@ -44,7 +44,7 @@ mbin_sort_xform(void *ptr, size_t n, size_t es, mbin_cmp_t *fn)
 	char *pb;
 
 	/* sort array */
-	for (x = 1; x != n; x *= 2) {
+	for (x = n / 2; x != 0; x /= 2) {
 		for (y = 0; y != n; y += (2 * x)) {
 			int tog = (mbin_sort_index(y) & 1) ? -1 : 1;
 
