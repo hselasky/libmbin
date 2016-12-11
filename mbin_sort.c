@@ -125,6 +125,68 @@ mbin_osort_xform(void *ptr, size_t n, size_t es, mbin_cmp_t *fn)
 	return (retval);
 }
 
+static int
+mbin_xsort_xform(void *ptr, size_t n, size_t lim, size_t es, mbin_cmp_t *fn)
+{
+#define	MBIN_XSORT_TABLE_MAX (1 << 4)
+	size_t x, y, z;
+	unsigned t, u, v;
+	size_t table[2][MBIN_XSORT_TABLE_MAX];
+	const size_t *p;
+	int retval = 0;
+
+	x = n;
+	while (1) {
+		/* optimise */
+		if (x >= MBIN_XSORT_TABLE_MAX)
+			v = MBIN_XSORT_TABLE_MAX;
+		else if (x >= 2)
+			v = x;
+		else
+			break;
+
+		/* divide down */
+		x /= v;
+
+		/* generate ramp table */
+		for (t = 0; t != v; t++) {
+			y = mbin_sort_index(x * (t ^ (t / 2)));
+			table[0][t] = y;
+			table[1][v - 1 - t] = y;
+		}
+
+		/* bitonic sort */
+		for (y = 0; y != n; y += (v * x)) {
+			size_t yi = mbin_sort_index(y);
+
+			p = table[yi & 1];
+
+			for (z = 0; z != x; z++) {
+				size_t zi = yi ^ mbin_sort_index(z);
+
+				/* insertion sort */
+				for (t = 1; t != v; t++) {
+					/* check for arrays which are not power of two */
+					if ((zi ^ p[t]) >= lim)
+						break;
+					for (u = t; u != 0; u--) {
+						char *pa = (char *)ptr + ((zi ^ p[u - 1]) * es);
+						char *pb = (char *)ptr + ((zi ^ p[u]) * es);
+
+						if (fn(pa, pb) > 0) {
+							mbin_sort_swap(pa, pb, es);
+							retval = 1;
+						} else {
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+	return (retval);
+}
+
 size_t
 mbin_sort_index(size_t t)
 {
@@ -174,21 +236,14 @@ mbin_sort_swap(char *pa, char *pb, size_t es)
 void
 mbin_sort(void *ptr, size_t n, size_t es, mbin_cmp_t *fn)
 {
-	uint8_t sb;
+	size_t max;
 
 	if (n <= 1)
 		return;
 
-	sb = mbin_sumbits64(n - 1);
+	for (max = 1; max < n; max <<= 1)
+		;
 
-	if ((sb % 3) == 0) {
-		while (mbin_osort_xform(ptr, n, es, fn))
-			;
-	} else if ((sb % 2) == 0) {
-		while (mbin_qsort_xform(ptr, n, es, fn))
-			;
-	} else {
-		while (mbin_bsort_xform(ptr, n, es, fn))
-			;
-	}
+	while (mbin_xsort_xform(ptr, max, n, es, fn))
+		;
 }
