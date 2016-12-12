@@ -131,8 +131,7 @@ mbin_xsort_xform(void *ptr, size_t n, size_t lim, size_t es, mbin_cmp_t *fn)
 #define	MBIN_XSORT_TABLE_MAX (1 << 4)
 	size_t x, y, z;
 	unsigned t, u, v;
-	size_t table[2][MBIN_XSORT_TABLE_MAX];
-	const size_t *p;
+	size_t p[MBIN_XSORT_TABLE_MAX];
 	int retval = 0;
 
 	x = n;
@@ -149,20 +148,13 @@ mbin_xsort_xform(void *ptr, size_t n, size_t lim, size_t es, mbin_cmp_t *fn)
 		x /= v;
 
 		/* generate ramp table */
-		for (t = 0; t != v; t++) {
-			y = mbin_sort_index(x * (t ^ (t / 2)));
-			table[0][t] = y;
-			table[1][v - 1 - t] = y;
-		}
+		for (t = 0; t != v; t++)
+			p[t] = mbin_sort_index(x * (t ^ (t / 2)));
 
 		/* bitonic sort */
 		for (y = 0; y != n; y += (v * x)) {
-			size_t yi = mbin_sort_index(y);
-
-			p = table[yi & 1];
-
 			for (z = 0; z != x; z++) {
-				size_t zi = yi ^ mbin_sort_index(z);
+				size_t zi = y ^ mbin_sort_index(z);
 
 				/* insertion sort */
 				for (t = 1; t != v; t++) {
