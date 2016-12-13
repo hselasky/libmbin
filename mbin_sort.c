@@ -154,16 +154,16 @@ mbin_xsort_xform(void *ptr, size_t n, size_t lim, size_t es, mbin_cmp_t *fn)
 		/* bitonic sort */
 		for (y = 0; y != n; y += (v * x)) {
 			for (z = 0; z != x; z++) {
-				size_t zi = y ^ mbin_sort_index(z);
+				size_t w = y + z;
 
 				/* insertion sort */
 				for (t = 1; t != v; t++) {
 					/* check for arrays which are not power of two */
-					if ((zi ^ p[t]) >= lim)
+					if ((w ^ p[t]) >= lim)
 						break;
 					for (u = t; u != 0; u--) {
-						char *pa = (char *)ptr + ((zi ^ p[u - 1]) * es);
-						char *pb = (char *)ptr + ((zi ^ p[u]) * es);
+						char *pa = (char *)ptr + ((w ^ p[u - 1]) * es);
+						char *pb = (char *)ptr + ((w ^ p[u]) * es);
 
 						if (fn(pa, pb) > 0) {
 							mbin_sort_swap(pa, pb, es);
