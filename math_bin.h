@@ -914,8 +914,8 @@ int	mbin_bsort_xform(void *, size_t, size_t, mbin_cmp_t *);
 int	mbin_qsort_xform(void *, size_t, size_t, mbin_cmp_t *);
 int	mbin_osort_xform(void *, size_t, size_t, mbin_cmp_t *);
 size_t	mbin_sort_index(size_t);
-void	mbin_sort_swap(char *, char *, size_t);
-void	mbin_sort(void *, size_t, size_t, mbin_cmp_t *);
+void	mbin_sort_swap(char *, char *, const size_t);
+void	mbin_sort(void *, const size_t, const size_t, mbin_cmp_t *);
 
 __END_DECLS
 

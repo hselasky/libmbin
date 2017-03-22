@@ -34,7 +34,7 @@
  * Additional memory usage: none
  */
 
-int
+inline int
 mbin_bsort_xform(void *ptr, size_t n, size_t es, mbin_cmp_t *fn)
 {
 	int retval = 0;
@@ -125,8 +125,8 @@ mbin_osort_xform(void *ptr, size_t n, size_t es, mbin_cmp_t *fn)
 	return (retval);
 }
 
-static int
-mbin_xsort_xform(void *ptr, size_t n, size_t lim, size_t es, mbin_cmp_t *fn)
+static __always_inline int
+mbin_xsort_xform(void *ptr, const size_t n, const size_t lim, const size_t es, mbin_cmp_t *fn)
 {
 #define	MBIN_XSORT_TABLE_MAX (1 << 4)
 	size_t x, y, z;
@@ -179,7 +179,7 @@ mbin_xsort_xform(void *ptr, size_t n, size_t lim, size_t es, mbin_cmp_t *fn)
 	return (retval);
 }
 
-size_t
+__always_inline size_t
 mbin_sort_index(size_t t)
 {
 	t ^= t >> 1;
@@ -188,36 +188,44 @@ mbin_sort_index(size_t t)
 	t ^= t >> 8;
 	t ^= t >> 16;
 	if (sizeof(t) >= 8)
-		t ^= t >> 32;
+		t ^= t >> (sizeof(t) >= 8 ? 32 : 0);
 	return (t);
 }
 
-void
-mbin_sort_swap(char *pa, char *pb, size_t es)
+__always_inline void
+mbin_sort_swap(char *pa, char *pb, const size_t es)
 {
-	char tmp[es] __aligned(8);
+	if (__builtin_constant_p(es) && es == 8) {
+		uint64_t tmp;
 
-	if (es == 8) {
 		/* swap */
-		*(uint64_t *)tmp = *(uint64_t *)pa;
+		tmp = *(uint64_t *)pa;
 		*(uint64_t *)pa = *(uint64_t *)pb;
-		*(uint64_t *)pb = *(uint64_t *)tmp;
-	} else if (es == 4) {
+		*(uint64_t *)pb = tmp;
+	} else if (__builtin_constant_p(es) && es == 4) {
+		uint32_t tmp;
+
 		/* swap */
-		*(uint32_t *)tmp = *(uint32_t *)pa;
+		tmp = *(uint32_t *)pa;
 		*(uint32_t *)pa = *(uint32_t *)pb;
-		*(uint32_t *)pb = *(uint32_t *)tmp;
-	} else if (es == 2) {
+		*(uint32_t *)pb = tmp;
+	} else if (__builtin_constant_p(es) && es == 2) {
+		uint16_t tmp;
+
 		/* swap */
-		*(uint16_t *)tmp = *(uint16_t *)pa;
+		tmp = *(uint16_t *)pa;
 		*(uint16_t *)pa = *(uint16_t *)pb;
-		*(uint16_t *)pb = *(uint16_t *)tmp;
-	} else if (es == 1) {
+		*(uint16_t *)pb = tmp;
+	} else if (__builtin_constant_p(es) && es == 1) {
+		uint8_t tmp;
+
 		/* swap */
-		*(uint8_t *)tmp = *(uint8_t *)pa;
+		tmp = *(uint8_t *)pa;
 		*(uint8_t *)pa = *(uint8_t *)pb;
-		*(uint8_t *)pb = *(uint8_t *)tmp;
+		*(uint8_t *)pb = tmp;
 	} else {
+	  	char tmp[es] __aligned(8);
+
 		/* swap */
 		memcpy(tmp, pa, es);
 		memcpy(pa, pb, es);
@@ -226,7 +234,7 @@ mbin_sort_swap(char *pa, char *pb, size_t es)
 }
 
 void
-mbin_sort(void *ptr, size_t n, size_t es, mbin_cmp_t *fn)
+mbin_sort(void *ptr, const size_t n, const size_t es, mbin_cmp_t *fn)
 {
 	size_t max;
 
@@ -236,6 +244,20 @@ mbin_sort(void *ptr, size_t n, size_t es, mbin_cmp_t *fn)
 	for (max = 1; max < n; max <<= 1)
 		;
 
-	while (mbin_xsort_xform(ptr, max, n, es, fn))
-		;
+	if (es == 8) {
+	  	while (mbin_xsort_xform(ptr, max, n, 8, fn))
+			;
+	} else if (es == 4) {
+	  	while (mbin_xsort_xform(ptr, max, n, 4, fn))
+			;
+	} else if (es == 2) {
+	  	while (mbin_xsort_xform(ptr, max, n, 2, fn))
+			;
+	} else if (es == 1) {
+		while (mbin_xsort_xform(ptr, max, n, 1, fn))
+			;
+	} else {
+		while (mbin_xsort_xform(ptr, max, n, es, fn))
+			;
+	}
 }
