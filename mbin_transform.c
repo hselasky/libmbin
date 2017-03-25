@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008-2013 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008-2017 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -1567,5 +1567,170 @@ mbin_xor2_power_mod_xform_64(uint64_t *ptr, uint32_t size,
 		}
 		ptr[x] = z;
 		u = mbin_xor2_mul_mod_64(u, base, mod);
+	}
+}
+
+void
+mbin_xor2_multi_xform_32(uint32_t *ptr, const uint32_t *fact)
+{
+	const uint32_t *curr;
+	uint32_t size = 1;
+	uint32_t step = 1;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+
+	for (curr = fact; curr[0] != 1; curr++)
+		size *= curr[0];
+
+	for (curr = fact; curr[0] != 1; curr++) {
+		for (x = 0; x != size; x += curr[0] * step) {
+			for (y = 0; y != step; y++) {
+				uint32_t last = 0;
+
+				for (z = 0; z != curr[0]; z++) {
+					uint32_t t = (z * step) + x + y;
+
+					ptr[t] ^= last;
+					last ^= ptr[t];
+				}
+			}
+		}
+		step *= curr[0];
+	}
+}
+
+void
+mbin_xor3_multi_xform_32(uint32_t *ptr, const uint32_t *fact)
+{
+	const uint32_t *curr;
+	uint32_t size = 1;
+	uint32_t step = 1;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+
+	for (curr = fact; curr[0] != 1; curr++)
+		size *= curr[0];
+
+	for (curr = fact; curr[0] != 1; curr++) {
+		for (x = 0; x != size; x += curr[0] * step) {
+			for (y = 0; y != step; y++) {
+				uint32_t last = 0;
+
+				for (z = 0; z != curr[0]; z++) {
+					uint32_t t = (z * step) + x + y;
+
+					ptr[t] = mbin_xor3_32(ptr[t],
+					    mbin_xor3_32(last, last));
+					last = mbin_xor3_32(last, ptr[t]);
+				}
+			}
+		}
+		step *= curr[0];
+	}
+}
+
+void
+mbin_add_inv_multi_xform_32(uint32_t *ptr, const uint32_t *fact)
+{
+	const uint32_t *curr;
+	uint32_t size = 1;
+	uint32_t step = 1;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+
+	for (curr = fact; curr[0] != 1; curr++)
+		size *= curr[0];
+
+	for (curr = fact; curr[0] != 1; curr++) {
+		for (x = 0; x != size; x += curr[0] * step) {
+			for (y = 0; y != step; y++) {
+				uint32_t last = 0;
+
+				for (z = 0; z != curr[0]; z++) {
+					uint32_t t = (z * step) + x + y;
+
+					ptr[t] -= last;
+					last += ptr[t];
+				}
+			}
+		}
+		step *= curr[0];
+	}
+}
+
+void
+mbin_add_mod_inv_multi_xform_32(uint32_t *ptr, const uint32_t *fact)
+{
+	const uint32_t *curr;
+	uint32_t size = 1;
+	uint32_t step = 1;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+
+	for (curr = fact; curr[0] != 1; curr++)
+		size *= curr[0];
+
+	for (curr = fact; curr[0] != 1; curr++) {
+		for (x = 0; x != size; x += curr[0] * step) {
+			for (y = 0; y != step; y++) {
+				uint32_t last = 0;
+
+				for (z = 0; z != curr[0]; z++) {
+					uint32_t t = (z * step) + x + y;
+
+					ptr[t] = (size + ptr[t] - last) % size;
+					last = (last + ptr[t]) % size;
+				}
+			}
+		}
+		step *= curr[0];
+	}
+}
+
+void
+mbin_xor_mod_inv_multi_xform_32(uint32_t *ptr, const uint32_t *fact)
+{
+	const uint32_t *curr;
+	const uint32_t *div;
+	uint32_t size = 1;
+	uint32_t step = 1;
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+
+	for (curr = fact; curr[0] != 1; curr++)
+		size *= curr[0];
+
+	for (curr = fact; curr[0] != 1; curr++) {
+		for (x = 0; x != size; x += curr[0] * step) {
+			for (y = 0; y != step; y++) {
+				uint32_t last = 0;
+
+				for (z = 0; z != curr[0]; z++) {
+					uint32_t t = (z * step) + x + y;
+					uint32_t dd = 1;
+					uint32_t pp = 0;
+					uint32_t ll = 0;
+
+					for (div = fact; div[0] != 1; div++) {
+						uint32_t a = (div[0] + ((ptr[t] / dd) % div[0]) -
+						    ((last / dd) % div[0])) % div[0];
+						uint32_t b = (((last / dd) % div[0]) + a) % div[0];
+
+						pp += a * dd;
+						ll += b * dd;
+
+						dd *= div[0];
+					}
+					ptr[t] = pp;
+					last = ll;
+				}
+			}
+		}
+		step *= curr[0];
 	}
 }
