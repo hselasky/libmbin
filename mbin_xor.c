@@ -2167,6 +2167,19 @@ mbin_xor2v_print_mat_32(const struct mbin_xor2v_32 *table,
  * ========================================================================
  */
 
+uint64_t
+mbin_xor4_64(uint64_t a, uint64_t b)
+{
+	const uint64_t K = 0x5555555555555555ULL;
+	uint64_t d;
+	uint64_t e;
+
+	d = a ^ b;
+	e = a & b & K;
+
+	return (d ^ (2 * e));
+}
+
 uint32_t
 mbin_xor4_32(uint32_t a, uint32_t b)
 {
@@ -2237,4 +2250,99 @@ mbin_xor4_multiply_plain_32(uint32_t a, uint32_t b, uint32_t mod)
 		s = mbin_xor4_mul_mod_any_32(s, b, mod);
 	}
 	return (r);
+}
+
+uint64_t
+mbin_xor4_mul_64(uint64_t a, uint64_t b)
+{
+	uint64_t r = 0;
+
+	while (a != 0) {
+		while (a & 3) {
+			a--;
+			r = mbin_xor4_64(r, b);
+		}
+		a /= 4;
+		b *= 4;
+	}
+	return (r);
+}
+
+uint64_t
+mbin_xor4_mod_64(uint64_t rem, uint64_t mod)
+{
+	uint8_t sr;
+	uint8_t sm;
+
+	if (rem == 0 || mod == 0)
+		return (0);
+
+	sr = mbin_sumbits32(mbin_msb32(rem) - 1);
+	sr &= ~1;
+
+	sm = mbin_sumbits32(mbin_msb32(mod) - 1);
+	sm &= ~1;
+
+	if (sm > sr)
+		return (rem);
+
+	while (1) {
+		uint8_t to = 0;
+
+		while ((rem & (3 << sr)) && ++to != 4)
+			rem = mbin_xor4_32(rem, mod << (sr - sm));
+		if (to == 4 || sr == sm)
+			break;
+		sr -= 2;
+	}
+	return (rem);
+}
+
+uint64_t
+mbin_xor4_div_64(uint64_t rem, uint64_t div)
+{
+	uint8_t sr;
+	uint8_t sm;
+	uint64_t ret = 0;
+
+	if (rem == 0 || div == 0)
+		return (0);
+
+	sr = mbin_sumbits64(mbin_msb64(rem) - 1);
+	sr &= ~1;
+
+	sm = mbin_sumbits64(mbin_msb64(div) - 1);
+	sm &= ~1;
+
+	if (sm > sr)
+		return (0);
+	if (sm == sr)
+		return (1);
+
+	while (1) {
+		uint8_t to = 0;
+
+		while ((rem & (3 << sr)) && ++to != 4) {
+			rem = mbin_xor4_64(rem, div << (sr - sm));
+			ret = mbin_xor4_64(ret, 1 << (sr - sm));
+		}
+		if (to == 4)
+			return (0);
+		if (sr == sm)
+			break;
+		sr -= 2;
+	}
+	return (ret);
+}
+
+uint64_t
+mbin_xor4_factor_slow_64(uint64_t x)
+{
+	uint64_t y;
+
+	for (y = 4; y < x; y++) {
+		if (mbin_xor4_mod_64(x, y) == 0)
+			return (y);
+	}
+	return (0);
 }

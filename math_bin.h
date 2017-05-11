@@ -350,8 +350,13 @@ uint32_t mbin_rebase_22_m3_32(uint32_t x);
 
 uint8_t	mbin_is2_div_by3_32(uint32_t x);
 uint32_t mbin_lt4_32(uint32_t a, uint32_t b);
+uint64_t mbin_xor4_64(uint64_t a, uint64_t b);
 uint32_t mbin_xor4_32(uint32_t a, uint32_t b);
 uint32_t mbin_inv4_32(uint32_t a);
+uint64_t mbin_xor4_mul_64(uint64_t a, uint64_t b);
+uint64_t mbin_xor4_mod_64(uint64_t rem, uint64_t mod);
+uint64_t mbin_xor4_div_64(uint64_t rem, uint64_t div);
+uint64_t mbin_xor4_factor_slow_64(uint64_t x);
 void	mbin_expand_xor4_16x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, uint32_t slice);
 void	mbin_transform_multi_xor4_fwd_16x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
 uint32_t mbin_split4_32(uint32_t x);
