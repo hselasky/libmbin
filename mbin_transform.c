@@ -1734,3 +1734,47 @@ mbin_xor_mod_inv_multi_xform_32(uint32_t *ptr, const uint32_t *fact)
 		step *= curr[0];
 	}
 }
+
+void
+mbin_xform3_fwd_double(double *ptr, const uint32_t max)
+{
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	double a;
+	double b;
+
+	for (x = 1; x != max; x *= 3) {
+		for (y = 0; y != max; y += (3 * x)) {
+			for (z = 0; z != x; z++) {
+				a = ptr[y + z] + ptr[y + z + x];
+				b = ptr[y + z + 2 * x];
+				ptr[y + z + x] = a + b;
+				ptr[y + z + 2 * x] = a - b;
+			}
+		}
+	}
+}
+
+void
+mbin_xform3_inv_double(double *ptr, const uint32_t max)
+{
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	double a;
+	double b;
+	double c;
+
+	for (x = 1; x != max; x *= 3) {
+		for (y = 0; y != max; y += (3 * x)) {
+			for (z = 0; z != x; z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + x] - a;
+				c = ptr[y + z + 2 * x] - a;
+				ptr[y + z + x] = (b + c) / 2.0;
+				ptr[y + z + 2 * x] = (b - c) / 2.0;
+			}
+		}
+	}
+}

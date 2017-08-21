@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008-2016 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008-2017 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -634,6 +634,8 @@ void	mbin_add_inv_multi_xform_32(uint32_t *ptr, const uint32_t *fact);
 void	mbin_add_mod_inv_multi_xform_32(uint32_t *ptr, const uint32_t *fact);
 void	mbin_xor_mod_inv_multi_xform_32(uint32_t *ptr, const uint32_t *fact);
 
+void	mbin_xform3_fwd_double(double *ptr, const uint32_t max);
+void	mbin_xform3_inv_double(double *ptr, const uint32_t max);
 void	mbin_multiply_xform_32(const uint32_t *, const uint32_t *, uint32_t *, uint8_t);
 void	mbin_multiply_xform_64(const uint64_t *, const uint64_t *, uint64_t *, uint8_t);
 void	mbin_multiply_xform_double(const double *, const double *, double *, uint8_t);
