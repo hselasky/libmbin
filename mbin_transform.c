@@ -1772,8 +1772,8 @@ mbin_xform3_inv_double(double *ptr, const uint32_t max)
 				a = ptr[y + z];
 				b = ptr[y + z + x] - a;
 				c = ptr[y + z + 2 * x] - a;
-				ptr[y + z + x] = (b + c) / 2.0;
-				ptr[y + z + 2 * x] = (b - c) / 2.0;
+				ptr[y + z + x] = (b + c) / 2;
+				ptr[y + z + 2 * x] = (b - c) / 2;
 			}
 		}
 	}
