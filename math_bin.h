@@ -930,6 +930,22 @@ size_t	mbin_sort_index(size_t);
 void	mbin_sort_swap(char *, char *, const size_t);
 void	mbin_sort(void *, const size_t, const size_t, mbin_cmp_t *);
 
+/* Transform puzzle prototypes */
+
+struct mbin_xform_puzzle {
+	TAILQ_ENTRY(mbin_xform_puzzle) entry;
+	int size;
+	int start;
+	int vars[0];
+};
+
+typedef TAILQ_HEAD(,mbin_xform_puzzle) mbin_xform_puzzle_head_t;
+
+struct mbin_xform_puzzle *mbin_xform_puzzle_new(mbin_xform_puzzle_head_t *, size_t);
+void mbin_xform_puzzle_solve(mbin_xform_puzzle_head_t *);
+void mbin_xform_puzzle_print(mbin_xform_puzzle_head_t *);
+void mbin_xform_puzzle_free(mbin_xform_puzzle_head_t *);
+
 __END_DECLS
 
 #endif					/* _MATH_BIN_H_ */
