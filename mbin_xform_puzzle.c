@@ -76,8 +76,8 @@ mbin_xform_puzzle_solve(mbin_xform_puzzle_head_t *phead)
 	struct mbin_xform_puzzle *pother;
 	struct mbin_xform_puzzle *ptr;
 	int any;
-	int x;
-	int y;
+	size_t x;
+	size_t y;
 
 repeat:
 	any = 0;
@@ -149,21 +149,22 @@ mbin_xform_puzzle_print(mbin_xform_puzzle_head_t *phead)
 	struct mbin_xform_puzzle *ptr;
 	size_t total_cost = 0;
 	size_t xform_cost;
-	int x;
-	int sb;
-	int mask;
+	size_t x;
+	size_t sb;
+	size_t mask;
 
 	printf("Transform set\n");
 
 	TAILQ_FOREACH(ptr, phead, entry) {
 
-		printf("start=%4d size=%4d :: ", ptr->start, ptr->size);
+		printf("start=%4lld size=%4lld :: ",
+		    (long long)ptr->start, (long long)ptr->size);
 
 		for (x = 0; x != ptr->start; x++)
 			printf("     ");
 
 		for (x = 0; x != ptr->size; x++)
-			printf("%4d ", ptr->vars[x]);
+			printf("%4lld ", (long long)ptr->vars[x]);
 
 		mask = 0;
 		for (x = 0; x != ptr->size; x++) {

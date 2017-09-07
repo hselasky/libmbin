@@ -934,9 +934,9 @@ void	mbin_sort(void *, const size_t, const size_t, mbin_cmp_t *);
 
 struct mbin_xform_puzzle {
 	TAILQ_ENTRY(mbin_xform_puzzle) entry;
-	int size;
-	int start;
-	int vars[0];
+	size_t size;
+	ssize_t start;
+	ssize_t vars[0];
 };
 
 typedef TAILQ_HEAD(,mbin_xform_puzzle) mbin_xform_puzzle_head_t;
