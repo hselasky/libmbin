@@ -932,17 +932,23 @@ void	mbin_sort(void *, const size_t, const size_t, mbin_cmp_t *);
 
 /* Transform puzzle prototypes */
 
+struct mbin_xform_var {
+	ssize_t var;
+	ssize_t val;
+};
+
 struct mbin_xform_puzzle {
 	TAILQ_ENTRY(mbin_xform_puzzle) entry;
 	size_t size;
 	ssize_t start;
-	ssize_t vars[0];
+	struct mbin_xform_var data[0];
 };
 
 typedef TAILQ_HEAD(,mbin_xform_puzzle) mbin_xform_puzzle_head_t;
 
 struct mbin_xform_puzzle *mbin_xform_puzzle_new(mbin_xform_puzzle_head_t *, size_t);
-void mbin_xform_puzzle_solve(mbin_xform_puzzle_head_t *);
+int mbin_xform_puzzle_simplify(mbin_xform_puzzle_head_t *);
+void mbin_xform_puzzle_reverse(mbin_xform_puzzle_head_t *);
 void mbin_xform_puzzle_print(mbin_xform_puzzle_head_t *);
 void mbin_xform_puzzle_free(mbin_xform_puzzle_head_t *);
 
