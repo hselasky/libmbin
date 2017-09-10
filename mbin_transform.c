@@ -1119,6 +1119,27 @@ mbin_xor_xform_8(uint8_t *ptr, uint8_t log2_max)
 }
 
 /*
+ * Polar and add and transform:
+ * f(x,y) = ((x & y) == y) * ((mbin_sumbits32(x & y) & 1) ? -1 : 1);
+ */
+void
+mbin_polar_and_add_xform_double(double *ptr, uint8_t log2_max)
+{
+	const size_t max = 1UL << log2_max;
+	size_t x;
+	size_t y;
+
+	for (x = 1; x != max; x *= 2) {
+		const double *low = ptr - x;
+
+		for (y = 0; y != max; y++) {
+			y |= x;
+			ptr[y] = low[y] - ptr[y];
+		}
+	}
+}
+
+/*
  * Sumbits-and transform
  *
  * f(x,y) = (mbin_sumbits32(x & y) & 1) ? -1 : 1;
