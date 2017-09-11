@@ -35,12 +35,91 @@ mbin_xform_puzzle_new(mbin_xform_puzzle_head_t *phead, size_t num)
 	struct mbin_xform_puzzle *ptr;
 	const size_t size = sizeof(*ptr) + sizeof(ptr->data[0]) * num;
 
+	/* check for power of two */
+	if (num & (num - 1))
+		return (NULL);
+
 	ptr = malloc(size);
 	if (ptr != NULL) {
 		memset(ptr, 0, size);
 		ptr->size = num;
 		TAILQ_INSERT_TAIL(phead, ptr, entry);
 	}
+	return (ptr);
+}
+
+struct mbin_xform_puzzle *
+mbin_xform_puzzle_new_from_pattern(mbin_xform_puzzle_head_t *phead,
+    const double *src, size_t len, ssize_t var, mbin_xform_function_t *func)
+{
+	struct mbin_xform_puzzle *ptr;
+	ssize_t first = -1;
+	ssize_t end = -1;
+	size_t slide = 1;
+	size_t x;
+	size_t y;
+	size_t z;
+	ssize_t f;
+
+	for (x = 0; x != len; x++) {
+		if (src[x] != 0.0) {
+			if (first == -1)
+				first = x;
+			end = x + 1;
+		}
+	}
+
+	/* round up to power of two */
+	while ((end - first) & (end - first - 1)) {
+		first--;
+		slide++;
+	}
+
+	do {
+		double array[slide][end - first];
+		size_t stats[slide];
+
+		memset(stats, 0, sizeof(stats));
+
+		for (y = 0; y != slide; y++) {
+
+			/* fill array */
+			for (x = 0; x != (end - first); x++) {
+				ssize_t t = first + x + y;
+
+				if (t >= 0 && t < len)
+					array[y][x] = src[t];
+				else
+					array[y][x] = 0;
+			}
+
+			/* transform, if any */
+			if (func != NULL)
+				func(array[y], end - first);
+
+			/* keep statistics */
+			for (x = 0; x != (end - first); x++)
+				stats[y] += (array[y][x] != 0.0);
+		}
+
+		/* figure out best value */
+		for (z = f = 0; f != slide; f++) {
+			if (stats[z] >= stats[f])
+				z = f;
+		}
+
+		ptr = mbin_xform_puzzle_new(phead, end - first);
+		if (ptr == NULL)
+			break;
+
+		ptr->start = first + z;
+
+		for (x = 0; x != (end - first); x++) {
+			ptr->data[x].val = array[z][x];
+			ptr->data[x].var = var;
+		}
+	} while (0);
+
 	return (ptr);
 }
 
@@ -53,6 +132,13 @@ mbin_xform_puzzle_compare(const void *_pa, const void *_pb)
 	if (pa[0]->start > pb[0]->start)
 		return (1);
 	else if (pa[0]->start < pb[0]->start)
+		return (-1);
+	else
+		return (0);
+
+	if (pa[0]->size > pb[0]->size)
+		return (1);
+	else if (pa[0]->size < pb[0]->size)
 		return (-1);
 	else
 		return (0);
@@ -76,8 +162,6 @@ mbin_xform_puzzle_reverse(mbin_xform_puzzle_head_t *phead)
 	size_t x;
 
 	TAILQ_FOREACH(ptr, phead, entry) {
-		ptr->start = -ptr->start - ptr->size + 1;
-
 		for (x = 0; x != (ptr->size / 2); x++) {
 			struct mbin_xform_var temp = ptr->data[x];
 
@@ -87,10 +171,38 @@ mbin_xform_puzzle_reverse(mbin_xform_puzzle_head_t *phead)
 	}
 }
 
+void
+mbin_xform_puzzle_sort(mbin_xform_puzzle_head_t *phead)
+{
+	struct mbin_xform_puzzle *ptr;
+	struct mbin_xform_puzzle **array;
+	size_t x;
+	size_t y;
+
+	x = 0;
+	TAILQ_FOREACH(ptr, phead, entry)
+	    x++;
+
+	array = malloc(sizeof(array[0]) * x);
+	if (array == NULL)
+		return;
+
+	x = 0;
+	TAILQ_FOREACH(ptr, phead, entry)
+	    array[x++] = ptr;
+
+	mergesort(array, x, sizeof(array[0]), &mbin_xform_puzzle_compare);
+
+	TAILQ_INIT(phead);
+	for (y = 0; y != x; y++)
+		TAILQ_INSERT_TAIL(phead, array[y], entry);
+
+	free(array);
+}
+
 int
 mbin_xform_puzzle_simplify(mbin_xform_puzzle_head_t *phead)
 {
-	struct mbin_xform_puzzle **array;
 	struct mbin_xform_puzzle *pother;
 	struct mbin_xform_puzzle *ptr;
 	int retval = 0;
@@ -99,13 +211,15 @@ mbin_xform_puzzle_simplify(mbin_xform_puzzle_head_t *phead)
 	size_t y;
 
 repeat:
+	mbin_xform_puzzle_sort(phead);
+
 	any = 0;
 	TAILQ_FOREACH(ptr, phead, entry) {
 		size_t half = ptr->size / 2;
 
 		for (x = 0; x != half; x++) {
 			/* single out mirrors */
-			if (ptr->data[x].val != 0 &&
+			if (ptr->data[x].val != 0.0 &&
 			    ptr->data[x].var == ptr->data[x + half].var &&
 			    ptr->data[x].val == -ptr->data[x + half].val) {
 
@@ -120,26 +234,32 @@ repeat:
 			}
 		}
 
-		TAILQ_FOREACH(pother, phead, entry) {
-			if (pother == ptr || pother->size < ptr->size)
+		for (x = 0; x != ptr->size; x++) {
+			if (ptr->data[x].val == 0.0)
 				continue;
-			for (x = 0; x != ptr->size; x++) {
-				if (ptr->data[x].val == 0)
+
+			TAILQ_FOREACH(pother, phead, entry) {
+				if (pother == ptr)
 					continue;
-				y = pother->size - ptr->size + x;
 
 				/* try to move variable from ptr to pother */
+				y = pother->size - ptr->size + x;
+				if (y >= pother->size)
+					continue;
+
 				if ((ptr->start + ptr->size) == (pother->start + pother->size) &&
-				    (pother->data[y].val == 0 ||
+				    (pother->data[y].val == 0.0 ||
 				    pother->data[y].var == ptr->data[x].var)) {
 					pother->data[y].val += ptr->data[x].val;
 					pother->data[y].var = ptr->data[x].var;
 					ptr->data[x].val = 0;
 					ptr->data[x].var = 0;
+
 					if (ptr->size != pother->size) {
 						any = 1;
 						retval = 1;
 					}
+					break;
 				}
 			}
 		}
@@ -148,7 +268,7 @@ repeat:
 	TAILQ_FOREACH_SAFE(ptr, phead, entry, pother) {
 retest:
 		for (x = 0; x != ptr->size; x++) {
-			if (ptr->data[x].val != 0)
+			if (ptr->data[x].val != 0.0)
 				break;
 		}
 		if (x == ptr->size) {
@@ -168,25 +288,6 @@ retest:
 	if (any)
 		goto repeat;
 
-	x = 0;
-	TAILQ_FOREACH(ptr, phead, entry)
-	    x++;
-
-	array = malloc(sizeof(array[0]) * x);
-	if (array == NULL)
-		return (retval);
-
-	x = 0;
-	TAILQ_FOREACH(ptr, phead, entry)
-	    array[x++] = ptr;
-
-	mergesort(array, x, sizeof(array[0]), &mbin_xform_puzzle_compare);
-
-	TAILQ_INIT(phead);
-	for (y = 0; y != x; y++)
-		TAILQ_INSERT_TAIL(phead, array[y], entry);
-
-	free(array);
 	return (retval);
 }
 
@@ -199,7 +300,6 @@ mbin_xform_puzzle_print(mbin_xform_puzzle_head_t *phead)
 	ssize_t min = 0;
 	size_t x;
 	size_t sb;
-	size_t mask;
 
 	printf("Transform set\n");
 
@@ -209,9 +309,11 @@ mbin_xform_puzzle_print(mbin_xform_puzzle_head_t *phead)
 	}
 
 	TAILQ_FOREACH(ptr, phead, entry) {
-		mask = 0;
+		char buffer[8 + 1];
+		size_t mask = 0;
+
 		for (x = 0; x != ptr->size; x++) {
-			if (ptr->data[x].val != 0)
+			if (ptr->data[x].val != 0.0)
 				mask |= x;
 		}
 
@@ -225,16 +327,29 @@ mbin_xform_puzzle_print(mbin_xform_puzzle_head_t *phead)
 		    (long long)ptr->start, (long long)ptr->size,
 		    (long long)mask);
 
+		memset(buffer, ' ', 8);
+		buffer[8] = 0;
+
 		for (x = min; x != ptr->start; x++)
-			printf("        ");
+			printf("%s", buffer);
 
 		for (x = 0; x != ptr->size; x++) {
 			if (ptr->data[x].val == 0) {
-				printf("  *     ");
-			} else {
-				printf("%2lld*%-4lld ",
-				    (long long)ptr->data[x].val,
+				memset(buffer, ' ', 8);
+				if ((x & mask) == x)
+					buffer[4] = '*';
+				buffer[8] = 0;
+				printf("%s", buffer);
+			} else if (ptr->data[x].val < 0) {
+				snprintf(buffer, sizeof(buffer), "%3.1f*%-4lld ",
+				    (float)ptr->data[x].val,
 				    (long long)ptr->data[x].var);
+				printf("%s", buffer);
+			} else {
+				snprintf(buffer, sizeof(buffer) - 1, "%3.1f*%-4lld ",
+				    (float)ptr->data[x].val,
+				    (long long)ptr->data[x].var);
+				printf(" %s", buffer);
 			}
 		}
 

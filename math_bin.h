@@ -935,7 +935,7 @@ void	mbin_sort(void *, const size_t, const size_t, mbin_cmp_t *);
 
 struct mbin_xform_var {
 	ssize_t var;
-	ssize_t val;
+	double val;
 };
 
 struct mbin_xform_puzzle {
@@ -946,12 +946,16 @@ struct mbin_xform_puzzle {
 };
 
 typedef TAILQ_HEAD(,mbin_xform_puzzle) mbin_xform_puzzle_head_t;
+typedef void mbin_xform_function_t(double *, size_t);
 
 struct mbin_xform_puzzle *mbin_xform_puzzle_new(mbin_xform_puzzle_head_t *, size_t);
+struct mbin_xform_puzzle *mbin_xform_puzzle_new_from_pattern(mbin_xform_puzzle_head_t *,
+    const double *, size_t, ssize_t, mbin_xform_function_t *);
 int mbin_xform_puzzle_simplify(mbin_xform_puzzle_head_t *);
 void mbin_xform_puzzle_reverse(mbin_xform_puzzle_head_t *);
 void mbin_xform_puzzle_print(mbin_xform_puzzle_head_t *);
 void mbin_xform_puzzle_free(mbin_xform_puzzle_head_t *);
+void mbin_xform_puzzle_sort(mbin_xform_puzzle_head_t *);
 
 __END_DECLS
 
