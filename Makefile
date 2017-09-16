@@ -6,7 +6,6 @@ LIB=		mbin1
 SHLIB_MAJOR=	1
 SHLIB_MINOR=	0
 CFLAGS+=	-Wall -O3
-WITHOUT_PROFILE=YES
 
 SRCS=
 SRCS+=	mbin_base23.c
