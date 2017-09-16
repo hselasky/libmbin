@@ -636,6 +636,9 @@ void	mbin_xor_mod_inv_multi_xform_32(uint32_t *ptr, const uint32_t *fact);
 
 void	mbin_xform3_fwd_double(double *ptr, const uint32_t max);
 void	mbin_xform3_inv_double(double *ptr, const uint32_t max);
+void	mbin_xform3_alt_fwd_double(double *ptr, const size_t wmax);
+void	mbin_xform3_alt_inv_double(double *ptr, const size_t wmax);
+
 void	mbin_multiply_xform_32(const uint32_t *, const uint32_t *, uint32_t *, uint8_t);
 void	mbin_multiply_xform_64(const uint64_t *, const uint64_t *, uint64_t *, uint8_t);
 void	mbin_multiply_xform_double(const double *, const double *, double *, uint8_t);

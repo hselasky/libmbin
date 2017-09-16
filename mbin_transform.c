@@ -1804,3 +1804,47 @@ mbin_xform3_inv_double(double *ptr, const uint32_t max)
 		}
 	}
 }
+
+void
+mbin_xform3_alt_fwd_double(double *ptr, const size_t wmax)
+{
+	size_t f, g, h;
+
+	for (f = 1; f != wmax; f *= 3) {
+		for (g = 0; g != wmax; g += 3 * f) {
+			for (h = 0; h != f; h++) {
+				double aa, bb, cc;
+
+				aa = ptr[g + f * 0 + h];
+				bb = ptr[g + f * 1 + h];
+				cc = ptr[g + f * 2 + h];
+
+				ptr[g + f * 0 + h] = (aa + bb);
+				ptr[g + f * 1 + h] = (aa + cc);
+				ptr[g + f * 2 + h] = (bb + cc);
+			}
+		}
+	}
+}
+
+void
+mbin_xform3_alt_inv_double(double *ptr, const size_t wmax)
+{
+	size_t f, g, h;
+
+	for (f = 1; f != wmax; f *= 3) {
+		for (g = 0; g != wmax; g += 3 * f) {
+			for (h = 0; h != f; h++) {
+				double aa, bb, cc;
+
+				aa = ptr[g + f * 0 + h];
+				bb = ptr[g + f * 1 + h];
+				cc = ptr[g + f * 2 + h];
+
+				ptr[g + f * 0 + h] = (aa + bb - cc) / 2.0;
+				ptr[g + f * 1 + h] = (aa + cc - bb) / 2.0;
+				ptr[g + f * 2 + h] = (bb + cc - aa) / 2.0;
+			}
+		}
+	}
+}
