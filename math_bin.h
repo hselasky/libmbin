@@ -960,6 +960,10 @@ void mbin_xform_puzzle_print(mbin_xform_puzzle_head_t *);
 void mbin_xform_puzzle_free(mbin_xform_puzzle_head_t *);
 void mbin_xform_puzzle_sort(mbin_xform_puzzle_head_t *);
 
+/* Multiply X3 prototypes */
+
+void mbin_x3_multiply_double(double *, double *, double *, const size_t);
+
 __END_DECLS
 
 #endif					/* _MATH_BIN_H_ */

@@ -57,6 +57,7 @@ SRCS+=  mbin_lsb.c
 SRCS+=  mbin_msb.c
 SRCS+=  mbin_mod_array.c
 SRCS+=  mbin_mul.c
+SRCS+=  mbin_multiply_x3.c
 SRCS+=  mbin_recode.c
 SRCS+=  mbin_sort.c
 SRCS+=  mbin_sos.c
