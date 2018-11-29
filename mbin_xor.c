@@ -1309,11 +1309,13 @@ mbin_xor2_div_mod_any_64(uint64_t rem, uint64_t div, uint64_t mod)
 	for (x = 0; x != nbit; x++)
 		table[x][1] = 1ULL << x;
 
-	for (x = 0; x != nbit; x++) {
-		t = mbin_xor2_mul_mod_any_64(1ULL << x, div, mod);
-
+	for (x = 0, t = div; x != nbit; x++) {
 		for (y = 0; y != nbit; y++)
 			table[y][0] |= ((t >> y) & 1ULL) << x;
+
+		t <<= 1;
+		if (t & msb)
+			t ^= mod;
 	}
 
 	for (x = z = 0; x != nbit; x++) {
