@@ -1389,6 +1389,9 @@ mbin_xor2_div_mod_any_64(uint64_t rem, uint64_t div, uint64_t mod)
 			break;
 		}
 	}
+	/* find correct solution */
+	if (mbin_xor2_mul_mod_any_64(t, div, mod) != rem)
+		t ^= msb - 1;
 	return (t);
 }
 
