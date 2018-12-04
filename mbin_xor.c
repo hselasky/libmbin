@@ -1390,8 +1390,11 @@ mbin_xor2_div_mod_any_64(uint64_t rem, uint64_t div, uint64_t mod)
 		}
 	}
 	/* find correct solution */
-	if (mbin_xor2_mul_mod_any_64(t, div, mod) != rem)
+	if (mbin_xor2_mul_mod_any_64(t, div, mod) != rem) {
 		t ^= msb - 1;
+		if (mbin_xor2_mul_mod_any_64(t, div, mod) != rem)
+			return (-1ULL);	/* unsolvable */
+	}
 	return (t);
 }
 
