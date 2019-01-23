@@ -1255,37 +1255,17 @@ mbin_xor2_div_odd_64(uint64_t x, uint64_t div)
 	return (r);
 }
 
-static void
-mbin_xor2_square_func(uint64_t x, uint8_t *pval, uint8_t num)
+uint64_t
+mbin_xor2_multiply_func_64(uint64_t x, uint64_t y)
 {
+	uint64_t retval = 0;
 	uint8_t a, b;
 
-	memset(pval, 0, num);
-
-	for (a = 0; a != (num / 2); a++) {
-		for (b = a + 1; b != (num / 2); b++)
-			pval[a + b] += ((x >> a) ^ (x >> b)) & 1ULL;
+	for (a = 0; a != 32; a++) {
+		for (b = a + 1; (a + b) < 64; b++)
+			retval += (((x >> a) ^ (y >> b)) & 1ULL) << (a + b);
 	}
-
-	/* do the carry */
-	for (a = b = 0; a != num; a++) {
-		b += pval[a];
-		pval[a] = b & 1;
-		b /= 2;
-	}
-}
-
-static int
-mbin_xor2_compare_func(const uint8_t *pa, const uint8_t *pb, uint8_t num)
-{
-
-	while (num--) {
-		if (pa[num] > pb[num])
-			return (1);
-		else if (pa[num] < pb[num])
-			return (-1);
-	}
-	return (0);
+	return (retval);
 }
 
 uint64_t
@@ -1293,17 +1273,12 @@ mbin_xor2_div_mod_any_64(uint64_t rem, uint64_t div, uint64_t mod)
 {
 	uint64_t msb = mbin_msb64(mod);
 	size_t nbit = mbin_sumbits64(msb - 1ULL);
-	size_t num = nbit + ((nbit * nbit - nbit) / 2ULL);
 	size_t x;
 	size_t y;
-	size_t z;
-	uint64_t table[num][2];
+	uint64_t table[nbit][2];
 	uint64_t t;
-	uint8_t k[2 * nbit];
-	uint8_t v[2 * nbit];
 
 	memset(table, 0, sizeof(table));
-	memset(k, 0, sizeof(k));
 
 	/* build binary equation set in table */
 	for (x = 0; x != nbit; x++)
@@ -1318,18 +1293,13 @@ mbin_xor2_div_mod_any_64(uint64_t rem, uint64_t div, uint64_t mod)
 			t ^= mod;
 	}
 
-	for (x = z = 0; x != nbit; x++) {
-		for (y = x + 1; y != nbit; y++, z++)
-			table[nbit + z][0] |= (1ULL << x) | (1ULL << y);
-	}
-
 	/* solve binary equation set */
 	for (x = 0; x != nbit; x++) {
 		if (table[x][0] == 0)
 			continue;
 		t = mbin_lsb64(table[x][0]);
 
-		for (y = 0; y != num; y++) {
+		for (y = 0; y != nbit; y++) {
 			if (x == y)
 				continue;
 			if (table[y][0] & t) {
@@ -1339,61 +1309,9 @@ mbin_xor2_div_mod_any_64(uint64_t rem, uint64_t div, uint64_t mod)
 		}
 	}
 
-	/* build constant */
-	for (x = z = 0; x != nbit; x++) {
-		for (y = x + 1; y != nbit; y++, z++) {
-			/* compute the XOR of all set bits */
-			k[x + y] += mbin_sumbits64(table[nbit + z][1] & rem) & 1;
-		}
-	}
-
-	/* do the carry */
-	for (x = y = 0; x != (2 * nbit); x++) {
-		y += k[x];
-		k[x] = y & 1;
-		y /= 2;
-	}
-
-	/* binary search the result */
-	for (t = 1; t != msb; t *= 2ULL) {
-		int r;
-
-		mbin_xor2_square_func(t, v, 2 * nbit);
-		r = mbin_xor2_compare_func(v, k, 2 * nbit);
-
-		if (r == 0) {
-			break;
-		} else if (r > 0) {
-			uint64_t u, w;
-
-			u = t / 4;
-			t -= 1;
-
-			while (1) {
-				w = (t - u);
-
-				mbin_xor2_square_func(w, v, 2 * nbit);
-				r = mbin_xor2_compare_func(v, k, 2 * nbit);
-
-				if (r == 0) {
-					t = w;
-					break;
-				} else if (r > 0) {
-					t = w;
-				}
-				/* unsolvable */
-				if (u == 0)
-					return (-1ULL);
-				u /= 2;
-			}
-			break;
-		}
-	}
-	/* find correct solution */
-	if (mbin_xor2_mul_mod_any_64(t, div, mod) != rem) {
-		t ^= msb - 1;
-		if (mbin_xor2_mul_mod_any_64(t, div, mod) != rem)
-			return (-1ULL);	/* unsolvable */
+	/* compute answer */
+	for (t = x = 0; x != nbit; x++) {
+		t |= mbin_lsb64(table[x][0]) * (mbin_sumbits64(table[x][1] & rem) & 1ULL);
 	}
 	return (t);
 }

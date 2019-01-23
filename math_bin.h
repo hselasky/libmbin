@@ -799,6 +799,7 @@ uint64_t mbin_xor2_mod_simple_64(uint64_t, uint64_t);
 uint32_t mbin_xor2_mod_32(uint32_t, uint32_t);
 uint64_t mbin_xor2_div_64(uint64_t, uint64_t);
 uint64_t mbin_xor2_div_odd_64(uint64_t, uint64_t);
+uint64_t mbin_xor2_multiply_func_64(uint64_t, uint64_t);
 uint64_t mbin_xor2_div_mod_any_64(uint64_t, uint64_t, uint64_t);
 uint64_t mbin_xor2_lin_mul_64(uint64_t, uint64_t, uint8_t);
 uint64_t mbin_xor2_bit_reduce_mod_64(uint64_t, uint8_t);
