@@ -1272,13 +1272,13 @@ uint64_t
 mbin_xor2_div_mod_any_64(uint64_t rem, uint64_t div, uint64_t mod)
 {
 	uint64_t msb = mbin_msb64(mod);
-	size_t nbit = mbin_sumbits64(msb - 1ULL);
-	size_t x;
-	size_t y;
-	uint64_t table[nbit][2];
+	uint32_t nbit = mbin_sumbits64(msb - 1ULL);
+	uint32_t x;
+	uint32_t y;
+	uint64_t table[64][2];
 	uint64_t t;
 
-	memset(table, 0, sizeof(table));
+	memset(table, 0, sizeof(table[0]) * nbit);
 
 	/* build binary equation set in table */
 	for (x = 0; x != nbit; x++)
@@ -1311,7 +1311,8 @@ mbin_xor2_div_mod_any_64(uint64_t rem, uint64_t div, uint64_t mod)
 
 	/* compute answer */
 	for (t = x = 0; x != nbit; x++) {
-		t |= mbin_lsb64(table[x][0]) * (mbin_sumbits64(table[x][1] & rem) & 1ULL);
+		t |= mbin_lsb64(table[x][0]) *
+		    (mbin_sumbits64(table[x][1] & rem) & 1ULL);
 	}
 	return (t);
 }
