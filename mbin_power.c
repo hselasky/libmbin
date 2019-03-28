@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2009-2012 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2009-2019 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -620,4 +620,40 @@ mbin_factor_slower_64(uint64_t x)
 	if (b < x)
 		return (b);
 	return (0);
+}
+
+uint64_t
+mbin_factor_slowest_64(uint64_t x)
+{
+	uint64_t a;
+	uint64_t b;
+
+	if (x <= 1)
+		return (0);
+
+	/* check for even number */
+	if (!(x & 1))
+		return (2);
+
+	/* check for square */
+	b = mbin_sqrt_64(x);
+	if (x == (b * b))
+		return (b);
+
+	/* compute offset */
+	a = (x + 1) / 2;
+	a = (a * a - 2 * a) % x;
+
+	for (b = 0; b < x; b += 2) {
+		a += b;
+		if (a >= x)
+			a -= x;
+		if (a == 0) {
+			if ((b + 3) == x)
+				return (0);	/* is prime */
+			else
+				return (mbin_gcd_64(b + 3, x));
+		}
+	}
+	return (0);	/* not reachable */
 }
