@@ -51,7 +51,7 @@ struct mbin_x3_input_double {
 } __aligned(32);
 
 /*
- * This function take one input array input[0..stride-1] and compute
+ * This function take one input array input[0..stride-1] and accumulate
  * the resulting product into ptr_low[0..stride-1] and
  * ptr_high[0..stride-1] for the low and high parts respectivly.
  */
