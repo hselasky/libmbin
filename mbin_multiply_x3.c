@@ -28,14 +28,22 @@
 
 #include "math_bin.h"
 
+/* Set logarithmic limit for switching to classic multiplication: */
+
 #ifndef MBIN_X3_LOG2_COMBA
 #define	MBIN_X3_LOG2_COMBA 6
 #endif
 
-#if (MBIN_X3_LOG2_COMBA < 2)
-#error "MBIN_X3_LOG2_COMBA must be greater than 1"
+/* Assert sane limit: */
+
+#if (MBIN_X3_LOG2_COMBA < 1)
+#error "MBIN_X3_LOG2_COMBA must be greater than 0"
 #endif
 
+/*
+ * Helper structure to save some pointer passing. The structure size
+ * is aligned to 32-bytes to avoid multiplication in array lookups.
+ */
 struct mbin_x3_input_double {
 	double	a;
 	double	b;
@@ -43,8 +51,9 @@ struct mbin_x3_input_double {
 } __aligned(32);
 
 /*
- * <input size> = "stride"
- * <output size> = 2 * "stride"
+ * This function take one input array input[0..stride-1] and compute
+ * the resulting product into ptr_low[0..stride-1] and
+ * ptr_high[0..stride-1] for the low and high parts respectivly.
  */
 static void
 mbin_x3_multiply_sub_double(struct mbin_x3_input_double *input, double *ptr_low, double *ptr_high, const size_t stride)
@@ -52,11 +61,20 @@ mbin_x3_multiply_sub_double(struct mbin_x3_input_double *input, double *ptr_low,
 	size_t x;
 	size_t y;
 
+	/*
+	 * Check for small multiplications, because they run faster
+	 * the classic way than by using the transform on the CPU:
+	 */
 	if (stride >= (1UL << MBIN_X3_LOG2_COMBA)) {
 		const size_t strideh = stride >> 1;
 
 		input->toggle ^= stride;
 
+		/*
+		 * Optimise use of transforms to avoid having to
+		 * balance the inverse and forward transforms before
+		 * returning from this function:
+		 */
 		if (input->toggle & stride) {
 
 			/* inverse step */
@@ -136,32 +154,42 @@ mbin_x3_multiply_sub_double(struct mbin_x3_input_double *input, double *ptr_low,
 			}
 		}
 	} else {
+#if (MBIN_X3_LOG2_COMBA == 1)
+		ptr_low[0] += input[0].a * input[0].b;
+#else
 		for (x = 0; x != stride; x++) {
 			double value = input[x].a;
 
+			/* optimise multiplication by zero */
 			if (value == 0.0)
 				continue;
+			/* compute low-part of product */
 			for (y = 0; y != (stride - x); y++) {
 				ptr_low[x + y] += input[y].b * value;
 			}
+			/* compute high-part of product */
 			for (; y != stride; y++) {
 				ptr_high[x + y - stride] += input[y].b * value;
 			}
 		}
+#endif
 	}
 }
 
 /*
- * <input size> = "max"
- * <output size> = 2 * "max"
+ * This function take the two input arrays va[0..max-1] and
+ * vb[0..max-1] and compute their product into pc[0..2max-1]:
  */
 void
-mbin_x3_multiply_double(double *va, double *vb, double *pc, const size_t max)
+mbin_x3_multiply_double(const double *va, const double *vb, double *pc, const size_t max)
 {
 	struct mbin_x3_input_double input[max];
 	size_t x;
 
-	/* check for non-power of two */
+	/*
+	 * The transform is only supported for powers of two.
+	 * Return otherwise.
+	 */
 	if (max & (max - 1))
 		return;
 

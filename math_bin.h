@@ -965,7 +965,7 @@ void mbin_xform_puzzle_sort(mbin_xform_puzzle_head_t *);
 
 /* Multiply X3 prototypes */
 
-void mbin_x3_multiply_double(double *, double *, double *, const size_t);
+void mbin_x3_multiply_double(const double *, const double *, double *, const size_t);
 
 __END_DECLS
 
