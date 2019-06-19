@@ -44,11 +44,10 @@
  * Helper structure to save some pointer passing. The structure size
  * is aligned to 32-bytes to avoid multiplication in array lookups.
  */
-struct mbin_x3_input_double {
+struct mbin_x3_mul_input_double {
 	double	a;
 	double	b;
-	size_t	toggle;
-} __aligned(32);
+} __aligned(16);
 
 /*
  * This function take one input array input[0..stride-1] and accumulate
@@ -56,7 +55,8 @@ struct mbin_x3_input_double {
  * ptr_high[0..stride-1] for the low and high parts respectivly.
  */
 static void
-mbin_x3_multiply_sub_double(struct mbin_x3_input_double *input, double *ptr_low, double *ptr_high, const size_t stride)
+mbin_x3_multiply_sub_double(struct mbin_x3_mul_input_double *input, double *ptr_low, double *ptr_high,
+    const size_t stride, const uint8_t toggle)
 {
 	size_t x;
 	size_t y;
@@ -68,14 +68,12 @@ mbin_x3_multiply_sub_double(struct mbin_x3_input_double *input, double *ptr_low,
 	if (stride >= (1UL << MBIN_X3_LOG2_COMBA)) {
 		const size_t strideh = stride >> 1;
 
-		input->toggle ^= stride;
-
 		/*
 		 * Optimise use of transforms to avoid having to
 		 * balance the inverse and forward transforms before
 		 * returning from this function:
 		 */
-		if (input->toggle & stride) {
+		if (toggle) {
 
 			/* inverse step */
 			for (x = 0; x != strideh; x++) {
@@ -90,12 +88,12 @@ mbin_x3_multiply_sub_double(struct mbin_x3_input_double *input, double *ptr_low,
 				ptr_high[x] = a + b + c + d;
 			}
 
-			mbin_x3_multiply_sub_double(input, ptr_low, ptr_low + strideh, strideh);
+			mbin_x3_multiply_sub_double(input, ptr_low, ptr_low + strideh, strideh, toggle);
 
 			for (x = 0; x != strideh; x++)
 				ptr_low[x + strideh] = -ptr_low[x + strideh];
 
-			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh);
+			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, toggle);
 
 			/* forward step */
 			for (x = 0; x != strideh; x++) {
@@ -113,9 +111,9 @@ mbin_x3_multiply_sub_double(struct mbin_x3_input_double *input, double *ptr_low,
 				input[x + strideh].b += input[x].b;
 			}
 
-			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh);
+			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh, !toggle);
 		} else {
-			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh);
+			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh, !toggle);
 
 			/* inverse step */
 			for (x = 0; x != strideh; x++) {
@@ -133,12 +131,12 @@ mbin_x3_multiply_sub_double(struct mbin_x3_input_double *input, double *ptr_low,
 				input[x + strideh].b -= input[x].b;
 			}
 
-			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh);
+			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, toggle);
 
 			for (x = 0; x != strideh; x++)
 				ptr_low[x + strideh] = -ptr_low[x + strideh];
 
-			mbin_x3_multiply_sub_double(input, ptr_low, ptr_low + strideh, strideh);
+			mbin_x3_multiply_sub_double(input, ptr_low, ptr_low + strideh, strideh, toggle);
 
 			/* forward step */
 			for (x = 0; x != strideh; x++) {
@@ -183,7 +181,7 @@ mbin_x3_multiply_sub_double(struct mbin_x3_input_double *input, double *ptr_low,
 void
 mbin_x3_multiply_double(const double *va, const double *vb, double *pc, const size_t max)
 {
-	struct mbin_x3_input_double input[max];
+	struct mbin_x3_mul_input_double input[max];
 	size_t x;
 
 	/*
@@ -197,12 +195,170 @@ mbin_x3_multiply_double(const double *va, const double *vb, double *pc, const si
 	for (x = 0; x != max; x++) {
 		input[x].a = va[x];
 		input[x].b = vb[x];
-		input[x].toggle = 0;
 	}
 
 	/* clear output vector */
 	memset(pc, 0, (2 * sizeof(double)) * max);
 
 	/* do multiplication */
-	mbin_x3_multiply_sub_double(input, pc, pc + max, max);
+	mbin_x3_multiply_sub_double(input, pc, pc + max, max, 1);
+}
+
+/*
+ * Helper structure to save some pointer passing. The structure size
+ * is aligned to 16-bytes to avoid multiplication in array lookups.
+ */
+struct mbin_x3_sqr_input_double {
+	double	a;
+} __aligned(8);
+
+/*
+ * This function take one input array input[0..stride-1] and accumulate
+ * the resulting square product into ptr_low[0..stride-1] and
+ * ptr_high[0..stride-1] for the low and high parts respectivly.
+ */
+static void
+mbin_x3_square_sub_double(struct mbin_x3_sqr_input_double *input, double *ptr_low, double *ptr_high,
+    const size_t stride, const uint8_t toggle)
+{
+	size_t x;
+	size_t y;
+
+	/*
+	 * Check for small multiplications, because they run faster
+	 * the classic way than by using the transform on the CPU:
+	 */
+	if (stride >= (1UL << MBIN_X3_LOG2_COMBA)) {
+		const size_t strideh = stride >> 1;
+
+		/*
+		 * Optimise use of transforms to avoid having to
+		 * balance the inverse and forward transforms before
+		 * returning from this function:
+		 */
+		if (toggle) {
+
+			/* inverse step */
+			for (x = 0; x != strideh; x++) {
+				double a, b, c, d;
+
+				a = ptr_low[x];
+				b = ptr_low[x + strideh];
+				c = ptr_high[x];
+				d = ptr_high[x + strideh];
+
+				ptr_low[x + strideh] = a + b;
+				ptr_high[x] = a + b + c + d;
+			}
+
+			mbin_x3_square_sub_double(input, ptr_low, ptr_low + strideh, strideh, toggle);
+
+			for (x = 0; x != strideh; x++)
+				ptr_low[x + strideh] = -ptr_low[x + strideh];
+
+			mbin_x3_square_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, toggle);
+
+			/* forward step */
+			for (x = 0; x != strideh; x++) {
+				double a, b, c, d;
+
+				a = ptr_low[x];
+				b = ptr_low[x + strideh];
+				c = ptr_high[x];
+				d = ptr_high[x + strideh];
+
+				ptr_low[x + strideh] = -a - b;
+				ptr_high[x] = c + b - d;
+
+				input[x + strideh].a += input[x].a;
+			}
+
+			mbin_x3_square_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh, !toggle);
+		} else {
+			mbin_x3_square_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh, !toggle);
+
+			/* inverse step */
+			for (x = 0; x != strideh; x++) {
+				double a, b, c, d;
+
+				a = ptr_low[x];
+				b = ptr_low[x + strideh];
+				c = ptr_high[x];
+				d = ptr_high[x + strideh];
+
+				ptr_low[x + strideh] = -a - b;
+				ptr_high[x] = a + b + c + d;
+
+				input[x + strideh].a -= input[x].a;
+			}
+
+			mbin_x3_square_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, toggle);
+
+			for (x = 0; x != strideh; x++)
+				ptr_low[x + strideh] = -ptr_low[x + strideh];
+
+			mbin_x3_square_sub_double(input, ptr_low, ptr_low + strideh, strideh, toggle);
+
+			/* forward step */
+			for (x = 0; x != strideh; x++) {
+				double a, b, c, d;
+
+				a = ptr_low[x];
+				b = ptr_low[x + strideh];
+				c = ptr_high[x];
+				d = ptr_high[x + strideh];
+
+				ptr_low[x + strideh] = b - a;
+				ptr_high[x] = c - b - d;
+			}
+		}
+	} else {
+#if (MBIN_X3_LOG2_COMBA == 1)
+		ptr_low[0] += input[0].a * input[0].a;
+#else
+		for (x = 0; x != stride; x++) {
+			double value = input[x].a;
+
+			/* optimise multiplication by zero */
+			if (value == 0.0)
+				continue;
+			/* compute low-part of product */
+			for (y = 0; y != (stride - x); y++) {
+				ptr_low[x + y] += input[y].a * value;
+			}
+			/* compute high-part of product */
+			for (; y != stride; y++) {
+				ptr_high[x + y - stride] += input[y].a * value;
+			}
+		}
+#endif
+	}
+}
+
+/*
+ * This function take the input array va[0..max-1] and
+ * compute the square product into pc[0..2max-1]:
+ */
+void
+mbin_x3_square_double(const double *va, double *pc, const size_t max)
+{
+	struct mbin_x3_sqr_input_double input[max];
+	size_t x;
+
+	/*
+	 * The transform is only supported for powers of two.
+	 * Return otherwise.
+	 */
+	if (max & (max - 1))
+		return;
+
+	/* setup input vector */
+	for (x = 0; x != max; x++)
+		input[x].a = va[x];
+
+	/* clear output vector */
+	memset(pc, 0, (2 * sizeof(double)) * max);
+
+	/* do multiplication */
+	mbin_x3_square_sub_double(input, pc, pc + max, max, 1);
 }
