@@ -56,7 +56,7 @@ struct mbin_x3_mul_input_double {
  */
 static void
 mbin_x3_multiply_sub_double(struct mbin_x3_mul_input_double *input, double *ptr_low, double *ptr_high,
-    const size_t stride)
+    const size_t stride, const uint8_t toggle)
 {
 	size_t x;
 	size_t y;
@@ -68,43 +68,89 @@ mbin_x3_multiply_sub_double(struct mbin_x3_mul_input_double *input, double *ptr_
 	if (stride >= (1UL << MBIN_X3_LOG2_COMBA)) {
 		const size_t strideh = stride >> 1;
 
-		/* inverse step */
-		for (x = 0; x != strideh; x++) {
-			double a, b, c, d;
+		/*
+		 * Optimise use of transforms to avoid having to
+		 * balance the inverse and forward transforms before
+		 * returning from this function:
+		 */
+		if (toggle) {
 
-			a = ptr_low[x];
-			b = ptr_low[x + strideh];
-			c = ptr_high[x];
-			d = ptr_high[x + strideh];
+			/* inverse step */
+			for (x = 0; x != strideh; x++) {
+				double a, b, c, d;
 
-			ptr_low[x + strideh] = a + b;
-			ptr_high[x] = a + b + c + d;
+				a = ptr_low[x];
+				b = ptr_low[x + strideh];
+				c = ptr_high[x];
+				d = ptr_high[x + strideh];
+
+				ptr_low[x + strideh] = a + b;
+				ptr_high[x] = a + b + c + d;
+			}
+
+			mbin_x3_multiply_sub_double(input, ptr_low, ptr_low + strideh, strideh, toggle);
+
+			for (x = 0; x != strideh; x++)
+				ptr_low[x + strideh] = -ptr_low[x + strideh];
+
+			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, toggle);
+
+			/* forward step */
+			for (x = 0; x != strideh; x++) {
+				double a, b, c, d;
+
+				a = ptr_low[x];
+				b = ptr_low[x + strideh];
+				c = ptr_high[x];
+				d = ptr_high[x + strideh];
+
+				ptr_low[x + strideh] = -a - b;
+				ptr_high[x] = c + b - d;
+
+				input[x + strideh].a += input[x].a;
+				input[x + strideh].b += input[x].b;
+			}
+
+			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh, !toggle);
+		} else {
+			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh, !toggle);
+
+			/* inverse step */
+			for (x = 0; x != strideh; x++) {
+				double a, b, c, d;
+
+				a = ptr_low[x];
+				b = ptr_low[x + strideh];
+				c = ptr_high[x];
+				d = ptr_high[x + strideh];
+
+				ptr_low[x + strideh] = -a - b;
+				ptr_high[x] = a + b + c + d;
+
+				input[x + strideh].a -= input[x].a;
+				input[x + strideh].b -= input[x].b;
+			}
+
+			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, toggle);
+
+			for (x = 0; x != strideh; x++)
+				ptr_low[x + strideh] = -ptr_low[x + strideh];
+
+			mbin_x3_multiply_sub_double(input, ptr_low, ptr_low + strideh, strideh, toggle);
+
+			/* forward step */
+			for (x = 0; x != strideh; x++) {
+				double a, b, c, d;
+
+				a = ptr_low[x];
+				b = ptr_low[x + strideh];
+				c = ptr_high[x];
+				d = ptr_high[x + strideh];
+
+				ptr_low[x + strideh] = b - a;
+				ptr_high[x] = c - b - d;
+			}
 		}
-
-		mbin_x3_multiply_sub_double(input, ptr_low, ptr_low + strideh, strideh);
-
-		for (x = 0; x != strideh; x++)
-			ptr_low[x + strideh] = -ptr_low[x + strideh];
-
-		mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh);
-
-		/* forward step */
-		for (x = 0; x != strideh; x++) {
-			double a, b, c, d;
-
-			a = ptr_low[x];
-			b = ptr_low[x + strideh];
-			c = ptr_high[x];
-			d = ptr_high[x + strideh];
-
-			ptr_low[x + strideh] = -a - b;
-			ptr_high[x] = c + b - d;
-
-			input[x + strideh].a += input[x].a;
-			input[x + strideh].b += input[x].b;
-		}
-
-		mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh);
 	} else {
 #if (MBIN_X3_LOG2_COMBA == 1)
 		ptr_low[0] += input[0].a * input[0].b;
@@ -155,7 +201,7 @@ mbin_x3_multiply_double(const double *va, const double *vb, double *pc, const si
 	memset(pc, 0, (2 * sizeof(double)) * max);
 
 	/* do multiplication */
-	mbin_x3_multiply_sub_double(input, pc, pc + max, max);
+	mbin_x3_multiply_sub_double(input, pc, pc + max, max, 1);
 }
 
 /*
@@ -173,7 +219,7 @@ struct mbin_x3_sqr_input_double {
  */
 static void
 mbin_x3_square_sub_double(struct mbin_x3_sqr_input_double *input, double *ptr_low, double *ptr_high,
-    const size_t stride)
+    const size_t stride, const uint8_t toggle)
 {
 	size_t x;
 	size_t y;
@@ -185,42 +231,87 @@ mbin_x3_square_sub_double(struct mbin_x3_sqr_input_double *input, double *ptr_lo
 	if (stride >= (1UL << MBIN_X3_LOG2_COMBA)) {
 		const size_t strideh = stride >> 1;
 
-		/* inverse step */
-		for (x = 0; x != strideh; x++) {
-			double a, b, c, d;
+		/*
+		 * Optimise use of transforms to avoid having to
+		 * balance the inverse and forward transforms before
+		 * returning from this function:
+		 */
+		if (toggle) {
 
-			a = ptr_low[x];
-			b = ptr_low[x + strideh];
-			c = ptr_high[x];
-			d = ptr_high[x + strideh];
+			/* inverse step */
+			for (x = 0; x != strideh; x++) {
+				double a, b, c, d;
 
-			ptr_low[x + strideh] = a + b;
-			ptr_high[x] = a + b + c + d;
+				a = ptr_low[x];
+				b = ptr_low[x + strideh];
+				c = ptr_high[x];
+				d = ptr_high[x + strideh];
+
+				ptr_low[x + strideh] = a + b;
+				ptr_high[x] = a + b + c + d;
+			}
+
+			mbin_x3_square_sub_double(input, ptr_low, ptr_low + strideh, strideh, toggle);
+
+			for (x = 0; x != strideh; x++)
+				ptr_low[x + strideh] = -ptr_low[x + strideh];
+
+			mbin_x3_square_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, toggle);
+
+			/* forward step */
+			for (x = 0; x != strideh; x++) {
+				double a, b, c, d;
+
+				a = ptr_low[x];
+				b = ptr_low[x + strideh];
+				c = ptr_high[x];
+				d = ptr_high[x + strideh];
+
+				ptr_low[x + strideh] = -a - b;
+				ptr_high[x] = c + b - d;
+
+				input[x + strideh].a += input[x].a;
+			}
+
+			mbin_x3_square_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh, !toggle);
+		} else {
+			mbin_x3_square_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh, !toggle);
+
+			/* inverse step */
+			for (x = 0; x != strideh; x++) {
+				double a, b, c, d;
+
+				a = ptr_low[x];
+				b = ptr_low[x + strideh];
+				c = ptr_high[x];
+				d = ptr_high[x + strideh];
+
+				ptr_low[x + strideh] = -a - b;
+				ptr_high[x] = a + b + c + d;
+
+				input[x + strideh].a -= input[x].a;
+			}
+
+			mbin_x3_square_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, toggle);
+
+			for (x = 0; x != strideh; x++)
+				ptr_low[x + strideh] = -ptr_low[x + strideh];
+
+			mbin_x3_square_sub_double(input, ptr_low, ptr_low + strideh, strideh, toggle);
+
+			/* forward step */
+			for (x = 0; x != strideh; x++) {
+				double a, b, c, d;
+
+				a = ptr_low[x];
+				b = ptr_low[x + strideh];
+				c = ptr_high[x];
+				d = ptr_high[x + strideh];
+
+				ptr_low[x + strideh] = b - a;
+				ptr_high[x] = c - b - d;
+			}
 		}
-
-		mbin_x3_square_sub_double(input, ptr_low, ptr_low + strideh, strideh);
-
-		for (x = 0; x != strideh; x++)
-			ptr_low[x + strideh] = -ptr_low[x + strideh];
-
-		mbin_x3_square_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh);
-
-		/* forward step */
-		for (x = 0; x != strideh; x++) {
-			double a, b, c, d;
-
-			a = ptr_low[x];
-			b = ptr_low[x + strideh];
-			c = ptr_high[x];
-			d = ptr_high[x + strideh];
-
-			ptr_low[x + strideh] = -a - b;
-			ptr_high[x] = c + b - d;
-
-			input[x + strideh].a += input[x].a;
-		}
-
-		mbin_x3_square_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh);
 	} else {
 #if (MBIN_X3_LOG2_COMBA == 1)
 		ptr_low[0] += input[0].a * input[0].a;
@@ -269,5 +360,5 @@ mbin_x3_square_double(const double *va, double *pc, const size_t max)
 	memset(pc, 0, (2 * sizeof(double)) * max);
 
 	/* do multiplication */
-	mbin_x3_square_sub_double(input, pc, pc + max, max);
+	mbin_x3_square_sub_double(input, pc, pc + max, max, 1);
 }
