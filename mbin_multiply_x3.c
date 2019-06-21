@@ -88,12 +88,12 @@ mbin_x3_multiply_sub_double(struct mbin_x3_mul_input_double *input, double *ptr_
 				ptr_high[x] = a + b + c + d;
 			}
 
-			mbin_x3_multiply_sub_double(input, ptr_low, ptr_low + strideh, strideh, toggle);
+			mbin_x3_multiply_sub_double(input, ptr_low, ptr_low + strideh, strideh, 1);
 
 			for (x = 0; x != strideh; x++)
 				ptr_low[x + strideh] = -ptr_low[x + strideh];
 
-			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, toggle);
+			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, 1);
 
 			/* forward step */
 			for (x = 0; x != strideh; x++) {
@@ -111,9 +111,9 @@ mbin_x3_multiply_sub_double(struct mbin_x3_mul_input_double *input, double *ptr_
 				input[x + strideh].b += input[x].b;
 			}
 
-			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh, !toggle);
+			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh, 0);
 		} else {
-			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh, !toggle);
+			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh, 1);
 
 			/* inverse step */
 			for (x = 0; x != strideh; x++) {
@@ -131,12 +131,12 @@ mbin_x3_multiply_sub_double(struct mbin_x3_mul_input_double *input, double *ptr_
 				input[x + strideh].b -= input[x].b;
 			}
 
-			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, toggle);
+			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, 0);
 
 			for (x = 0; x != strideh; x++)
 				ptr_low[x + strideh] = -ptr_low[x + strideh];
 
-			mbin_x3_multiply_sub_double(input, ptr_low, ptr_low + strideh, strideh, toggle);
+			mbin_x3_multiply_sub_double(input, ptr_low, ptr_low + strideh, strideh, 0);
 
 			/* forward step */
 			for (x = 0; x != strideh; x++) {
