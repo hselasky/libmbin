@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2017 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2017-2019 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -55,12 +55,13 @@ struct mbin_x3_mul_input_double {
  * ptr_high[0..stride-1] for the low and high parts respectivly.
  */
 static void
-mbin_x3_multiply_sub_double(struct mbin_x3_mul_input_double *input, double *ptr_low, double *ptr_high,
+mbin_x3_multiply_add_double(struct mbin_x3_mul_input_double *input, double *ptr_low, double *ptr_high,
     const size_t stride, const uint8_t toggle)
 {
 	size_t x;
+#if (MBIN_X3_LOG2_COMBA != 1)
 	size_t y;
-
+#endif
 	/*
 	 * Check for small multiplications, because they run faster
 	 * the classic way than by using the transform on the CPU:
@@ -77,23 +78,22 @@ mbin_x3_multiply_sub_double(struct mbin_x3_mul_input_double *input, double *ptr_
 
 			/* inverse step */
 			for (x = 0; x != strideh; x++) {
-				double a, b, c, d;
+				double a, c;
 
-				a = ptr_low[x];
-				b = ptr_low[x + strideh];
-				c = ptr_high[x];
-				d = ptr_high[x + strideh];
+				a = ptr_low[x] + ptr_low[x + strideh];
+				c = ptr_high[x] + ptr_high[x + strideh];
 
-				ptr_low[x + strideh] = a + b;
-				ptr_high[x] = a + b + c + d;
+				ptr_low[x + strideh] = a;
+				ptr_high[x] = a + c;
 			}
 
-			mbin_x3_multiply_sub_double(input, ptr_low, ptr_low + strideh, strideh, 1);
+			mbin_x3_multiply_add_double(input, ptr_low, ptr_low + strideh, strideh, 1);
 
+			/* negation step */
 			for (x = 0; x != strideh; x++)
 				ptr_low[x + strideh] = -ptr_low[x + strideh];
 
-			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, 1);
+			mbin_x3_multiply_add_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, 1);
 
 			/* forward step */
 			for (x = 0; x != strideh; x++) {
@@ -111,32 +111,31 @@ mbin_x3_multiply_sub_double(struct mbin_x3_mul_input_double *input, double *ptr_
 				input[x + strideh].b += input[x].b;
 			}
 
-			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh, 0);
+			mbin_x3_multiply_add_double(input + strideh, ptr_low + strideh, ptr_high, strideh, 0);
 		} else {
-			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high, strideh, 1);
+			mbin_x3_multiply_add_double(input + strideh, ptr_low + strideh, ptr_high, strideh, 1);
 
 			/* inverse step */
 			for (x = 0; x != strideh; x++) {
-				double a, b, c, d;
+				double a, c;
 
-				a = ptr_low[x];
-				b = ptr_low[x + strideh];
-				c = ptr_high[x];
-				d = ptr_high[x + strideh];
+				a = ptr_low[x] + ptr_low[x + strideh];
+				c = ptr_high[x] + ptr_high[x + strideh];
 
-				ptr_low[x + strideh] = -a - b;
-				ptr_high[x] = a + b + c + d;
+				ptr_low[x + strideh] = -a;
+				ptr_high[x] = a + c;
 
 				input[x + strideh].a -= input[x].a;
 				input[x + strideh].b -= input[x].b;
 			}
 
-			mbin_x3_multiply_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, 0);
+			mbin_x3_multiply_add_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, 0);
 
+			/* negation step */
 			for (x = 0; x != strideh; x++)
 				ptr_low[x + strideh] = -ptr_low[x + strideh];
 
-			mbin_x3_multiply_sub_double(input, ptr_low, ptr_low + strideh, strideh, 0);
+			mbin_x3_multiply_add_double(input, ptr_low, ptr_low + strideh, strideh, 0);
 
 			/* forward step */
 			for (x = 0; x != strideh; x++) {
@@ -201,7 +200,7 @@ mbin_x3_multiply_double(const double *va, const double *vb, double *pc, const si
 	memset(pc, 0, (2 * sizeof(double)) * max);
 
 	/* do multiplication */
-	mbin_x3_multiply_sub_double(input, pc, pc + max, max, 1);
+	mbin_x3_multiply_add_double(input, pc, pc + max, max, 1);
 }
 
 /*
@@ -222,8 +221,9 @@ mbin_x3_square_sub_double(struct mbin_x3_sqr_input_double *input, double *ptr_lo
     const size_t stride, const uint8_t toggle)
 {
 	size_t x;
+#if (MBIN_X3_LOG2_COMBA != 1)
 	size_t y;
-
+#endif
 	/*
 	 * Check for small multiplications, because they run faster
 	 * the classic way than by using the transform on the CPU:
@@ -240,19 +240,18 @@ mbin_x3_square_sub_double(struct mbin_x3_sqr_input_double *input, double *ptr_lo
 
 			/* inverse step */
 			for (x = 0; x != strideh; x++) {
-				double a, b, c, d;
+				double a, c;
 
-				a = ptr_low[x];
-				b = ptr_low[x + strideh];
-				c = ptr_high[x];
-				d = ptr_high[x + strideh];
+				a = ptr_low[x] + ptr_low[x + strideh];
+				c = ptr_high[x] + ptr_high[x + strideh];
 
-				ptr_low[x + strideh] = a + b;
-				ptr_high[x] = a + b + c + d;
+				ptr_low[x + strideh] = a;
+				ptr_high[x] = a + c;
 			}
 
 			mbin_x3_square_sub_double(input, ptr_low, ptr_low + strideh, strideh, 1);
 
+			/* negation step */
 			for (x = 0; x != strideh; x++)
 				ptr_low[x + strideh] = -ptr_low[x + strideh];
 
@@ -279,21 +278,20 @@ mbin_x3_square_sub_double(struct mbin_x3_sqr_input_double *input, double *ptr_lo
 
 			/* inverse step */
 			for (x = 0; x != strideh; x++) {
-				double a, b, c, d;
+				double a, c;
 
-				a = ptr_low[x];
-				b = ptr_low[x + strideh];
-				c = ptr_high[x];
-				d = ptr_high[x + strideh];
+				a = ptr_low[x] + ptr_low[x + strideh];
+				c = ptr_high[x] + ptr_high[x + strideh];
 
-				ptr_low[x + strideh] = -a - b;
-				ptr_high[x] = a + b + c + d;
+				ptr_low[x + strideh] = -a;
+				ptr_high[x] = a + c;
 
 				input[x + strideh].a -= input[x].a;
 			}
 
 			mbin_x3_square_sub_double(input + strideh, ptr_low + strideh, ptr_high + strideh, strideh, 0);
 
+			/* negation step */
 			for (x = 0; x != strideh; x++)
 				ptr_low[x + strideh] = -ptr_low[x + strideh];
 
