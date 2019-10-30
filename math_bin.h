@@ -965,8 +965,14 @@ void mbin_xform_puzzle_sort(mbin_xform_puzzle_head_t *);
 
 /* Multiply X3 prototypes */
 
-void mbin_x3_multiply_double(const double *, const double *, double *, const size_t);
-void mbin_x3_square_double(const double *, double *, const size_t);
+void mbin_x3_multiply_double(const double *, const double *, double *, double *, const size_t);
+void mbin_x3_square_double(const double *, double *, double *, const size_t);
+
+void mbin_x3_multiply_32(const int32_t *, const int32_t *, int32_t *, int32_t *, const size_t);
+void mbin_x3_square_32(const int32_t *, int32_t *, int32_t *, const size_t);
+
+void mbin_x3_multiply_64(const int64_t *, const int64_t *, int64_t *, int64_t *, const size_t);
+void mbin_x3_square_64(const int64_t *, int64_t *, int64_t *, const size_t);
 
 __END_DECLS
 
