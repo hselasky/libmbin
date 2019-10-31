@@ -707,7 +707,7 @@ mbin_x3_square_64(const int64_t *va, int64_t *pc, int64_t *pd, const size_t max)
 struct mbin_x3_mul_input_32 {
 	int32_t	a;
 	int32_t	b;
-} __aligned(16);
+} __aligned(8);
 
 /*
  * This function take one input array input[0..stride-1] and accumulate
@@ -872,7 +872,7 @@ mbin_x3_multiply_32(const int32_t *va, const int32_t *vb,
  */
 struct mbin_x3_sqr_input_32 {
 	int32_t	a;
-} __aligned(8);
+} __aligned(4);
 
 /*
  * This function take one input array input[0..stride-1] and accumulate
