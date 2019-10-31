@@ -100,48 +100,59 @@ mbin_fet_multiply_32(const int32_t *pa, const int32_t *pb, int32_t *low, int32_t
 	const uint32_t varmax = 1U << varpower;
 	const uint32_t size = 1U << power;
 
-	int32_t ta[nummax][varmax];
-	int32_t va[nummax][varmax];
-	int32_t vb[nummax][varmax];
+	int32_t *ta = malloc(sizeof(ta[0]) * 4 * size);
+	int32_t *va = malloc(sizeof(va[0]) * 4 * size);
+	int32_t *vb = malloc(sizeof(vb[0]) * 4 * size);
 
-	uint32_t x,y,z;
+	uint32_t x,y,z,t,u;
 
 	assert(numpower <= varpower);
 
-	memset(va, 0, sizeof(va));
-	memset(vb, 0, sizeof(vb));
+	memset(va, 0, sizeof(va[0]) * 4 * size);
+	memset(vb, 0, sizeof(vb[0]) * 4 * size);
 
 	for (x = z = 0; x != (nummax / 2); x++) {
+		t = x << varpower;
+		u = ((-x) & (nummax - 1)) << varpower;
 		for (y = 0; y != (varmax / 2); y++, z++) {
-			va[x][y] = pa[z];
-			vb[(-x) & (nummax - 1)][y] = pb[z];
+			va[t + y] = pa[z];
+			vb[u + y] = pb[z];
 		}
 	}
 
-	mbin_fet_xform_fwd_32(va[0], varpower, numpower);
-	mbin_fet_xform_fwd_32(vb[0], varpower, numpower);
-	mbin_fet_correlate_32(va[0], vb[0], ta[0], varpower, numpower);
-	mbin_fet_xform_inv_32(ta[0], varpower, numpower);
+	mbin_fet_xform_fwd_32(va, varpower, numpower);
+	mbin_fet_xform_fwd_32(vb, varpower, numpower);
+	mbin_fet_correlate_32(va, vb, ta, varpower, numpower);
+	mbin_fet_xform_inv_32(ta, varpower, numpower);
 
 	for (x = 0, z = 0; x != (nummax / 2); x++) {
+		t = x << varpower;
+		u = (x + (nummax / 2)) << varpower;
 		for (y = 0; y != (varmax / 2); y++, z++) {
-			low[z] = ta[x][y];
-			high[z] = ta[x + (nummax / 2)][y];
+			low[z] = ta[t + y];
+			high[z] = ta[u + y];
 		}
 	}
 
 	for (x = 0, z = (varmax / 2); x != (nummax / 2); x++) {
+		t = x << varpower;
+		u = (x + (nummax / 2)) << varpower;
 		if (z >= size) {
 			for (y = (varmax / 2); y != varmax; y++, z++) {
-				high[z - size] += ta[x][y];
+				high[z - size] += ta[t + y];
 			}
 		} else {
+			t = x + (nummax / 2);
 			for (y = (varmax / 2); y != varmax; y++, z++) {
-				low[z] += ta[x][y];
-				high[z] += ta[x + (nummax / 2)][y];
+				low[z] += ta[t + y];
+				high[z] += ta[u + y];
 			}
 		}
 	}
+
+	free(ta);
+	free(va);
+	free(vb);
 }
 
 static void
@@ -361,48 +372,59 @@ mbin_fet_multiply_64(const int64_t *pa, const int64_t *pb, int64_t *low, int64_t
 	const uint32_t varmax = 1U << varpower;
 	const uint32_t size = 1U << power;
 
-	int64_t ta[nummax][varmax];
-	int64_t va[nummax][varmax];
-	int64_t vb[nummax][varmax];
+	int64_t *ta = malloc(sizeof(ta[0]) * 4 * size);
+	int64_t *va = malloc(sizeof(va[0]) * 4 * size);
+	int64_t *vb = malloc(sizeof(vb[0]) * 4 * size);
 
-	uint32_t x,y,z;
+	uint32_t x,y,z,t,u;
 
 	assert(numpower <= varpower);
 
-	memset(va, 0, sizeof(va));
-	memset(vb, 0, sizeof(vb));
+	memset(va, 0, sizeof(va[0]) * 4 * size);
+	memset(vb, 0, sizeof(vb[0]) * 4 * size);
 
 	for (x = z = 0; x != (nummax / 2); x++) {
+		t = x << varpower;
+		u = ((-x) & (nummax - 1)) << varpower;
 		for (y = 0; y != (varmax / 2); y++, z++) {
-			va[x][y] = pa[z];
-			vb[(-x) & (nummax - 1)][y] = pb[z];
+			va[t + y] = pa[z];
+			vb[u + y] = pb[z];
 		}
 	}
 
-	mbin_fet_xform_fwd_64(va[0], varpower, numpower);
-	mbin_fet_xform_fwd_64(vb[0], varpower, numpower);
-	mbin_fet_correlate_64(va[0], vb[0], ta[0], varpower, numpower);
-	mbin_fet_xform_inv_64(ta[0], varpower, numpower);
+	mbin_fet_xform_fwd_64(va, varpower, numpower);
+	mbin_fet_xform_fwd_64(vb, varpower, numpower);
+	mbin_fet_correlate_64(va, vb, ta, varpower, numpower);
+	mbin_fet_xform_inv_64(ta, varpower, numpower);
 
 	for (x = 0, z = 0; x != (nummax / 2); x++) {
+		t = x << varpower;
+		u = (x + (nummax / 2)) << varpower;
 		for (y = 0; y != (varmax / 2); y++, z++) {
-			low[z] = ta[x][y];
-			high[z] = ta[x + (nummax / 2)][y];
+			low[z] = ta[t + y];
+			high[z] = ta[u + y];
 		}
 	}
 
 	for (x = 0, z = (varmax / 2); x != (nummax / 2); x++) {
+		t = x << varpower;
+		u = (x + (nummax / 2)) << varpower;
 		if (z >= size) {
 			for (y = (varmax / 2); y != varmax; y++, z++) {
-				high[z - size] += ta[x][y];
+				high[z - size] += ta[t + y];
 			}
 		} else {
+			t = x + (nummax / 2);
 			for (y = (varmax / 2); y != varmax; y++, z++) {
-				low[z] += ta[x][y];
-				high[z] += ta[x + (nummax / 2)][y];
+				low[z] += ta[t + y];
+				high[z] += ta[u + y];
 			}
 		}
 	}
+
+	free(ta);
+	free(va);
+	free(vb);
 }
 
 static void
@@ -623,48 +645,59 @@ mbin_fet_multiply_double(const double *pa, const double *pb, double *low, double
 	const uint32_t varmax = 1U << varpower;
 	const uint32_t size = 1U << power;
 
-	double ta[nummax][varmax];
-	double va[nummax][varmax];
-	double vb[nummax][varmax];
+	double *ta = malloc(sizeof(ta[0]) * 4 * size);
+	double *va = malloc(sizeof(va[0]) * 4 * size);
+	double *vb = malloc(sizeof(vb[0]) * 4 * size);
 
-	uint32_t x,y,z;
+	uint32_t x,y,z,t,u;
 
 	assert(numpower <= varpower);
 
-	memset(va, 0, sizeof(va));
-	memset(vb, 0, sizeof(vb));
+	memset(va, 0, sizeof(va[0]) * 4 * size);
+	memset(vb, 0, sizeof(vb[0]) * 4 * size);
 
 	for (x = z = 0; x != (nummax / 2); x++) {
+		t = x << varpower;
+		u = ((-x) & (nummax - 1)) << varpower;
 		for (y = 0; y != (varmax / 2); y++, z++) {
-			va[x][y] = pa[z];
-			vb[(-x) & (nummax - 1)][y] = pb[z];
+			va[t + y] = pa[z];
+			vb[u + y] = pb[z];
 		}
 	}
 
-	mbin_fet_xform_fwd_double(va[0], varpower, numpower);
-	mbin_fet_xform_fwd_double(vb[0], varpower, numpower);
-	mbin_fet_correlate_double(va[0], vb[0], ta[0], varpower, numpower);
-	mbin_fet_xform_inv_double(ta[0], varpower, numpower);
+	mbin_fet_xform_fwd_double(va, varpower, numpower);
+	mbin_fet_xform_fwd_double(vb, varpower, numpower);
+	mbin_fet_correlate_double(va, vb, ta, varpower, numpower);
+	mbin_fet_xform_inv_double(ta, varpower, numpower);
 
 	for (x = 0, z = 0; x != (nummax / 2); x++) {
+		t = x << varpower;
+		u = (x + (nummax / 2)) << varpower;
 		for (y = 0; y != (varmax / 2); y++, z++) {
-			low[z] = ta[x][y];
-			high[z] = ta[x + (nummax / 2)][y];
+			low[z] = ta[t + y];
+			high[z] = ta[u + y];
 		}
 	}
 
 	for (x = 0, z = (varmax / 2); x != (nummax / 2); x++) {
+		t = x << varpower;
+		u = (x + (nummax / 2)) << varpower;
 		if (z >= size) {
 			for (y = (varmax / 2); y != varmax; y++, z++) {
-				high[z - size] += ta[x][y];
+				high[z - size] += ta[t + y];
 			}
 		} else {
+			t = x + (nummax / 2);
 			for (y = (varmax / 2); y != varmax; y++, z++) {
-				low[z] += ta[x][y];
-				high[z] += ta[x + (nummax / 2)][y];
+				low[z] += ta[t + y];
+				high[z] += ta[u + y];
 			}
 		}
 	}
+
+	free(ta);
+	free(va);
+	free(vb);
 }
 
 static void
