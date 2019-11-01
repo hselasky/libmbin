@@ -94,10 +94,10 @@ mbin_fet_mul_fast_32(const int32_t *pa, const int32_t *pb, int32_t *ptr, uint8_t
 void
 mbin_fet_multiply_32(const int32_t *pa, const int32_t *pb, int32_t *low, int32_t *high, uint8_t power)
 {
-	const uint8_t numpower = (power + 2) / 2;
-	const uint8_t varpower = (power + 2) - numpower;
-	const uint32_t nummax = 1U << numpower;
+	const uint8_t varpower = (power + 2) / 2;
+	const uint8_t numpower = (power + 2) - varpower;
 	const uint32_t varmax = 1U << varpower;
+	const uint32_t nummax = 1U << numpower;
 	const uint32_t size = 1U << power;
 
 	int32_t *ta = malloc(sizeof(ta[0]) * 4 * size);
@@ -106,7 +106,7 @@ mbin_fet_multiply_32(const int32_t *pa, const int32_t *pb, int32_t *low, int32_t
 
 	uint32_t x,y,z,t,u;
 
-	assert(numpower <= varpower);
+	assert(numpower <= (varpower + 1));
 
 	memset(va, 0, sizeof(va[0]) * 4 * size);
 	memset(vb, 0, sizeof(vb[0]) * 4 * size);
@@ -202,7 +202,7 @@ mbin_fet_xform_fwd_32(int32_t *data, uint8_t varpower, uint8_t numpower)
 	uint32_t y;
 	uint32_t z;
 
-	assert(numpower <= varpower);
+	assert(numpower <= (varpower + 1));
 	
 	for (step = nummax; (step /= 2);) {
 		for (y = z = 0; y != nummax; y += 2 * step) {
@@ -248,7 +248,7 @@ mbin_fet_xform_inv_32(int32_t *data, uint8_t varpower, uint8_t numpower)
 	uint32_t y;
 	uint32_t z;
 
-	assert(numpower <= varpower);
+	assert(numpower <= (varpower + 1));
 	
 	/* in-place data order bit-reversal */
 	for (x = 0; x != nummax; x++) {
@@ -293,7 +293,7 @@ mbin_fet_correlate_32(const int32_t *a, const int32_t *b, int32_t *c,
 	const uint32_t varmax = 1U << varpower;
 	uint32_t x;
 
-	assert(numpower <= varpower);
+	assert(numpower <= (varpower + 1));
 
 	if (varmax < MBIN_FET_COMBA) {
 		for (x = 0; x != nummax; x++) {
@@ -366,10 +366,10 @@ mbin_fet_mul_fast_64(const int64_t *pa, const int64_t *pb, int64_t *ptr, uint8_t
 void
 mbin_fet_multiply_64(const int64_t *pa, const int64_t *pb, int64_t *low, int64_t *high, uint8_t power)
 {
-	const uint8_t numpower = (power + 2) / 2;
-	const uint8_t varpower = (power + 2) - numpower;
-	const uint32_t nummax = 1U << numpower;
+	const uint8_t varpower = (power + 2) / 2;
+	const uint8_t numpower = (power + 2) - varpower;
 	const uint32_t varmax = 1U << varpower;
+	const uint32_t nummax = 1U << numpower;
 	const uint32_t size = 1U << power;
 
 	int64_t *ta = malloc(sizeof(ta[0]) * 4 * size);
@@ -378,7 +378,7 @@ mbin_fet_multiply_64(const int64_t *pa, const int64_t *pb, int64_t *low, int64_t
 
 	uint32_t x,y,z,t,u;
 
-	assert(numpower <= varpower);
+	assert(numpower <= (varpower + 1));
 
 	memset(va, 0, sizeof(va[0]) * 4 * size);
 	memset(vb, 0, sizeof(vb[0]) * 4 * size);
@@ -474,7 +474,7 @@ mbin_fet_xform_fwd_64(int64_t *data, uint8_t varpower, uint8_t numpower)
 	uint32_t y;
 	uint32_t z;
 
-	assert(numpower <= varpower);
+	assert(numpower <= (varpower + 1));
 
 	for (step = nummax; (step /= 2);) {
 		for (y = z = 0; y != nummax; y += 2 * step) {
@@ -521,7 +521,7 @@ mbin_fet_xform_inv_64(int64_t *data, uint8_t varpower, uint8_t numpower)
 	uint32_t y;
 	uint32_t z;
 
-	assert(numpower <= varpower);
+	assert(numpower <= (varpower + 1));
 
 	/* in-place data order bit-reversal */
 	for (x = 0; x != nummax; x++) {
@@ -566,7 +566,7 @@ mbin_fet_correlate_64(const int64_t *a, const int64_t *b, int64_t *c,
 	const uint32_t varmax = 1U << varpower;
 	uint32_t x;
 
-	assert(numpower <= varpower);
+	assert(numpower <= (varpower + 1));
 
 	if (varmax < MBIN_FET_COMBA) {
 		for (x = 0; x != nummax; x++) {
@@ -639,10 +639,10 @@ mbin_fet_mul_fast_double(const double *pa, const double *pb, double *ptr, uint8_
 void
 mbin_fet_multiply_double(const double *pa, const double *pb, double *low, double *high, uint8_t power)
 {
-	const uint8_t numpower = (power + 2) / 2;
-	const uint8_t varpower = (power + 2) - numpower;
-	const uint32_t nummax = 1U << numpower;
+	const uint8_t varpower = (power + 2) / 2;
+	const uint8_t numpower = (power + 2) - varpower;
 	const uint32_t varmax = 1U << varpower;
+	const uint32_t nummax = 1U << numpower;
 	const uint32_t size = 1U << power;
 
 	double *ta = malloc(sizeof(ta[0]) * 4 * size);
@@ -651,7 +651,7 @@ mbin_fet_multiply_double(const double *pa, const double *pb, double *low, double
 
 	uint32_t x,y,z,t,u;
 
-	assert(numpower <= varpower);
+	assert(numpower <= (varpower + 1));
 
 	memset(va, 0, sizeof(va[0]) * 4 * size);
 	memset(vb, 0, sizeof(vb[0]) * 4 * size);
@@ -747,7 +747,7 @@ mbin_fet_xform_fwd_double(double *data, uint8_t varpower, uint8_t numpower)
 	uint32_t y;
 	uint32_t z;
 
-	assert(numpower <= varpower);
+	assert(numpower <= (varpower + 1));
 
 	for (step = nummax; (step /= 2);) {
 		for (y = z = 0; y != nummax; y += 2 * step) {
@@ -794,7 +794,7 @@ mbin_fet_xform_inv_double(double *data, uint8_t varpower, uint8_t numpower)
 	uint32_t y;
 	uint32_t z;
 
-	assert(numpower <= varpower);
+	assert(numpower <= (varpower + 1));
 
 	/* in-place data order bit-reversal */
 	for (x = 0; x != nummax; x++) {
@@ -839,7 +839,7 @@ mbin_fet_correlate_double(const double *a, const double *b, double *c,
 	const uint32_t varmax = 1U << varpower;
 	uint32_t x;
 
-	assert(numpower <= varpower);
+	assert(numpower <= (varpower + 1));
 
 	if (varmax < MBIN_FET_COMBA) {
 		for (x = 0; x != nummax; x++) {
