@@ -38,7 +38,7 @@
 
 #include "math_bin.h"
 
-#define	MBIN_FET_COMBA (1U << 13)	/* crossover point */
+#define	MBIN_FET_COMBA (1U << 16)	/* crossover point */
 
 static void
 mbin_fet_shift_32(const int32_t *pa, int32_t *ptr, uint32_t num, uint32_t size)
