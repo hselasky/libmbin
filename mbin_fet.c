@@ -227,16 +227,6 @@ mbin_fet_xform_fwd_32(int32_t *data, uint8_t varpower, uint8_t numpower)
 			z = mbin_fet_add_bitreversed_32(z, varmax / 2);
 		}
 	}
-
-	/* in-place data order bit-reversal */
-	for (x = 0; x != nummax; x++) {
-		y = mbin_bitrev32(x << (32 - numpower));
-		if (y < x) {
-			memcpy(t[0], data + (x << varpower), sizeof(t[0]));
-			memcpy(data + (x << varpower), data + (y << varpower), sizeof(t[0]));
-			memcpy(data + (y << varpower), t[0], sizeof(t[0]));
-		}
-	}
 }
 
 void
@@ -252,16 +242,6 @@ mbin_fet_xform_inv_32(int32_t *data, uint8_t varpower, uint8_t numpower)
 
 	assert(numpower <= (varpower + 1));
 	
-	/* in-place data order bit-reversal */
-	for (x = 0; x != nummax; x++) {
-		y = mbin_bitrev32(x << (32 - numpower));
-		if (y < x) {
-			memcpy(t[0], data + (x << varpower), sizeof(t[0]));
-			memcpy(data + (x << varpower), data + (y << varpower), sizeof(t[0]));
-			memcpy(data + (y << varpower), t[0], sizeof(t[0]));
-		}
-	}
-
 	for (step = 1; step != nummax; step *= 2) {
 		for (y = z = 0; y != nummax; y += 2 * step) {
 			const uint32_t shift = z;
@@ -293,15 +273,19 @@ mbin_fet_correlate_32(const int32_t *a, const int32_t *b, int32_t *c,
 
 	if (varmax < MBIN_FET_COMBA) {
 		for (x = 0; x != nummax; x++) {
-			mbin_fet_mul_slow_32(a + (x << varpower),
-					     b + (((-x) & (nummax - 1)) << varpower),
-					     c + (x << varpower), varmax);
+			uint32_t t = mbin_bitrev32(x << (32 - numpower));
+			uint32_t u = mbin_bitrev32((-x) << (32 - numpower));
+			mbin_fet_mul_slow_32(a + (t << varpower),
+					     b + (u << varpower),
+					     c + (t << varpower), varmax);
 		}
 	} else {
 		for (x = 0; x != nummax; x++) {
-			mbin_fet_mul_fast_32(a + (x << varpower),
-					     b + (((-x) & (nummax - 1)) << varpower),
-					     c + (x << varpower), varpower);
+			uint32_t t = mbin_bitrev32(x << (32 - numpower));
+			uint32_t u = mbin_bitrev32((-x) << (32 - numpower));
+			mbin_fet_mul_fast_32(a + (t << varpower),
+					     b + (u << varpower),
+					     c + (t << varpower), varpower);
 		}
 	}
 }
@@ -487,16 +471,6 @@ mbin_fet_xform_fwd_64(int64_t *data, uint8_t varpower, uint8_t numpower)
 			z = mbin_fet_add_bitreversed_32(z, varmax / 2);
 		}
 	}
-
-	/* in-place data order bit-reversal */
-	for (x = 0; x != nummax; x++) {
-		y = mbin_bitrev32(x << (32 - numpower));
-		if (y < x) {
-			memcpy(t[0], data + (x << varpower), sizeof(t[0]));
-			memcpy(data + (x << varpower), data + (y << varpower), sizeof(t[0]));
-			memcpy(data + (y << varpower), t[0], sizeof(t[0]));
-		}
-	}
 }
 
 void
@@ -511,16 +485,6 @@ mbin_fet_xform_inv_64(int64_t *data, uint8_t varpower, uint8_t numpower)
 	uint32_t z;
 
 	assert(numpower <= (varpower + 1));
-
-	/* in-place data order bit-reversal */
-	for (x = 0; x != nummax; x++) {
-		y = mbin_bitrev32(x << (32 - numpower));
-		if (y < x) {
-			memcpy(t[0], data + (x << varpower), sizeof(t[0]));
-			memcpy(data + (x << varpower), data + (y << varpower), sizeof(t[0]));
-			memcpy(data + (y << varpower), t[0], sizeof(t[0]));
-		}
-	}
 
 	for (step = 1; step != nummax; step *= 2) {
 		for (y = z = 0; y != nummax; y += 2 * step) {
@@ -553,15 +517,19 @@ mbin_fet_correlate_64(const int64_t *a, const int64_t *b, int64_t *c,
 
 	if (varmax < MBIN_FET_COMBA) {
 		for (x = 0; x != nummax; x++) {
-			mbin_fet_mul_slow_64(a + (x << varpower),
-					     b + (((-x) & (nummax - 1)) << varpower),
-					     c + (x << varpower), varmax);
+			uint32_t t = mbin_bitrev32(x << (32 - numpower));
+			uint32_t u = mbin_bitrev32((-x) << (32 - numpower));
+			mbin_fet_mul_slow_64(a + (t << varpower),
+					     b + (u << varpower),
+					     c + (t << varpower), varmax);
 		}
 	} else {
 		for (x = 0; x != nummax; x++) {
-			mbin_fet_mul_fast_64(a + (x << varpower),
-					     b + (((-x) & (nummax - 1)) << varpower),
-					     c + (x << varpower), varpower);
+			uint32_t t = mbin_bitrev32(x << (32 - numpower));
+			uint32_t u = mbin_bitrev32((-x) << (32 - numpower));
+			mbin_fet_mul_fast_64(a + (t << varpower),
+					     b + (u << varpower),
+					     c + (t << varpower), varpower);
 		}
 	}
 }
@@ -747,16 +715,6 @@ mbin_fet_xform_fwd_double(double *data, uint8_t varpower, uint8_t numpower)
 			z = mbin_fet_add_bitreversed_32(z, varmax / 2);
 		}
 	}
-
-	/* in-place data order bit-reversal */
-	for (x = 0; x != nummax; x++) {
-		y = mbin_bitrev32(x << (32 - numpower));
-		if (y < x) {
-			memcpy(t[0], data + (x << varpower), sizeof(t[0]));
-			memcpy(data + (x << varpower), data + (y << varpower), sizeof(t[0]));
-			memcpy(data + (y << varpower), t[0], sizeof(t[0]));
-		}
-	}
 }
 
 void
@@ -771,16 +729,6 @@ mbin_fet_xform_inv_double(double *data, uint8_t varpower, uint8_t numpower)
 	uint32_t z;
 
 	assert(numpower <= (varpower + 1));
-
-	/* in-place data order bit-reversal */
-	for (x = 0; x != nummax; x++) {
-		y = mbin_bitrev32(x << (32 - numpower));
-		if (y < x) {
-			memcpy(t[0], data + (x << varpower), sizeof(t[0]));
-			memcpy(data + (x << varpower), data + (y << varpower), sizeof(t[0]));
-			memcpy(data + (y << varpower), t[0], sizeof(t[0]));
-		}
-	}
 
 	for (step = 1; step != nummax; step *= 2) {
 		for (y = z = 0; y != nummax; y += 2 * step) {
@@ -813,15 +761,19 @@ mbin_fet_correlate_double(const double *a, const double *b, double *c,
 
 	if (varmax < MBIN_FET_COMBA) {
 		for (x = 0; x != nummax; x++) {
-			mbin_fet_mul_slow_double(a + (x << varpower),
-						 b + (((-x) & (nummax - 1)) << varpower),
-						 c + (x << varpower), varmax);
+			uint32_t t = mbin_bitrev32(x << (32 - numpower));
+			uint32_t u = mbin_bitrev32((-x) << (32 - numpower));
+			mbin_fet_mul_slow_double(a + (t << varpower),
+						 b + (u << varpower),
+						 c + (t << varpower), varmax);
 		}
 	} else {
 		for (x = 0; x != nummax; x++) {
-			mbin_fet_mul_fast_double(a + (x << varpower),
-						 b + (((-x) & (nummax - 1)) << varpower),
-						 c + (x << varpower), varpower);
+			uint32_t t = mbin_bitrev32(x << (32 - numpower));
+			uint32_t u = mbin_bitrev32((-x) << (32 - numpower));
+			mbin_fet_mul_fast_double(a + (t << varpower),
+						 b + (u << varpower),
+						 c + (t << varpower), varpower);
 		}
 	}
 }
