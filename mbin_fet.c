@@ -41,7 +41,7 @@
 /*
  * Size at which in-place Karatsuba is slower than this routine.
  */
-#define	MBIN_FET_COMBA (1U << 12)
+#define	MBIN_FET_COMBA (1U << 11)
 
 static uint32_t
 mbin_fet_add_bitreversed_32(uint32_t x, uint32_t mask)
