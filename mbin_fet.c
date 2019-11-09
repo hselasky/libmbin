@@ -40,6 +40,15 @@
 
 #define	MBIN_FET_COMBA (1U << 16)	/* crossover point */
 
+static uint32_t
+mbin_fet_add_bitreversed_32(uint32_t x, uint32_t mask)
+{
+	do {
+		x ^= mask;
+	} while ((x & mask) == 0 && (mask /= 2) != 0);
+	return (x);
+}
+
 static void
 mbin_fet_shift_32(const int32_t *pa, int32_t *ptr, uint32_t num, uint32_t size)
 {
@@ -215,13 +224,7 @@ mbin_fet_xform_fwd_32(int32_t *data, uint8_t varpower, uint8_t numpower)
 				mbin_fet_add_32(t[0], t[1], data + ((y + x) << varpower), varmax);
 				mbin_fet_sub_32(t[0], t[1], data + ((y + x + step) << varpower), varmax);
 			}
-
-			/* add one bitreversed */
-			for (x = varmax / 2; x; x /= 2) {
-				z ^= x;
-				if (z & x)
-					break;
-			}
+			z = mbin_fet_add_bitreversed_32(z, varmax / 2);
 		}
 	}
 
@@ -273,13 +276,7 @@ mbin_fet_xform_inv_32(int32_t *data, uint8_t varpower, uint8_t numpower)
 
 				mbin_fet_shift_32(t[0], data + ((y + x + step) << varpower), shift, varmax);
 			}
-
-			/* add one bitreversed */
-			for (x = varmax / 2; x; x /= 2) {
-				z ^= x;
-				if (z & x)
-					break;
-			}
+			z = mbin_fet_add_bitreversed_32(z, varmax / 2);
 		}
 	}
 }
@@ -487,13 +484,7 @@ mbin_fet_xform_fwd_64(int64_t *data, uint8_t varpower, uint8_t numpower)
 				mbin_fet_add_64(t[0], t[1], data + ((y + x) << varpower), varmax);
 				mbin_fet_sub_64(t[0], t[1], data + ((y + x + step) << varpower), varmax);
 			}
-
-			/* add one bitreversed */
-			for (x = varmax / 2; x; x /= 2) {
-				z ^= x;
-				if (z & x)
-					break;
-			}
+			z = mbin_fet_add_bitreversed_32(z, varmax / 2);
 		}
 	}
 
@@ -545,13 +536,7 @@ mbin_fet_xform_inv_64(int64_t *data, uint8_t varpower, uint8_t numpower)
 
 				mbin_fet_shift_64(t[0], data + ((y + x + step) << varpower), shift, varmax);
 			}
-
-			/* add one bitreversed */
-			for (x = varmax / 2; x; x /= 2) {
-				z ^= x;
-				if (z & x)
-					break;
-			}
+			z = mbin_fet_add_bitreversed_32(z, varmax / 2);
 		}
 	}
 }
@@ -759,13 +744,7 @@ mbin_fet_xform_fwd_double(double *data, uint8_t varpower, uint8_t numpower)
 				mbin_fet_add_double(t[0], t[1], data + ((y + x) << varpower), varmax);
 				mbin_fet_sub_double(t[0], t[1], data + ((y + x + step) << varpower), varmax);
 			}
-
-			/* add one bitreversed */
-			for (x = varmax / 2; x; x /= 2) {
-				z ^= x;
-				if (z & x)
-					break;
-			}
+			z = mbin_fet_add_bitreversed_32(z, varmax / 2);
 		}
 	}
 
@@ -817,13 +796,7 @@ mbin_fet_xform_inv_double(double *data, uint8_t varpower, uint8_t numpower)
 
 				mbin_fet_shift_double(t[0], data + ((y + x + step) << varpower), shift, varmax);
 			}
-
-			/* add one bitreversed */
-			for (x = varmax / 2; x; x /= 2) {
-				z ^= x;
-				if (z & x)
-					break;
-			}
+			z = mbin_fet_add_bitreversed_32(z, varmax / 2);
 		}
 	}
 }
