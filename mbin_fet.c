@@ -142,7 +142,6 @@ mbin_fet_multiply_32(const int32_t *pa, const int32_t *pb, int32_t *low, int32_t
 				high[z - size] += ta[t + y];
 			}
 		} else {
-			t = x + (nummax / 2);
 			for (y = (varmax / 2); y != varmax; y++, z++) {
 				low[z] += ta[t + y];
 				high[z] += ta[u + y];
@@ -414,7 +413,6 @@ mbin_fet_multiply_64(const int64_t *pa, const int64_t *pb, int64_t *low, int64_t
 				high[z - size] += ta[t + y];
 			}
 		} else {
-			t = x + (nummax / 2);
 			for (y = (varmax / 2); y != varmax; y++, z++) {
 				low[z] += ta[t + y];
 				high[z] += ta[u + y];
@@ -687,7 +685,6 @@ mbin_fet_multiply_double(const double *pa, const double *pb, double *low, double
 				high[z - size] += ta[t + y];
 			}
 		} else {
-			t = x + (nummax / 2);
 			for (y = (varmax / 2); y != varmax; y++, z++) {
 				low[z] += ta[t + y];
 				high[z] += ta[u + y];
