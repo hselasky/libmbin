@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2001-2016 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2001-2020 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -294,6 +294,35 @@ mbin_sqrt_64(uint64_t a)
 		b >>= 1;
 	}
 	return (b);
+}
+
+/*
+ * Carry optimised version of function above:
+ */
+uint32_t
+mbin_sqrt_carry_optimised_64(uint64_t z)
+{
+	uint64_t y = 0;
+	uint64_t zc = 0;
+	uint64_t h;
+	uint64_t j;
+	uint64_t m;
+	uint8_t k;
+
+	for (k = 62; k != (256 - 2); k -= 2) {
+		j = (y | 1) << k;
+		h = z ^ zc ^ j;
+		m = 2 * ((~z & zc) | (~(z & ~zc) & j));
+
+		if (h > m) {
+			zc = m;
+			z = h;
+			y |= 2;
+		}
+
+		y *= 2;
+	}
+	return (y / 4);
 }
 
 uint32_t

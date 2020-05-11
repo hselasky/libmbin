@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008-2017 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008-2020 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -309,6 +309,7 @@ void	mbin_parse32_xor(const char *ptr, uint32_t *ptable, uint32_t mask);
 void	mbin_parse32_factor(const char *ptr, uint32_t *ptable, uint32_t mask, uint32_t var, uint8_t level, uint8_t is_xor);
 
 uint32_t mbin_sqrt_64(uint64_t a);
+uint32_t mbin_sqrt_carry_optimised_64(uint64_t z);
 uint32_t mbin_sqrt_odd_32(uint32_t x);
 uint64_t mbin_sqrt_odd_64(uint64_t x);
 uint32_t mbin_sqrt_inv_odd32(uint32_t rem, uint32_t div);
@@ -940,6 +941,15 @@ void mbin_x3_square_32(const int32_t *, int32_t *, int32_t *, const size_t);
 
 void mbin_x3_multiply_64(const int64_t *, const int64_t *, int64_t *, int64_t *, const size_t);
 void mbin_x3_square_64(const int64_t *, int64_t *, int64_t *, const size_t);
+
+/* Higher Power Transform prototypes */
+
+typedef struct {
+	double r[2];
+} hpt_double_t;
+
+void mbin_hpt_xform_fwd_double(hpt_double_t *, uint8_t);
+void mbin_hpt_xform_inv_double(hpt_double_t *, uint8_t);
 
 __END_DECLS
 
