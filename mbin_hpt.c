@@ -49,7 +49,7 @@ mbin_hpt_mul_fwd_double(hpt_double_t a, hpt_double_t b)
 
 	return ((hpt_double_t){
 		a.r[0] * b.r[0] - top,
-		a.r[0] * b.r[1] + a.r[1] * b.r[0]});
+		a.r[0] * b.r[1] + a.r[1] * b.r[0] });
 }
 
 static hpt_double_t
@@ -65,7 +65,7 @@ mbin_hpt_mul_inv_double(hpt_double_t a, hpt_double_t b)
 static hpt_double_t
 mbin_hpt_exp_fwd_double(hpt_double_t base, uint64_t exp)
 {
-        hpt_double_t r = {1, 0};
+	hpt_double_t r = {1, 0};
 
 	while (exp != 0) {
 		if (exp & 1)
@@ -73,7 +73,7 @@ mbin_hpt_exp_fwd_double(hpt_double_t base, uint64_t exp)
 		base = mbin_hpt_mul_fwd_double(base, base);
 		exp /= 2;
 	}
-        return (r);
+	return (r);
 }
 
 static hpt_double_t
@@ -87,19 +87,21 @@ mbin_hpt_exp_inv_double(hpt_double_t base, uint64_t exp)
 		base = mbin_hpt_mul_inv_double(base, base);
 		exp /= 2;
 	}
-        return (r);
+	return (r);
 }
 
 static hpt_double_t
 mbin_hpt_add_double(hpt_double_t a, hpt_double_t b)
 {
-	return ((hpt_double_t){a.r[0] + b.r[0], a.r[1] + b.r[1]});
+	return ((hpt_double_t){
+		a.r[0] + b.r[0], a.r[1] + b.r[1] });
 }
 
 static hpt_double_t
 mbin_hpt_sub_double(hpt_double_t a, hpt_double_t b)
 {
-	return ((hpt_double_t){a.r[0] - b.r[0], a.r[1] - b.r[1]});
+	return ((hpt_double_t){
+		a.r[0] - b.r[0], a.r[1] - b.r[1] });
 }
 
 static hpt_double_t
@@ -131,22 +133,13 @@ mbin_hpt_xform_fwd_double(hpt_double_t *data, uint8_t power)
 	uint32_t z;
 	uint32_t u;
 
-	printf("X: ");
-	for (x = 0; x != max * max; x++) {
-	  t[0] = mbin_hpt_exp_fwd_double(base, x);
-	  t[1] = mbin_hpt_mul_fwd_double(t[0], t[0]);
-	  printf("%2d,%2d  ", (int)t[0].r[0], (int)t[0].r[1]);
-	  printf("(%2d,%2d)  ", (int)t[1].r[0], (int)t[1].r[1]);
-	}
-	printf("\n");
-	
 	for (step = max; (step /= 2);) {
 		for (y = z = u = 0; y != max; y += 2 * step) {
 			u = mbin_hpt_add_bitreversed_32(z, step);
 
 			const hpt_double_t k[2] = {
-			    mbin_hpt_exp_fwd_double(base, z),
-			    mbin_hpt_exp_fwd_double(base, u)
+				mbin_hpt_exp_fwd_double(base, z),
+				mbin_hpt_exp_fwd_double(base, u)
 			};
 
 			for (x = 0; x != step; x++) {
@@ -181,7 +174,7 @@ mbin_hpt_xform_inv_double(hpt_double_t *data, uint8_t power)
 			for (x = 0; x != step; x++) {
 				t[0] = mbin_hpt_add_double(data[y + x], data[y + x + step]);
 				t[1] = mbin_hpt_sub_double(data[y + x], data[y + x + step]);
-				
+
 				data[y + x] = t[0];
 				data[y + x + step] = mbin_hpt_mul_inv_double(t[1], k);
 			}
@@ -189,34 +182,3 @@ mbin_hpt_xform_inv_double(hpt_double_t *data, uint8_t power)
 		}
 	}
 }
-
-#if 0
-void
-mbin_hpt_correlate_double(const double *a, const double *b, double *c,
-    uint8_t varpower, uint8_t power)
-{
-	const uint32_t max = 1U << power;
-	const uint32_t varmax = 1U << varpower;
-	uint32_t x;
-
-	assert(power <= (varpower + 1));
-
-	if (varmax < MBIN_FET_COMBA) {
-		for (x = 0; x != max; x++) {
-			uint32_t t = mbin_bitrev32(x << (32 - power));
-			uint32_t u = mbin_bitrev32((-x) << (32 - power));
-			mbin_fet_mul_slow_double(a + (t << varpower),
-						 b + (u << varpower),
-						 c + (t << varpower), varmax);
-		}
-	} else {
-		for (x = 0; x != max; x++) {
-			uint32_t t = mbin_bitrev32(x << (32 - power));
-			uint32_t u = mbin_bitrev32((-x) << (32 - power));
-			mbin_fet_mul_fast_double(a + (t << varpower),
-						 b + (u << varpower),
-						 c + (t << varpower), varpower);
-		}
-	}
-}
-#endif
