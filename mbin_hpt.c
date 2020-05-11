@@ -104,14 +104,6 @@ mbin_hpt_sub_double(hpt_double_t a, hpt_double_t b)
 		a.r[0] - b.r[0], a.r[1] - b.r[1] });
 }
 
-static hpt_double_t
-mbin_hpt_half_double(hpt_double_t a)
-{
-	a.r[0] /= 2.0;
-	a.r[1] /= 2.0;
-	return (a);
-}
-
 static uint32_t
 mbin_hpt_add_bitreversed_32(uint32_t x, uint32_t mask)
 {
