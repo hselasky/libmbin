@@ -314,7 +314,7 @@ mbin_sqrt_carry_optimised_64(uint64_t z)
 		h = z ^ zc ^ j;
 		m = 2 * ((~z & zc) | (~(z & ~zc) & j));
 
-		if (h > m) {
+		if (h >= m) {
 			zc = m;
 			z = h;
 			y |= 2;
