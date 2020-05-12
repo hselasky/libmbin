@@ -296,30 +296,53 @@ mbin_sqrt_64(uint64_t a)
 	return (b);
 }
 
+bool
+mbin_sub_if_gt_64(uint64_t *pa, uint64_t *ps, uint64_t value)
+{
+	uint64_t x;
+	uint64_t y;
+
+	x = *pa ^ *ps ^ value;
+	y = 2 * ((~*pa & *ps) | (~(*pa & ~*ps) & value));
+
+	if (x > y) {
+		*pa = x;
+		*ps = y;
+		return (1);
+	}
+	return (0);
+}
+
+bool
+mbin_sub_if_gte_64(uint64_t *pa, uint64_t *ps, uint64_t value)
+{
+	uint64_t x;
+	uint64_t y;
+
+	x = *pa ^ *ps ^ value;
+	y = 2 * ((~*pa & *ps) | (~(*pa & ~*ps) & value));
+
+	if (x >= y) {
+		*pa = x;
+		*ps = y;
+		return (1);
+	}
+	return (0);
+}
+
 /*
- * Carry optimised version of function above:
+ * Carry optimised version of mbin_sqrt_64() above:
  */
 uint32_t
 mbin_sqrt_carry_optimised_64(uint64_t z)
 {
 	uint64_t y = 0;
 	uint64_t zc = 0;
-	uint64_t h;
-	uint64_t j;
-	uint64_t m;
 	uint8_t k;
 
 	for (k = 62; k != (256 - 2); k -= 2) {
-		j = (y | 1) << k;
-		h = z ^ zc ^ j;
-		m = 2 * ((~z & zc) | (~(z & ~zc) & j));
-
-		if (h >= m) {
-			zc = m;
-			z = h;
+		if (mbin_sub_if_gte_64(&z, &zc, (y | 1) << k))
 			y |= 2;
-		}
-
 		y *= 2;
 	}
 	return (y / 4);

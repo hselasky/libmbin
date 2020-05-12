@@ -27,6 +27,8 @@
 #define	_MATH_BIN_H_
 
 #include <stdint.h>
+#include <stdbool.h>
+
 #include <sys/types.h>
 #include <sys/cdefs.h>
 #include <sys/queue.h>
@@ -314,6 +316,9 @@ uint32_t mbin_sqrt_odd_32(uint32_t x);
 uint64_t mbin_sqrt_odd_64(uint64_t x);
 uint32_t mbin_sqrt_inv_odd32(uint32_t rem, uint32_t div);
 uint64_t mbin_sqrt_inv_64(uint64_t rem, uint64_t div);
+
+bool mbin_sub_if_gt_64(uint64_t *, uint64_t *, uint64_t);
+bool mbin_sub_if_gte_64(uint64_t *, uint64_t *, uint64_t);
 
 /* Base-3 */
 
