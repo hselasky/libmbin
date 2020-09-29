@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2009 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2009-2020 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -182,4 +182,54 @@ mbin_sos_2nd_search_64(const uint64_t value)
 		m /= 2;
 	}
 	return (x);
+}
+
+uint32_t
+mbin_sos_block_block_2nd_mod_32(uint32_t log2_log2_level, const uint32_t mod)
+{
+	uint64_t value = 1;
+
+	while (log2_log2_level--) {
+		value += value * mbin_power_mod_32(2, 2 * log2_log2_level + 2, mod);
+		value %= mod;
+	}
+	return (value);
+}
+
+uint32_t
+mbin_sos_block_2nd_mod_32(const uint32_t log2_level, const uint32_t mod)
+{
+	uint64_t result;
+	uint64_t start;
+	uint64_t mask;
+	uint64_t k0;
+	uint64_t k1;
+
+	if (log2_level == 0)
+		return (0);
+
+	k0 = mbin_power_mod_32(2, log2_level - 1, mod);
+	k1 = (k0 * (k0 + k0 - 1)) % mod;
+
+	result = (k1 * k1) % mod;
+
+	mask = 1;
+	while (mask <= log2_level)
+		mask *= 2;
+
+	start = 0;
+	for (mask /= 2; mask != 0; mask /= 2) {
+		if (log2_level & mask) {
+			uint64_t chunk = mbin_power_mod_32(2, 2 * start + 2 * log2_level - 2, mod) *
+			mbin_sos_block_block_2nd_mod_32(mbin_sumbits64(mask - 1), mod);
+
+			result += (chunk % mod);
+			result %= mod;
+			start = log2_level & -mask;
+		}
+	}
+
+	result *= mbin_power_mod_32((1 + mod) / 2, log2_level, mod);
+	result %= mod;
+	return (result);
 }

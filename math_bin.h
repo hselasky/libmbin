@@ -485,6 +485,8 @@ uint32_t mbin_sos_32(int32_t x, int32_t y);
 uint64_t mbin_sos_block_2nd_64(const uint64_t start, uint8_t log2_level);
 uint64_t mbin_sos_2nd_64(const uint64_t end);
 uint64_t mbin_sos_2nd_search_64(const uint64_t value);
+uint32_t mbin_sos_block_block_2nd_mod_32(uint32_t log2_log2_level, const uint32_t mod);
+uint32_t mbin_sos_block_2nd_mod_32(const uint32_t log2_level, const uint32_t mod);
 
 uint32_t mbin_swm32(uint32_t x, uint32_t m, int8_t count);
 
