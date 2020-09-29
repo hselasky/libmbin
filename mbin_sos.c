@@ -190,7 +190,8 @@ mbin_sos_block_block_2nd_mod_32(uint32_t log2_log2_level, const uint32_t mod)
 	uint64_t value = 1;
 
 	while (log2_log2_level--) {
-		value += value * mbin_power_mod_32(2, 2 * log2_log2_level + 2, mod);
+		value += value *
+		    (uint64_t)mbin_power_mod_32(2, 2U << log2_log2_level, mod);
 		value %= mod;
 	}
 	return (value);
@@ -220,8 +221,9 @@ mbin_sos_block_2nd_mod_32(const uint32_t log2_level, const uint32_t mod)
 	start = 0;
 	for (mask /= 2; mask != 0; mask /= 2) {
 		if (log2_level & mask) {
-			uint64_t chunk = mbin_power_mod_32(2, 2 * start + 2 * log2_level - 2, mod) *
-			mbin_sos_block_block_2nd_mod_32(mbin_sumbits64(mask - 1), mod);
+			uint64_t chunk =
+			  (uint64_t)mbin_power_mod_32(2, 2 * start + 2 * log2_level - 2, mod) *
+			  (uint64_t)mbin_sos_block_block_2nd_mod_32(mbin_sumbits64(mask - 1), mod);
 
 			result += (chunk % mod);
 			result %= mod;
