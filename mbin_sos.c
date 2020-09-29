@@ -97,3 +97,89 @@ mbin_sos_32(int32_t x, int32_t y)
 
 	return (rem);
 }
+
+/*
+ * This function computes the sum of squares for a 2**log2_level block
+ * starting at "start" and returns the result.
+ */
+uint64_t
+mbin_sos_block_2nd_64(const uint64_t start, uint8_t log2_level)
+{
+	uint64_t result;
+	uint64_t k0;
+	uint64_t k1;
+	uint8_t x;
+
+	if (log2_level == 0)
+		return (start * start);
+
+	k0 = 1ULL << (log2_level - 1);
+	k1 = k0 * (k0 + k0 - 1 + start + start);
+
+	result = k1 * k1;
+
+	for (x = 0; x != log2_level; x++) {
+		result += 1ULL << (2 * (log2_level - 1 + x));
+	}
+
+	result >>= log2_level;
+	return (result);
+}
+
+/*
+ * This function computes the sum of squares up to and including "x"
+ * and returns the result:
+ * 0, 1, 5, 14, 30, 55, 91, 140, 204, 285, 385, 506, 650, 819, 1015, 1240 ...
+ *
+ * The return value can also be expressed like:
+ * (x**3) / 3 + (x**2) / 2 + (x / 6)
+ */
+uint64_t
+mbin_sos_2nd_64(uint64_t x)
+{
+	uint64_t result = 0;
+	uint64_t m0 = 1;
+	uint64_t start = 0;
+	uint8_t log2_m0 = 0;
+
+	x++;
+
+	while (m0 <= x) {
+		m0 *= 2;
+		log2_m0++;
+	}
+
+	m0 /= 2;
+	log2_m0--;
+
+	while (m0 != 0) {
+		if (x & m0) {
+			result += mbin_sos_block_2nd_64(start, log2_m0);
+			start = x & -m0;
+		}
+
+		m0 /= 2.0;
+		log2_m0--;
+	}
+	return (result);
+}
+
+uint64_t
+mbin_sos_2nd_search_64(const uint64_t value)
+{
+	uint64_t m = 1;
+	uint64_t x;
+
+	while (mbin_sos_2nd_64(m) <= value)
+		m *= 2;
+
+	m /= 2;
+	x = m;
+
+	while (m != 0) {
+		if (mbin_sos_2nd_64(m + x) <= value)
+			x += m;
+		m /= 2;
+	}
+	return (x);
+}

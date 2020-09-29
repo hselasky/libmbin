@@ -482,6 +482,9 @@ void	mbin_expr_optimise(struct mbin_expr *pexpr, uint32_t mask);
 int32_t	mbin_correlate_32x32(uint32_t *pa, uint32_t *pb, uint32_t mask, uint32_t slice_a, uint32_t slice_b);
 
 uint32_t mbin_sos_32(int32_t x, int32_t y);
+uint64_t mbin_sos_block_2nd_64(const uint64_t start, uint8_t log2_level);
+uint64_t mbin_sos_2nd_64(const uint64_t end);
+uint64_t mbin_sos_2nd_search_64(const uint64_t value);
 
 uint32_t mbin_swm32(uint32_t x, uint32_t m, int8_t count);
 
