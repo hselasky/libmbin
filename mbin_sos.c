@@ -244,7 +244,7 @@ mbin_sos_block_2nd_mod_32(const uint32_t log2_level, const uint32_t mod)
  * 0, 6, 42, 210, 930, 3906, 16002, 64770, 260610, 1045506, 4188162 ...
  */
 uint32_t
-sos_block_2nd_power_of_two_mod_32(const uint32_t x, const uint32_t mod)
+mbin_sos_block_2nd_power_of_two_mod_32(const uint32_t x, const uint32_t mod)
 {
 	uint64_t k0;
 	uint64_t k1;
