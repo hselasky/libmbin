@@ -158,7 +158,7 @@ mbin_sos_2nd_64(uint64_t x)
 			start = x & -m0;
 		}
 
-		m0 /= 2.0;
+		m0 /= 2;
 		log2_m0--;
 	}
 	return (result);
