@@ -224,7 +224,7 @@ mbin_sos_block_2nd_mod_32(const uint64_t start, const uint64_t log2_level, const
 		while (res % 3)
 			res += mod;
 		res /= 3;
-		res += k1 * k1 * k2;
+		res += ((k1 * k1) % mod) * k2;
 		while (res % 4)
 			res += mod;
 		res /= 4;
