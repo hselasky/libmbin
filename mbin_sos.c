@@ -105,25 +105,25 @@ mbin_sos_32(int32_t x, int32_t y)
 uint64_t
 mbin_sos_block_2nd_64(const uint64_t start, uint8_t log2_level)
 {
-	uint64_t result;
 	uint64_t k0;
 	uint64_t k1;
-	uint8_t x;
+	uint64_t k2;
 
-	if (log2_level == 0)
+	if (log2_level == 0) {
 		return (start * start);
+	} else if (start == 0) {
+		k0 = 2ULL << (3 * log2_level);
+		k1 = 1ULL << (2 * log2_level);
+		k2 = 1ULL << (1 * log2_level);
 
-	k0 = 1ULL << (log2_level - 1);
-	k1 = k0 * (k0 + k0 - 1 + start + start);
+		return (k0 - 3 * k1 + k2) / 6;
+	} else {
+		k0 = (1ULL << (3 * log2_level));
+		k2 = (1ULL << (1 * log2_level));
+		k1 = (k2 - 1 + 2 * start);
 
-	result = k1 * k1;
-
-	for (x = 0; x != log2_level; x++) {
-		result += 1ULL << (2 * (log2_level - 1 + x));
+		return ((((k1 * k1) << log2_level) + ((k0 - k2) / 3))) / 4;
 	}
-
-	result >>= log2_level;
-	return (result);
 }
 
 /*
