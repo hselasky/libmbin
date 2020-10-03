@@ -40,6 +40,7 @@
  */
 
 #include <stdint.h>
+#include <assert.h>
 
 #include "math_bin.h"
 
@@ -184,73 +185,83 @@ mbin_sos_2nd_search_64(const uint64_t value)
 	return (x);
 }
 
+/*
+ * This function computes the sum of squares up to and including
+ * (2**log2_level) under the given modulus, starting at "start".
+ */
 uint32_t
-mbin_sos_block_block_2nd_mod_32(uint32_t log2_log2_level, const uint32_t mod)
+mbin_sos_block_2nd_mod_32(const uint64_t start, const uint64_t log2_level, const uint32_t mod)
 {
-	uint64_t value = 1;
-
-	while (log2_log2_level--) {
-		value += value *
-		    (uint64_t)mbin_power_mod_32(2, 2U << log2_log2_level, mod);
-		value %= mod;
-	}
-	return (value);
-}
-
-uint32_t
-mbin_sos_block_2nd_mod_32(const uint32_t log2_level, const uint32_t mod)
-{
-	uint64_t result;
-	uint64_t start;
-	uint64_t mask;
+	uint64_t res;
 	uint64_t k0;
 	uint64_t k1;
+	uint64_t k2;
 
-	if (log2_level == 0)
-		return (0);
+	/* modulus must not be divisible by 2 or 3 */
+	assert(mod % 2);
+	assert(mod % 3);
 
-	k0 = mbin_power_mod_32(2, log2_level - 1, mod);
-	k1 = (k0 * (k0 + k0 - 1)) % mod;
+	if (log2_level == 0) {
+		res = start * start;
+	} else if (start == 0) {
+		k0 = mbin_power_mod_32(2, 3 * log2_level + 1, mod);
+		k1 = mbin_power_mod_32(2, 2 * log2_level, mod);
+		k2 = mbin_power_mod_32(2, log2_level, mod);
 
-	result = (k1 * k1) % mod;
+		res = (3 * mod + k0 - 3 * k1 + k2);
 
-	mask = 1;
-	while (mask <= log2_level)
-		mask *= 2;
+		while (res % 6)
+			res += mod;
 
-	start = 0;
-	for (mask /= 2; mask != 0; mask /= 2) {
-		if (log2_level & mask) {
-			uint64_t chunk =
-			  (uint64_t)mbin_power_mod_32(2, 2 * start + 2 * log2_level - 2, mod) *
-			  (uint64_t)mbin_sos_block_block_2nd_mod_32(mbin_sumbits64(mask - 1), mod);
+		res /= 6;
+	} else {
+		k0 = mbin_power_mod_32(2, 3 * log2_level, mod);
+		k2 = mbin_power_mod_32(2, log2_level, mod);
+		k1 = (mod + k2 - 1 + 2 * start) % mod;
 
-			result += (chunk % mod);
-			result %= mod;
-			start = log2_level & -mask;
-		}
+		res = mod + k0 - k2;
+
+		while (res % 3)
+			res += mod;
+		res /= 3;
+		res += k1 * k1 * k2;
+		while (res % 4)
+			res += mod;
+		res /= 4;
 	}
-
-	result *= mbin_power_mod_32((1 + mod) / 2, log2_level, mod);
-	result %= mod;
-	return (result);
+	return (res % mod);
 }
 
 /*
- * This function computes the sum of squares up to and including
- * (2**x) under the given modulus. The result is multiplied by six and
- * divided by (2**(x - 1)).
- *
- * 0, 6, 42, 210, 930, 3906, 16002, 64770, 260610, 1045506, 4188162 ...
+ * This function computes the sum of squares up to and including "x"
+ * and returns the result under the given modulus.
  */
 uint32_t
-mbin_sos_block_2nd_power_of_two_mod_32(const uint32_t x, const uint32_t mod)
+mbin_sos_2nd_mod_32(uint64_t x, const uint32_t mod)
 {
-	uint64_t k0;
-	uint64_t k1;
+	uint64_t result = 0;
+	uint64_t m0 = 1;
+	uint64_t start = 0;
+	uint8_t log2_m0 = 0;
 
-	k0 = mbin_power_mod_32(4, x + 1, mod);
-	k1 = mbin_power_mod_32(2, x + 1, mod);
+	x++;
 
-	return (3 * mod + k0 - 3 * k1 + 2) % mod;
+	while (m0 <= x) {
+		m0 *= 2;
+		log2_m0++;
+	}
+
+	m0 /= 2;
+	log2_m0--;
+
+	while (m0 != 0) {
+		if (x & m0) {
+			result += mbin_sos_block_2nd_mod_32(start, log2_m0, mod);
+			start = x & -m0;
+		}
+
+		m0 /= 2;
+		log2_m0--;
+	}
+	return (result % mod);
 }
