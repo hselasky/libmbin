@@ -338,9 +338,9 @@ mbin_sqrt_carry_optimised_64(uint64_t z)
 {
 	uint64_t y = 0;
 	uint64_t zc = 0;
-	uint8_t k;
+	int8_t k;
 
-	for (k = 62; k != (256 - 2); k -= 2) {
+	for (k = 62; k != -2; k -= 2) {
 		if (mbin_sub_if_gte_64(&z, &zc, (y | 1) << k))
 			y |= 2;
 		y *= 2;
