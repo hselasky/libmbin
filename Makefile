@@ -1,5 +1,5 @@
 #
-# Makefile for my Binary Math library
+# Makefile for my Binary Mathematics library
 #
 
 LIB=		mbin1
