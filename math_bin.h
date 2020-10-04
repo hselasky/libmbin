@@ -168,8 +168,12 @@ uint32_t mbin_bitrev32(uint32_t a);
 uint16_t mbin_bitrev16(uint16_t a);
 uint8_t	mbin_bitrev8(uint8_t a);
 
+/* baseL - prototypes */
+
 uint32_t mbin_base_2toL_32(uint32_t b2);
 uint32_t mbin_base_Lto2_32(uint32_t bl);
+
+/* baseM - prototypes */
 
 struct mbin_baseM_state32 {
 	uint32_t a;
@@ -195,6 +199,8 @@ void	mbin_baseM_bits_init_32(struct mbin_baseM_bits32 *st, uint32_t x, uint32_t 
 uint32_t mbin_baseM_bits_step_32(struct mbin_baseM_bits32 *st);
 uint32_t mbin_baseM_bits_step_alt_32(struct mbin_baseM_bits32 *st);
 
+/* baseG - prototypes */
+
 struct mbin_baseG_state32 {
 	uint32_t a;			/* result: a+b */
 	uint32_t b;
@@ -208,6 +214,8 @@ void	mbin_baseG_inc_state32(struct mbin_baseG_state32 *ps);
 uint32_t mbin_baseG_decipher_state32(struct mbin_baseG_state32 *ps);
 uint32_t mbin_baseG_inc_32(uint32_t f, uint32_t a);
 uint32_t mbin_baseG_carry_32(uint32_t f, uint32_t a);
+
+/* baseH - prototypes */
 
 struct mbin_baseH_state32 {
 	uint32_t a;
@@ -230,6 +238,8 @@ uint32_t mbin_baseHM2_add32(uint32_t, uint32_t);
 uint32_t mbin_baseHM2_sub32(uint32_t, uint32_t);
 uint32_t mbin_baseHM2_mul3_32(uint32_t, uint32_t);
 
+/* baseU - prototypes */
+
 struct mbin_baseU_state32 {
 	uint32_t a;
 	uint32_t c;
@@ -241,6 +251,8 @@ uint32_t mbin_base_Uto2_32(uint32_t bu);
 void	mbin_baseU_get_state32(struct mbin_baseU_state32 *ps, uint32_t index);
 void	mbin_baseU_inc_state32(struct mbin_baseU_state32 *ps);
 uint32_t mbin_baseU_decipher_state32(struct mbin_baseU_state32 *ps);
+
+/* baseV - prototypes */
 
 struct mbin_baseV_state32 {
 	uint32_t a;
