@@ -24,6 +24,7 @@
  */
 
 #include <stdint.h>
+#include <math.h>
 
 #include "math_bin.h"
 
@@ -470,7 +471,7 @@ mbin_sqrt_inv_64(uint64_t rem, uint64_t div)
 uint64_t
 mbin_r64_square(r64_t const value)
 {
-	return ((uint64_t)value.root * (uint64_t)value.root + value.rem);
+	return ((int64_t)(int32_t)value.root * (int64_t)(int32_t)value.root + (int32_t)value.rem);
 }
 
 r64_t
@@ -494,8 +495,9 @@ mbin_r64_add(const r64_t a, const r64_t b)
 r64_t
 mbin_r64_sub(const r64_t a, const r64_t b)
 {
-	return (mbin_r64_root(2 * (mbin_r64_square(a) + mbin_r64_square(b)) -
-	    mbin_r64_square(mbin_r64_add(a, b))));
+	return (r64_t){
+		a.root - b.root, a.rem - b.rem
+	};
 }
 
 r64_t
@@ -562,6 +564,78 @@ mbin_r2_sumdigits_xform_r64(r64_t *ptr, size_t max)
 
 				ptr[x + y] = mbin_r64_add(va, vb);
 				ptr[x + y + m] = mbin_r64_sub(va, vb);
+			}
+		}
+	}
+}
+
+double
+mbin_d64_square(d64_t const value)
+{
+	return (value.root * value.root + value.rem);
+}
+
+d64_t
+mbin_d64_root(const double value)
+{
+	double s = floor(sqrt(value));
+
+	return (d64_t){
+		s, value - s * s
+	};
+}
+
+d64_t
+mbin_d64_add(const d64_t a, const d64_t b)
+{
+	return (d64_t){
+		a.root + b.root, a.rem + b.rem
+	};
+}
+
+d64_t
+mbin_d64_sub(const d64_t a, const d64_t b)
+{
+	return (d64_t){
+		a.root - b.root, a.rem - b.rem
+	};
+}
+
+d64_t
+mbin_d64_normalize(const d64_t a)
+{
+	return (mbin_d64_root(mbin_d64_square(a)));
+}
+
+d64_t
+mbin_d64_add_exp(d64_t base, uint64_t exp)
+{
+	d64_t result = {};
+
+	while (exp) {
+		if (exp & 1)
+			result = mbin_d64_add(result, base);
+
+		base = mbin_d64_add(base, base);
+		exp /= 2;
+	}
+	return (result);
+}
+
+void
+mbin_r2_sumdigits_xform_d64(d64_t *ptr, size_t max)
+{
+	size_t m, x, y;
+	d64_t va, vb;
+
+	for (m = 1; m != max; m *= 2) {
+		for (x = 0; x != max; x += 2 * m) {
+			for (y = 0; y != m; y++) {
+				va = ptr[x + y];
+				vb = ptr[x + y + m];
+
+				ptr[x + y] = mbin_d64_add(va, vb);
+				ptr[x + y + m] = mbin_d64_sub(va, vb);
 			}
 		}
 	}
