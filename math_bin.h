@@ -322,6 +322,19 @@ void	mbin_parse32_add(const char *ptr, uint32_t *ptable, uint32_t mask);
 void	mbin_parse32_xor(const char *ptr, uint32_t *ptable, uint32_t mask);
 void	mbin_parse32_factor(const char *ptr, uint32_t *ptable, uint32_t mask, uint32_t var, uint8_t level, uint8_t is_xor);
 
+/* Square root functions */
+
+typedef struct {
+	int32_t root;
+	int32_t rem;
+} r64_t;
+
+int64_t mbin_r64_square(r64_t const);
+r64_t mbin_r64_root(int64_t);
+r64_t mbin_r64_add(const r64_t, const r64_t);
+r64_t mbin_r64_sub(const r64_t, const r64_t);
+void mbin_r2_sumdigits_xform_r64(r64_t *, size_t max);
+
 uint32_t mbin_sqrt_64(uint64_t a);
 uint32_t mbin_sqrt_carry_optimised_64(uint64_t z);
 uint32_t mbin_sqrt_odd_32(uint32_t x);

@@ -466,3 +466,61 @@ mbin_sqrt_inv_64(uint64_t rem, uint64_t div)
 	/* return square root inverse */
 	return (rem << x);
 }
+
+int64_t
+mbin_r64_square(r64_t const value)
+{
+	if (value.root < 0)
+		return (-(int64_t)value.root * (int64_t)value.root + value.rem);
+	else
+		return ((int64_t)value.root * (int64_t)value.root + value.rem);
+}
+
+r64_t
+mbin_r64_root(int64_t x)
+{
+	r64_t temp;
+
+	if (x >= 0) {
+		temp.root = mbin_sqrt_64(x);
+		temp.rem = x - temp.root * temp.root;
+	} else {
+		temp.root = -mbin_sqrt_64(-x);
+		temp.rem = x + (int64_t)temp.root * (int64_t)temp.root;
+	}
+	return (temp);
+}
+
+r64_t
+mbin_r64_add(const r64_t a, const r64_t b)
+{
+	return (r64_t){
+		a.root + b.root, a.rem + b.rem
+	};
+}
+
+r64_t
+mbin_r64_sub(const r64_t a, const r64_t b)
+{
+	return (mbin_r64_root(2 * (mbin_r64_square(a) + mbin_r64_square(b)) -
+	    mbin_r64_square(mbin_r64_add(a, b))));
+}
+
+void
+mbin_r2_sumdigits_xform_r64(r64_t *ptr, size_t max)
+{
+	size_t m, x, y;
+	r64_t va, vb;
+
+	for (m = 1; m != max; m *= 2) {
+		for (x = 0; x != max; x += 2 * m) {
+			for (y = 0; y != m; y++) {
+				va = ptr[x + y];
+				vb = ptr[x + y + m];
+
+				ptr[x + y] = mbin_r64_add(va, vb);
+				ptr[x + y + m] = mbin_r64_sub(va, vb);
+			}
+		}
+	}
+}
