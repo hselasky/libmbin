@@ -468,175 +468,36 @@ mbin_sqrt_inv_64(uint64_t rem, uint64_t div)
 	return (rem << x);
 }
 
-uint64_t
-mbin_r64_square(r64_t const value)
+void
+mbin_r2_sqrt_fwd_double(double *ptr, uint8_t lmax)
 {
-	return ((int64_t)(int32_t)value.root * (int64_t)(int32_t)value.root + (int32_t)value.rem);
-}
+	size_t max = 1UL << lmax;
+	size_t x;
+	double sum = 0;
 
-r64_t
-mbin_r64_root(uint64_t value)
-{
-	uint64_t s = mbin_sqrt_64(value);
-
-	return (r64_t){
-		s, value - s * s
-	};
-}
-
-r64_t
-mbin_r64_add(const r64_t a, const r64_t b)
-{
-	return (r64_t){
-		a.root + b.root, a.rem + b.rem
-	};
-}
-
-r64_t
-mbin_r64_sub(const r64_t a, const r64_t b)
-{
-	return (r64_t){
-		a.root - b.root, a.rem - b.rem
-	};
-}
-
-r64_t
-mbin_r64_normalize(const r64_t a)
-{
-	return (mbin_r64_root(mbin_r64_square(a)));
-}
-
-r64_t
-mbin_r64_add_exp(r64_t base, uint64_t exp)
-{
-	r64_t result = {};
-
-	while (exp) {
-		if (exp & 1)
-			result = mbin_r64_add(result, base);
-
-		base = mbin_r64_add(base, base);
-		exp /= 2;
+	for (x = 0; x != max; x++) {
+		sum += ptr[x] * ptr[x];
+		ptr[x] = sum;
 	}
-	return (result);
-}
-
-uint32_t
-mbin_r64_square_mod(r64_t const value, uint32_t mod)
-{
-	return ((uint64_t)value.root * (uint64_t)value.root + value.rem) % mod;
-}
-
-r64_t
-mbin_r64_add_mod(const r64_t a, const r64_t b, uint32_t mod)
-{
-	return (r64_t){
-		(a.root + b.root) % mod, (a.rem + b.rem) % mod
-	};
-}
-
-r64_t
-mbin_r64_add_exp_mod(r64_t base, uint64_t exp, uint32_t mod)
-{
-	r64_t result = {};
-
-	while (exp) {
-		if (exp & 1)
-			result = mbin_r64_add_mod(result, base, mod);
-
-		base = mbin_r64_add_mod(base, base, mod);
-		exp /= 2;
-	}
-	return (result);
+	mbin_sumdigits_r2_xform_double(ptr, lmax);
 }
 
 void
-mbin_r2_sumdigits_xform_r64(r64_t *ptr, size_t max)
+mbin_r2_sqrt_inv_double(double *ptr, uint8_t lmax)
 {
-	size_t m, x, y;
-	r64_t va, vb;
+	size_t max = 1UL << lmax;
+	double last = 0;
+	size_t x;
 
-	for (m = 1; m != max; m *= 2) {
-		for (x = 0; x != max; x += 2 * m) {
-			for (y = 0; y != m; y++) {
-				va = ptr[x + y];
-				vb = ptr[x + y + m];
+	mbin_sumdigits_r2_xform_double(ptr, lmax);
 
-				ptr[x + y] = mbin_r64_add(va, vb);
-				ptr[x + y + m] = mbin_r64_sub(va, vb);
-			}
-		}
-	}
-}
-
-double
-mbin_d64_square(d64_t const value)
-{
-	return (value.root * value.root + value.rem);
-}
-
-d64_t
-mbin_d64_root(const double value)
-{
-	double s = floor(sqrt(value));
-
-	return (d64_t){
-		s, value - s * s
-	};
-}
-
-d64_t
-mbin_d64_add(const d64_t a, const d64_t b)
-{
-	return (d64_t){
-		a.root + b.root, a.rem + b.rem
-	};
-}
-
-d64_t
-mbin_d64_sub(const d64_t a, const d64_t b)
-{
-	return (d64_t){
-		a.root - b.root, a.rem - b.rem
-	};
-}
-
-d64_t
-mbin_d64_normalize(const d64_t a)
-{
-	return (mbin_d64_root(mbin_d64_square(a)));
-}
-
-d64_t
-mbin_d64_add_exp(d64_t base, uint64_t exp)
-{
-	d64_t result = {};
-
-	while (exp) {
-		if (exp & 1)
-			result = mbin_d64_add(result, base);
-
-		base = mbin_d64_add(base, base);
-		exp /= 2;
-	}
-	return (result);
-}
-
-void
-mbin_r2_sumdigits_xform_d64(d64_t *ptr, size_t max)
-{
-	size_t m, x, y;
-	d64_t va, vb;
-
-	for (m = 1; m != max; m *= 2) {
-		for (x = 0; x != max; x += 2 * m) {
-			for (y = 0; y != m; y++) {
-				va = ptr[x + y];
-				vb = ptr[x + y + m];
-
-				ptr[x + y] = mbin_d64_add(va, vb);
-				ptr[x + y + m] = mbin_d64_sub(va, vb);
-			}
-		}
+	for (x = 0; x != max; x++) {
+		double v = (ptr[x] - last) / max;
+		if (v < 0.0)
+			v = 0.0;
+		else if (v > 4.0)
+			v = 4.0;
+		last = ptr[x];
+		ptr[x] = sqrt(v);
 	}
 }
