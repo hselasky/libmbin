@@ -467,28 +467,20 @@ mbin_sqrt_inv_64(uint64_t rem, uint64_t div)
 	return (rem << x);
 }
 
-int64_t
+uint64_t
 mbin_r64_square(r64_t const value)
 {
-	if (value.root < 0)
-		return (-(int64_t)value.root * (int64_t)value.root + value.rem);
-	else
-		return ((int64_t)value.root * (int64_t)value.root + value.rem);
+	return ((uint64_t)value.root * (uint64_t)value.root + value.rem);
 }
 
 r64_t
-mbin_r64_root(int64_t x)
+mbin_r64_root(uint64_t value)
 {
-	r64_t temp;
+	uint64_t s = mbin_sqrt_64(value);
 
-	if (x >= 0) {
-		temp.root = mbin_sqrt_64(x);
-		temp.rem = x - temp.root * temp.root;
-	} else {
-		temp.root = -mbin_sqrt_64(-x);
-		temp.rem = x + (int64_t)temp.root * (int64_t)temp.root;
-	}
-	return (temp);
+	return (r64_t){
+		s, value - s * s
+	};
 }
 
 r64_t
@@ -504,6 +496,56 @@ mbin_r64_sub(const r64_t a, const r64_t b)
 {
 	return (mbin_r64_root(2 * (mbin_r64_square(a) + mbin_r64_square(b)) -
 	    mbin_r64_square(mbin_r64_add(a, b))));
+}
+
+r64_t
+mbin_r64_normalize(const r64_t a)
+{
+	return (mbin_r64_root(mbin_r64_square(a)));
+}
+
+r64_t
+mbin_r64_add_exp(r64_t base, uint64_t exp)
+{
+	r64_t result = {};
+
+	while (exp) {
+		if (exp & 1)
+			result = mbin_r64_add(result, base);
+
+		base = mbin_r64_add(base, base);
+		exp /= 2;
+	}
+	return (result);
+}
+
+uint32_t
+mbin_r64_square_mod(r64_t const value, uint32_t mod)
+{
+	return ((uint64_t)value.root * (uint64_t)value.root + value.rem) % mod;
+}
+
+r64_t
+mbin_r64_add_mod(const r64_t a, const r64_t b, uint32_t mod)
+{
+	return (r64_t){
+		(a.root + b.root) % mod, (a.rem + b.rem) % mod
+	};
+}
+
+r64_t
+mbin_r64_add_exp_mod(r64_t base, uint64_t exp, uint32_t mod)
+{
+	r64_t result = {};
+
+	while (exp) {
+		if (exp & 1)
+			result = mbin_r64_add_mod(result, base, mod);
+
+		base = mbin_r64_add_mod(base, base, mod);
+		exp /= 2;
+	}
+	return (result);
 }
 
 void
