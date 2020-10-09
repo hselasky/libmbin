@@ -473,12 +473,10 @@ mbin_r2_sqrt_fwd_double(double *ptr, uint8_t lmax)
 {
 	size_t max = 1UL << lmax;
 	size_t x;
-	double sum = 0;
 
-	for (x = 0; x != max; x++) {
-		sum += ptr[x] * ptr[x];
-		ptr[x] = sum - (x + 1);
-	}
+	for (x = 0; x != max; x++)
+		ptr[x] = ptr[x] * ptr[x];
+
 	mbin_sumdigits_r2_xform_double(ptr, lmax);
 }
 
@@ -486,18 +484,16 @@ void
 mbin_r2_sqrt_inv_double(double *ptr, uint8_t lmax)
 {
 	size_t max = 1UL << lmax;
-	double last = 0;
 	size_t x;
 
 	mbin_sumdigits_r2_xform_double(ptr, lmax);
 
 	for (x = 0; x != max; x++) {
-		double v = (ptr[x] - last) / max + 1.0;
+		double v = ptr[x] / max;
 		if (v < 0.0)
 			v = 0.0;
 		else if (v > 4.0)
 			v = 4.0;
-		last = ptr[x];
 		ptr[x] = sqrt(v);
 	}
 }
