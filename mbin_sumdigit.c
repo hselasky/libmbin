@@ -45,3 +45,15 @@ mbin_sumdigit_32(uint32_t x, uint32_t y, uint32_t mod)
 	}
 	return (sum);
 }
+
+uint32_t
+mbin_sumdigit_r2_32(uint32_t x, uint32_t y)
+{
+	return mbin_sumdigit_32(x, y, 2);
+}
+
+uint32_t
+mbin_sumdigit_r4_32(uint32_t x, uint32_t y)
+{
+	return mbin_sumdigit_32(x, y, 4);
+}
