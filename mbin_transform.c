@@ -1381,38 +1381,42 @@ mbin_sumdigits_r3_xform_complex_double(struct mbin_complex_double *ptr, uint8_t 
 void
 mbin_sumdigits_r4_xform_complex_double(struct mbin_complex_double *ptr, uint8_t log4_max)
 {
-	const uint32_t max = 1U << (2 * log4_max);
-	uint32_t xp;
-	uint32_t x;
-	uint32_t y;
-	uint32_t z;
+	const size_t max = 1UL << (2 * log4_max);
 
-	for (xp = 1, x = 4; x <= max; xp = x, x *= 4) {
-		for (y = 0; y != max; y += x) {
-			for (z = 0; z != xp; z++) {
+	for (size_t x = 1; x != max; x *= 4) {
+		for (size_t y = 0; y != max; y += 4 * x) {
+			for (size_t z = 0; z != x; z++) {
 				struct mbin_complex_double temp[4];
+				struct mbin_complex_double *p[4] = {
+					ptr + y + z,
+					ptr + y + z + 1 * x,
+					ptr + y + z + 2 * x,
+					ptr + y + z + 3 * x
+				};
 
-				temp[0] = ptr[y + z];
-				temp[1] = ptr[y + z + (1 * xp)];
-				temp[2] = ptr[y + z + (2 * xp)];
-				temp[3] = ptr[y + z + (3 * xp)];
+				temp[0].x = p[0]->x + p[2]->x;
+				temp[0].y = p[0]->y + p[2]->y;
 
-				ptr[y + z].x =
-				    temp[0].x + temp[1].x + temp[2].x + temp[3].x;
-				ptr[y + z].y =
-				    temp[0].y + temp[1].y + temp[2].y + temp[3].y;
-				ptr[y + z + (1 * xp)].x =
-				    temp[0].x - temp[1].y - temp[2].x + temp[3].y;
-				ptr[y + z + (1 * xp)].y =
-				    temp[0].y + temp[1].x - temp[2].y - temp[3].x;
-				ptr[y + z + (2 * xp)].x =
-				    temp[0].x - temp[1].x + temp[2].x - temp[3].x;
-				ptr[y + z + (2 * xp)].y =
-				    temp[0].y - temp[1].y + temp[2].y - temp[3].y;
-				ptr[y + z + (3 * xp)].x =
-				    temp[0].x + temp[1].y - temp[2].x - temp[3].y;
-				ptr[y + z + (3 * xp)].y =
-				    temp[0].y - temp[1].x - temp[2].y + temp[3].x;
+				temp[1].x = p[0]->x - p[2]->x;
+				temp[1].y = p[0]->y - p[2]->y;
+
+				temp[2].x = p[1]->x + p[3]->x;
+				temp[2].y = p[1]->y + p[3]->y;
+
+				temp[3].x = p[1]->x - p[3]->x;
+				temp[3].y = p[1]->y - p[3]->y;
+
+				p[0]->x = temp[0].x + temp[2].x;
+				p[0]->y = temp[0].y + temp[2].y;
+
+				p[1]->x = temp[1].x - temp[3].y;
+				p[1]->y = temp[1].y + temp[3].x;
+
+				p[2]->x = temp[0].x - temp[2].x;
+				p[2]->y = temp[0].y - temp[2].y;
+
+				p[3]->x = temp[1].x + temp[3].y;
+				p[3]->y = temp[1].y - temp[3].x;
 			}
 		}
 	}
