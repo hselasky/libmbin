@@ -1006,6 +1006,11 @@ typedef struct {
 void mbin_hpt_xform_fwd_double(hpt_double_t *, uint8_t);
 void mbin_hpt_xform_inv_double(hpt_double_t *, uint8_t);
 
+/* Sine-wave functions */
+
+double mbin_sin_32(uint32_t);
+uint32_t mbin_asin_32(double);
+
 __END_DECLS
 
 #endif					/* _MATH_BIN_H_ */
