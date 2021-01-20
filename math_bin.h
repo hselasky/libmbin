@@ -709,6 +709,7 @@ int32_t	mbin_noise_24(void);
 
 uint32_t mbin_sumdigit_32(uint32_t, uint32_t, uint32_t);
 uint32_t mbin_sumdigit_r2_32(uint32_t, uint32_t);
+uint32_t mbin_sumdigit_r3_32(uint32_t, uint32_t);
 uint32_t mbin_sumdigit_r4_32(uint32_t, uint32_t);
 
 /* Complex functions */

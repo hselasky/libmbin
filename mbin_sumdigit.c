@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2011 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2011-2021 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -50,6 +50,12 @@ uint32_t
 mbin_sumdigit_r2_32(uint32_t x, uint32_t y)
 {
 	return mbin_sumdigit_32(x, y, 2);
+}
+
+uint32_t
+mbin_sumdigit_r3_32(uint32_t x, uint32_t y)
+{
+	return mbin_sumdigit_32(x, y, 3);
 }
 
 uint32_t
