@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008-2020 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008-2021 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -1120,7 +1120,7 @@ mbin_xor_xform_8(uint8_t *ptr, uint8_t log2_max)
 
 /*
  * Polar and add and transform:
- * f(x,y) = ((x & y) == y) * ((mbin_sumbits32(x & y) & 1) ? -1 : 1);
+ * f(x,y) = ((x & y) == y) * (mbin_sumdigits_r2_32(x,y) ? -1 : 1);
  */
 void
 mbin_polar_and_add_xform_double(double *ptr, uint8_t log2_max)
@@ -1142,7 +1142,7 @@ mbin_polar_and_add_xform_double(double *ptr, uint8_t log2_max)
 /*
  * Sumbits-and transform
  *
- * f(x,y) = (mbin_sumbits32(x & y) & 1) ? -1 : 1;
+ * f(x,y) = mbin_sumdigits_r2_32(x,y) ? -1 : 1;
  */
 void
 mbin_sumdigits_r2_xform_32(uint32_t *ptr, uint8_t log2_max)
@@ -1169,7 +1169,7 @@ mbin_sumdigits_r2_xform_32(uint32_t *ptr, uint8_t log2_max)
 /*
  * Sumbits-and transform (radix-2)
  *
- * f(x,y) = (mbin_sumbits32(x & y) & 1) ? -1 : 1;
+ * f(x,y) = mbin_sumdigits_r2_32(x,y) ? -1 : 1;
  */
 void
 mbin_sumdigits_r2_xform_64(uint64_t *ptr, uint8_t log2_max)
@@ -1196,7 +1196,7 @@ mbin_sumdigits_r2_xform_64(uint64_t *ptr, uint8_t log2_max)
 /*
  * Sumbits-and transform (radix-2)
  *
- * f(x,y) = (mbin_sumbits32(x & y) & 1) ? -1 : 1;
+ * f(x,y) = mbin_sumdigits_r2_32(x,y) ? -1 : 1;
  */
 void
 mbin_sumdigits_r2_xform_double(double *ptr, uint8_t log2_max)
@@ -1249,7 +1249,7 @@ mbin_sumdigits_r2_xform_complex_double(struct mbin_complex_double *ptr, uint8_t 
 /*
  * Sumbits-and transform - absolute version
  *
- * f(x,y) = (mbin_sumbits32(x & y) & 1) ? -1 : 1;
+ * f(x,y) = mbin_sumdigits_r2_32(x,y) ? -1 : 1;
  */
 void
 mbin_sumdigits_r2_xform_abs_32(uint32_t *ptr, uint8_t log2_max)
@@ -1276,7 +1276,7 @@ mbin_sumdigits_r2_xform_abs_32(uint32_t *ptr, uint8_t log2_max)
 /*
  * Sumbits-and transform - absolute version
  *
- * f(x,y) = (mbin_sumbits32(x & y) & 1) ? -1 : 1;
+ * f(x,y) = mbin_sumdigits_r2_32(x,y) ? -1 : 1;
  */
 void
 mbin_sumdigits_r2_xform_abs_64(uint64_t *ptr, uint8_t log2_max)
@@ -1303,7 +1303,7 @@ mbin_sumdigits_r2_xform_abs_64(uint64_t *ptr, uint8_t log2_max)
 /*
  * Sumbits-and transform - absolute version
  *
- * f(x,y) = (mbin_sumbits32(x & y) & 1) ? -1 : 1;
+ * f(x,y) = mbin_sumdigits_r2_32(x,y) ? -1 : 1;
  */
 void
 mbin_sumdigits_r2_xform_abs_double(double *ptr, uint8_t log2_max)
@@ -1327,57 +1327,64 @@ mbin_sumdigits_r2_xform_abs_double(double *ptr, uint8_t log2_max)
 	}
 }
 
-/* Sumdigits transform radix 3 */
-
-void
-mbin_sumdigits_r3_xform_complex_double(struct mbin_complex_double *ptr, uint8_t log3_max)
+static inline void
+step_complex_quad_double(struct mbin_complex_quad_double *p)
 {
-	static const union {
-		double	k;
-		uint64_t l;
-	}     m = {
-		.l = 0x3febb67ae8584caa
-	};
-	uint32_t max = 1;
-	uint32_t xp;
-	uint32_t x;
-	uint32_t y;
-	uint32_t z;
-	uint8_t n;
+	static const struct mbin_complex_quad_double f = { {-0.5,0,0,0}, {0,0.5,0,0} };
+	return (mbin_mul_complex_quad_double(&f, p, p));
+}
 
-	for (n = 0; n != log3_max; n++)
+/*
+ * Sumdigits radix 3 transform using quad coordiantes.
+ *
+ * f(x,y) = mbin_sumdigits_r3_32(x,y) ? 0 : 1 : 2
+ */
+void
+mbin_sumdigits_r3_xform_complex_quad_double(struct mbin_complex_quad_double *ptr, uint8_t log3_max)
+{
+	size_t max = 1;
+
+	for (uint8_t n = 0; n != log3_max; n++)
 		max *= 3;
 
-	for (xp = 1, x = 3; x <= max; xp = x, x *= 3) {
-		for (y = 0; y != max; y += x) {
-			for (z = 0; z != xp; z++) {
-				struct mbin_complex_double temp[3];
+	for (size_t x = 1; x != max; x *= 3) {
+		for (size_t y = 0; y != max; y += 3 * x) {
+			for (size_t z = 0; z != x; z++) {
+				struct mbin_complex_quad_double temp[3];
+				struct mbin_complex_quad_double *p[3] = {
+					ptr + y + z,
+					ptr + y + z + 1 * x,
+					ptr + y + z + 2 * x,
+				};
 
-				temp[0] = ptr[y + z];
-				temp[1] = ptr[y + z + (1 * xp)];
-				temp[2] = ptr[y + z + (2 * xp)];
+				temp[0] = p[0][0];
+				temp[1] = p[1][0];
+				temp[2] = p[2][0];
 
-				ptr[y + z].x = temp[0].x + temp[1].x + temp[2].x;
-				ptr[y + z].y = temp[0].y + temp[1].y + temp[2].y;
-				ptr[y + z + (1 * xp)].x =
-				    temp[0].x - (temp[1].x / 2.0) - (temp[1].y * m.k) -
-				    (temp[2].x / 2.0) + (temp[2].y * m.k);
-				ptr[y + z + (1 * xp)].y =
-				    temp[0].y - (temp[1].y / 2.0) + (temp[1].x * m.k) -
-				    (temp[2].y / 2.0) - (temp[2].x * m.k);
-				ptr[y + z + (2 * xp)].x =
-				    temp[0].x - (temp[1].x / 2.0) + (temp[1].y * m.k) -
-				    (temp[2].x / 2.0) - (temp[2].y * m.k);
-				ptr[y + z + (2 * xp)].y =
-				    temp[0].y - (temp[1].y / 2.0) - (temp[1].x * m.k) -
-				    (temp[2].y / 2.0) + (temp[2].x * m.k);
+				mbin_add_complex_quad_double(&temp[0], &temp[1], p[0]);
+				mbin_add_complex_quad_double(p[0], &temp[2], p[0]);
+
+				step_complex_quad_double(&temp[1]);
+				step_complex_quad_double(&temp[2]);
+
+				mbin_add_complex_quad_double(&temp[0], &temp[1], p[1]);
+				mbin_add_complex_quad_double(&temp[0], &temp[2], p[2]);
+
+				step_complex_quad_double(&temp[1]);
+				step_complex_quad_double(&temp[2]);
+
+				mbin_add_complex_quad_double(p[1], &temp[2], p[1]);
+				mbin_add_complex_quad_double(p[2], &temp[1], p[2]);
 			}
 		}
 	}
 }
 
-/* Sumdigits transform radix 4 */
-
+/*
+ * Sumdigits radix 4 transform using complex coordiantes.
+ *
+ * f(x,y) = mbin_sumdigits_r4_32(x,y) ? {1,0} : {0,1} : {-1,0} : {0,-1};
+ */
 void
 mbin_sumdigits_r4_xform_complex_double(struct mbin_complex_double *ptr, uint8_t log4_max)
 {
@@ -1417,6 +1424,43 @@ mbin_sumdigits_r4_xform_complex_double(struct mbin_complex_double *ptr, uint8_t 
 
 				p[3]->x = temp[1].x + temp[3].y;
 				p[3]->y = temp[1].y - temp[3].x;
+			}
+		}
+	}
+}
+
+/*
+ * Sumdigits radix 4 transform using complex coordiantes.
+ *
+ * f(x,y) = mbin_sumdigits_r4_32(x,y) ? {1,0} : {0,1} : {-1,0} : {0,-1};
+ */
+void
+mbin_sumdigits_r4_xform_complex_quad_double(struct mbin_complex_quad_double *ptr, uint8_t log4_max)
+{
+	const size_t max = 1UL << (2 * log4_max);
+
+	for (size_t x = 1; x != max; x *= 4) {
+		for (size_t y = 0; y != max; y += 4 * x) {
+			for (size_t z = 0; z != x; z++) {
+				struct mbin_complex_quad_double temp[4];
+				struct mbin_complex_quad_double *p[4] = {
+					ptr + y + z,
+					ptr + y + z + 1 * x,
+					ptr + y + z + 2 * x,
+					ptr + y + z + 3 * x
+				};
+
+				mbin_add_complex_quad_double(p[0], p[2], &temp[0]);
+				mbin_sub_complex_quad_double(p[0], p[2], &temp[1]);
+
+				mbin_add_complex_quad_double(p[1], p[3], &temp[2]);
+				mbin_sub_complex_quad_double(p[1], p[3], &temp[3]);
+
+				mbin_add_complex_quad_double(&temp[0], &temp[2], p[0]);
+				mbin_sub_conj_complex_quad_double(&temp[1], &temp[3], p[1]);
+
+				mbin_sub_complex_quad_double(&temp[0], &temp[2], p[2]);
+				mbin_add_conj_complex_quad_double(&temp[1], &temp[3], p[3]);
 			}
 		}
 	}
