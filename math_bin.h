@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008-2020 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008-2021 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -620,6 +620,15 @@ typedef struct mbin_complex_double {
 	double	y;
 } mbin_cd_t;
 
+typedef struct mbin_quad_double {
+	double v[4];
+} mbin_qd_t;
+
+typedef struct mbin_complex_quad_double {
+	struct mbin_quad_double x;
+	struct mbin_quad_double y;
+} mbin_cqd_t;
+
 /* Fast version of transforms */
 
 void	mbin_xor2_multi_xform_32(uint32_t *ptr, const uint32_t *fact);
@@ -709,6 +718,20 @@ struct mbin_complex_double mbin_div_complex_double(struct mbin_complex_double, s
 struct mbin_complex_double mbin_add_complex_double(struct mbin_complex_double, struct mbin_complex_double);
 struct mbin_complex_double mbin_sub_complex_double(struct mbin_complex_double, struct mbin_complex_double);
 double	mbin_square_len_complex_double(struct mbin_complex_double);
+
+/* Quad functions */
+
+void mbin_mul_quad_double(const struct mbin_quad_double *, const struct mbin_quad_double *, struct mbin_quad_double *);
+void mbin_add_quad_double(const struct mbin_quad_double *, const struct mbin_quad_double *, struct mbin_quad_double *);
+void mbin_sub_quad_double(const struct mbin_quad_double *, const struct mbin_quad_double *, struct mbin_quad_double *);
+
+/* Complex quad functions */
+
+void mbin_mul_complex_quad_double(const struct mbin_complex_quad_double *, const struct mbin_complex_quad_double *, struct mbin_complex_quad_double *);
+void mbin_add_complex_quad_double(const struct mbin_complex_quad_double *, const struct mbin_complex_quad_double *, struct mbin_complex_quad_double *);
+void mbin_sub_complex_quad_double(const struct mbin_complex_quad_double *, const struct mbin_complex_quad_double *, struct mbin_complex_quad_double *);
+void mbin_add_conj_complex_quad_double(const struct mbin_complex_quad_double *, const struct mbin_complex_quad_double *, struct mbin_complex_quad_double *);
+void mbin_sub_conj_complex_quad_double(const struct mbin_complex_quad_double *, const struct mbin_complex_quad_double *, struct mbin_complex_quad_double *);
 
 /* Orthogonal functions */
 
