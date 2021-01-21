@@ -36,9 +36,10 @@ double
 mbin_sin_32(uint32_t x)
 {
 	double retval = sqrt(0.5);
+	uint8_t num;
 
-	if (x == 0x80000000U)
-		return (retval);
+	if (x == 0)
+		return (0.0);
 	else if (x & 0x80000000U)
 		x ^= 0x2AAAAAAAU;
 	else
@@ -49,12 +50,21 @@ mbin_sin_32(uint32_t x)
 			x ^= (mask - 1);
 	}
 
-	for (uint8_t num = 32; num--; ) {
+	/* find first set bit */
+	for (num = 0; num != 32; x /= 2, num++) {
+		if (x & 1) {
+			x /= 2;
+			num++;
+			break;
+		}
+	}
+
+	/* compute the rest of the square-root series */
+	for (; num != 32; x /= 2, num++) {
 		if (x & 1)
 			retval = sqrt((1.0 + retval) / 2.0);
 		else
 			retval = sqrt((1.0 - retval) / 2.0);
-		x /= 2;
 	}
 	return (retval);
 }
@@ -77,10 +87,5 @@ mbin_asin_32(double input)
 		if (retval & m)
 			retval ^= (m / 2);
 	}
-#if 1
-	/* XXX check if we should round up XXX */
-	if ((retval & 1) != 0 && retval != 0xFFFFFFFFU)
-		retval++;
-#endif
 	return (retval);
 }
