@@ -28,59 +28,53 @@
 #include "math_bin.h"
 
 /*
- * The following function generates the full sinus waveform from [0 to
- * 360> degrees, using the floating point range [0..1.0>.
+ * The following function generates the full sinus waveform from [0
+ * to 360> degrees, using the floating point range [0..1.0>.
  *
  * The input and output noise floor for this function is 2**-32.
  */
 float
-mbin_sinf_32(float _x)
+mbin_sinf_32(float x)
+{
+	return (mbin_cosf_32(x + 0.75f));
+}
+
+/*
+ * The following function computes the inverse of the function above.
+ */
+float
+mbin_asinf_32(float x)
+{
+	return (0.25f - mbin_acosf_32(x));
+}
+
+/*
+ * The following function generates the full cosinus waveform from [0
+ * to 360> degrees, using the floating point range [0..1.0>.
+ *
+ * The input and output noise floor for this function is 2**-32.
+ */
+float
+mbin_cosf_32(float _x)
 {
 	uint32_t x = (_x - floorf(_x)) * (1ULL << 32);
 	double retval;
 	uint8_t num;
-	uint8_t quadrant;
 
 	/* Apply "grey" encoding */
-	for (uint32_t mask = 1U << 29; mask != 1; mask /= 2) {
+	for (uint32_t mask = 1U << 31; mask != 1; mask /= 2) {
 		if (x & mask)
 			x ^= (mask - 1);
 	}
 
-	quadrant = (x >> 30);
-
-	/* Figure out quadrant */
-	switch (quadrant) {
-	case 0:
-		if (x == 0)
-			return (0.0);
-		break;
-	case 1:
-		if (x == 0x40000000U)
-			return (1.0);
-		break;
-	case 2:
-		if (x == 0x80000000U)
-			return (0.0);
-		break;
-	case 3:
-		if (x == 0xC0000000U)
-			return (-1.0);
-		break;
-	default:
-		break;
-	}
-
-	/* Find first cleared bit, that is where it starts */
+	/* Find first set bit */
 	for (num = 0; num != 30; num++) {
-		if (!(x & (1U << num))) {
-			num++;
+		if (!(x & (1U << num)))
 			break;
-		}
 	}
 
 	/* Initialize return value */
-	retval = sqrt(0.5);
+	retval = 0;
 
 	/* Compute the rest of the square-root series */
 	for (; num != 30; num++) {
@@ -90,20 +84,10 @@ mbin_sinf_32(float _x)
 			retval = sqrt((1.0 + retval) / 2.0);
 	}
 
-	/* Use Pythagoras to fixup final value, if required */
-	switch (quadrant) {
-	case 0:
-		retval = sqrt(1.0 - retval * retval);
-		break;
-	case 2:
-		retval = -sqrt(1.0 - retval * retval);
-		break;
-	case 3:
+	/* Check if halfway */
+	if (x & (1ULL << 30))
 		retval = -retval;
-		break;
-	default:
-		break;
-	}
+
 	return (retval);
 }
 
@@ -111,49 +95,18 @@ mbin_sinf_32(float _x)
  * The following function computes the inverse of the function above.
  */
 float
-mbin_asinf_32(float _input)
+mbin_acosf_32(float _input)
 {
 	double input = _input;
-	double limit;
-	uint32_t retval;
-
-	/* Check for some well known values */
-	if (input == 0.0)
-		return (0);
-	else if (input == -1.0)
-		return (-0.25f);
-	else if (input == 1.0)
-		return (0.25f);
-
-	/* Detect which quadrant the value is in. */
-	limit = sqrt(0.5);
-	if (input < 0.0) {
-		if (input < -limit) {
-			input = -input;
-			retval = 0xBFFFFFFFU;
-		} else {
-			input = sqrt(1.0 - input * input);
-			retval = 0x80000000U;
-		}
-	} else {
-		if (input < limit) {
-			input = sqrt(1.0 - input * input);
-			retval = 0;
-		} else {
-			retval = 0x3FFFFFFFU;
-		}
-	}
+	uint32_t retval = 0;
 
 	/* Compute the rest of the squaring series */
-	for (uint32_t m = 1U << 29; m != 0; m /= 2) {
-		input = input * input * 2.0 - 1.0;
+	for (uint32_t m = 1U << 30; m != 0; m /= 2) {
 		if (input <= 0)
 			retval ^= (2 * m - 1);
+		input = input * input * 2.0 - 1.0;
 	}
 
 	/* Apply sign and fixup value */
-	if (retval & 0x80000000U)
-		return -(float)(retval & 0x7FFFFFFFU) / (float)(1ULL << 32);
-	else
-		return (float)(retval & 0x7FFFFFFFU) / (float)(1ULL << 32);
+	return (float)retval / (float)(1ULL << 32);
 }

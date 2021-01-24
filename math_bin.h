@@ -1008,7 +1008,10 @@ void mbin_hpt_xform_inv_double(hpt_double_t *, uint8_t);
 
 /* Sine-wave functions */
 
-#define	MBIN_PI 1.0f
+#define	MBIN_PI 0.5f
+
+float mbin_cosf_32(float);
+float mbin_acosf_32(float);
 
 float mbin_sinf_32(float);
 float mbin_asinf_32(float);
