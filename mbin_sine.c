@@ -61,6 +61,13 @@ mbin_cosf_32(float _x)
 	double retval;
 	uint8_t num;
 
+	/* Handle special cases, if any */
+	if (x == 0) {
+		return (1.0);
+	} else if (x == 0x80000000U) {
+		return (-1.0);
+	}
+
 	/* Apply "grey" encoding */
 	for (uint32_t mask = 1U << 31; mask != 1; mask /= 2) {
 		if (x & mask)
@@ -69,12 +76,14 @@ mbin_cosf_32(float _x)
 
 	/* Find first set bit */
 	for (num = 0; num != 30; num++) {
-		if (!(x & (1U << num)))
+		if (x & (1U << num)) {
+			num++;
 			break;
+		}
 	}
 
 	/* Initialize return value */
-	retval = 0;
+	retval = 0.0;
 
 	/* Compute the rest of the square-root series */
 	for (; num != 30; num++) {
