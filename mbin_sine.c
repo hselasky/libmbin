@@ -119,3 +119,72 @@ mbin_acosf_32(float _input)
 	/* Apply sign and fixup value */
 	return (float)retval / (float)(1ULL << 32);
 }
+
+float
+mbin_powf_32(float _x, float _power)
+{
+	uint32_t x = (_x - floorf(_x)) * (1ULL << 32);
+	double retval;
+	uint8_t num;
+
+	/* Handle special cases, if any */
+	if (x == 0) {
+		return (1.0);
+	} else if (x == 0x80000000U) {
+		return (-1.0);
+	}
+
+	/* Apply "grey" encoding */
+	for (uint32_t mask = 1U << 31; mask != 1; mask /= 2) {
+		if (x & mask)
+			x ^= (mask - 1);
+	}
+
+	/* Find first set bit */
+	for (num = 0; num != 30; num++) {
+		if (x & (1U << num)) {
+			num++;
+			break;
+		}
+	}
+
+	/* Initialize return value */
+	retval = 0.0;
+
+	/* Compute the rest of the power series */
+	for (; num != 30; num++) {
+		if (x & (1U << num))
+			retval = pow((1.0 - retval) / 2.0, _power);
+		else
+			retval = pow((1.0 + retval) / 2.0, _power);
+	}
+
+	/* Check if halfway */
+	if (x & (1ULL << 30))
+		retval = -retval;
+
+	return (retval);
+}
+
+/*
+ * The following function computes the inverse of the function above.
+ */
+float
+mbin_logf_32(float _input, float _power)
+{
+	double input = _input;
+	uint32_t retval = 0;
+
+	/* Compute the rest of the power series */
+	for (uint32_t m = 1U << 30; m != 0; m /= 2) {
+		if (input <= 0) {
+			retval ^= (2 * m - 1);
+			/* Only want absolute values */
+			input = -input;
+		}
+		input = pow(input, _power) * 2.0 - 1.0;
+	}
+
+	/* Apply sign and fixup value */
+	return (float)retval / (float)(1ULL << 32);
+}

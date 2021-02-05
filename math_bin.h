@@ -1016,6 +1016,9 @@ float mbin_acosf_32(float);
 float mbin_sinf_32(float);
 float mbin_asinf_32(float);
 
+float mbin_powf_32(float, float);
+float mbin_logf_32(float, float);
+
 __END_DECLS
 
 #endif					/* _MATH_BIN_H_ */
