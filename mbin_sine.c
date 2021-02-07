@@ -62,10 +62,18 @@ mbin_cosf_32(float _x)
 	uint8_t num;
 
 	/* Handle special cases, if any */
-	if (x == 0) {
-		return (1.0);
-	} else if (x == 0x80000000U) {
-		return (-1.0);
+	switch (x) {
+	case 0xFFFFFFFFU:
+	case 0x00000000U:
+		return (1.0f);
+	case 0x3FFFFFFFU:
+	case 0x40000000U:
+	case 0xBFFFFFFFU:
+	case 0xC0000000U:
+		return (0.0f);
+	case 0x7FFFFFFFU:
+	case 0x80000000U:
+		return (-1.0f);
 	}
 
 	/* Apply "grey" encoding */
@@ -128,10 +136,18 @@ mbin_powf_32(float _x, float _power)
 	uint8_t num;
 
 	/* Handle special cases, if any */
-	if (x == 0) {
-		return (1.0);
-	} else if (x == 0x80000000U) {
-		return (-1.0);
+	switch (x) {
+	case 0xFFFFFFFFU:
+	case 0x00000000U:
+		return (1.0f);
+	case 0x3FFFFFFFU:
+	case 0x40000000U:
+	case 0xBFFFFFFFU:
+	case 0xC0000000U:
+		return (0.0f);
+	case 0x7FFFFFFFU:
+	case 0x80000000U:
+		return (-1.0f);
 	}
 
 	/* Apply "grey" encoding */
