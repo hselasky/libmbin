@@ -262,11 +262,44 @@ mbin_powmul_cf(mbin_cf_t a, mbin_cf_t b, float power)
 
 	float gr = ga * gb;
 
-	float angle = mbin_acospowf_32(a.x, power) + mbin_acospowf_32(b.x, power);
-	if (a.y < 0)
-		angle += 0.5;
-	if (b.y < 0)
-		angle += 0.5;
+	uint8_t qa = (a.x < 0) + 2 * (a.y < 0);
+	uint8_t qb = (b.x < 0) + 2 * (b.y < 0);
+
+	float angle = 0;
+
+	switch (qa) {
+	case 0:
+		angle += mbin_acospowf_32(fabs(a.x), power);
+		break;
+	case 1:
+		angle += 0.5f - mbin_acospowf_32(fabs(a.x), power);
+		break;
+	case 2:
+		angle += 1.0f - mbin_acospowf_32(fabs(a.x), power);
+		break;
+	case 3:
+		angle += 0.5f + mbin_acospowf_32(fabs(a.x), power);
+		break;
+	default:
+		break;
+	}
+
+	switch (qb) {
+	case 0:
+		angle += mbin_acospowf_32(fabs(b.x), power);
+		break;
+	case 1:
+		angle += 0.5f - mbin_acospowf_32(fabs(b.x), power);
+		break;
+	case 2:
+		angle += 1.0f - mbin_acospowf_32(fabs(b.x), power);
+		break;
+	case 3:
+		angle += 0.5f + mbin_acospowf_32(fabs(b.x), power);
+		break;
+	default:
+		break;
+	}
 
 	return (mbin_cf_t){
 	    mbin_cospowf_32(angle, power) * gr,
