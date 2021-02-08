@@ -130,6 +130,7 @@ mbin_acosf_32(float _input)
 
 /*
  * Selected values of "power":
+ * 0.0: square wave
  * 0.5: cosine wave
  * 1.0: triangle function
  *
