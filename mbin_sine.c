@@ -247,6 +247,8 @@ mbin_powgainf_3d(float x, float y, float z, float power)
 mbin_cf_t
 mbin_powmul_cf(mbin_cf_t a, mbin_cf_t b, float power)
 {
+	const float invpower = 1.0f / power;
+
 	float ga = mbin_powgainf_2d(a.x, a.y, power);
 	float gb = mbin_powgainf_2d(b.x, b.y, power);
 
@@ -269,16 +271,16 @@ mbin_powmul_cf(mbin_cf_t a, mbin_cf_t b, float power)
 
 	switch (qa) {
 	case 0:
-		angle += mbin_acospowf_32(fabs(a.x), power);
+		angle += mbin_acospowf_32(fabs(a.x), invpower);
 		break;
 	case 1:
-		angle += 0.5f - mbin_acospowf_32(fabs(a.x), power);
+		angle += 0.5f - mbin_acospowf_32(fabs(a.x), invpower);
 		break;
 	case 2:
-		angle += 1.0f - mbin_acospowf_32(fabs(a.x), power);
+		angle += 1.0f - mbin_acospowf_32(fabs(a.x), invpower);
 		break;
 	case 3:
-		angle += 0.5f + mbin_acospowf_32(fabs(a.x), power);
+		angle += 0.5f + mbin_acospowf_32(fabs(a.x), invpower);
 		break;
 	default:
 		break;
@@ -286,16 +288,16 @@ mbin_powmul_cf(mbin_cf_t a, mbin_cf_t b, float power)
 
 	switch (qb) {
 	case 0:
-		angle += mbin_acospowf_32(fabs(b.x), power);
+		angle += mbin_acospowf_32(fabs(b.x), invpower);
 		break;
 	case 1:
-		angle += 0.5f - mbin_acospowf_32(fabs(b.x), power);
+		angle += 0.5f - mbin_acospowf_32(fabs(b.x), invpower);
 		break;
 	case 2:
-		angle += 1.0f - mbin_acospowf_32(fabs(b.x), power);
+		angle += 1.0f - mbin_acospowf_32(fabs(b.x), invpower);
 		break;
 	case 3:
-		angle += 0.5f + mbin_acospowf_32(fabs(b.x), power);
+		angle += 0.5f + mbin_acospowf_32(fabs(b.x), invpower);
 		break;
 	default:
 		break;
