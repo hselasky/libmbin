@@ -128,8 +128,15 @@ mbin_acosf_32(float _input)
 	return (float)retval / (float)(1ULL << 32);
 }
 
+/*
+ * Selected values of "power":
+ * 0.5: cosine wave
+ * 1.0: triangle function
+ *
+ * Phase is given by "x" argument.
+ */
 float
-mbin_powf_32(float _x, float _power)
+mbin_cospowf_32(float _x, float _power)
 {
 	uint32_t x = (_x - floorf(_x)) * (1ULL << 32);
 	double retval;
@@ -186,7 +193,7 @@ mbin_powf_32(float _x, float _power)
  * The following function computes the inverse of the function above.
  */
 float
-mbin_logf_32(float _input, float _power)
+mbin_acospowf_32(float _input, float _power)
 {
 	double input = _input;
 	uint32_t retval = 0;
@@ -203,4 +210,65 @@ mbin_logf_32(float _input, float _power)
 
 	/* Apply sign and fixup value */
 	return (float)retval / (float)(1ULL << 32);
+}
+
+float
+mbin_sinpowf_32(float x, float power)
+{
+	return (mbin_cospowf_32(x + 0.75f, power));
+}
+
+float
+mbin_asinpowf_32(float x, float power)
+{
+	return (0.25f - mbin_acospowf_32(x, power));
+}
+
+float
+mbin_powgainf_2d(float x, float y, float power)
+{
+	const float invpower = 1.0f / power;
+
+	return (powf(powf(fabs(x), invpower) +
+		     powf(fabs(y), invpower), power));
+}
+
+float
+mbin_powgainf_3d(float x, float y, float z, float power)
+{
+	const float invpower = 1.0f / power;
+
+	return (powf(powf(fabs(x), invpower) +
+		     powf(fabs(y), invpower) +
+		     powf(fabs(z), invpower), power));
+}
+
+mbin_cf_t
+mbin_powmul_cf(mbin_cf_t a, mbin_cf_t b, float power)
+{
+	float ga = mbin_powgainf_2d(a.x, a.y, power);
+	float gb = mbin_powgainf_2d(b.x, b.y, power);
+
+	if (ga != 0.0) {
+		a.x /= ga;
+		a.y /= ga;
+	}
+
+	if (gb != 0.0) {
+		b.x /= gb;
+		b.y /= gb;
+	}
+
+	float gr = ga * gb;
+
+	float angle = mbin_acospowf_32(a.x, power) + mbin_acospowf_32(b.x, power);
+	if (a.y < 0)
+		angle += 0.5;
+	if (b.y < 0)
+		angle += 0.5;
+
+	return (mbin_cf_t){
+	    mbin_cospowf_32(angle, power) * gr,
+	    mbin_sinpowf_32(angle, power) * gr
+	};
 }

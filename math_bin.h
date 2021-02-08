@@ -1010,14 +1010,27 @@ void mbin_hpt_xform_inv_double(hpt_double_t *, uint8_t);
 
 #define	MBIN_PI 0.5f
 
+typedef struct mbin_complex_float {
+	float x;
+	float y;
+} mbin_cf_t;
+
 float mbin_cosf_32(float);
 float mbin_acosf_32(float);
 
 float mbin_sinf_32(float);
 float mbin_asinf_32(float);
 
-float mbin_powf_32(float, float);
-float mbin_logf_32(float, float);
+float mbin_cospowf_32(float, float);
+float mbin_acospowf_32(float, float);
+
+float mbin_sinpowf_32(float, float);
+float mbin_asinpowf_32(float, float);
+
+float mbin_powgainf_2d(float, float, float);
+float mbin_powgainf_3d(float, float, float, float);
+
+mbin_cf_t mbin_powmul_cf(mbin_cf_t, mbin_cf_t, float);
 
 __END_DECLS
 
