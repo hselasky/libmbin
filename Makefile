@@ -38,6 +38,7 @@ SRCS+=	mbin_equation_double.c
 SRCS+=	mbin_expand.c
 SRCS+=	mbin_express.c
 SRCS+=	mbin_factor.c
+SRCS+=	mbin_ftt.c
 SRCS+=	mbin_fet.c
 SRCS+=	mbin_filter.c
 SRCS+=	mbin_fp.c

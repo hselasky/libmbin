@@ -1032,6 +1032,11 @@ float mbin_powgainf_3d(float, float, float, float);
 
 mbin_cf_t mbin_powmul_cf(mbin_cf_t, mbin_cf_t, float);
 
+/* Fast triangular transform functions */
+
+void mbin_ftt_cf(mbin_cf_t *, uint8_t);
+void mbin_ftt_mul_cf(const mbin_cf_t *, const mbin_cf_t *, mbin_cf_t *, uint8_t);
+
 __END_DECLS
 
 #endif					/* _MATH_BIN_H_ */
