@@ -252,37 +252,34 @@ mbin_powmul_cf(mbin_cf_t a, mbin_cf_t b, float power)
 	float ga = mbin_powgainf_2d(a.x, a.y, power);
 	float gb = mbin_powgainf_2d(b.x, b.y, power);
 
-	if (ga != 0.0) {
-		a.x /= ga;
-		a.y /= ga;
-	}
+	const uint8_t qa = (a.x < 0) + 2 * (a.y < 0);
+	const uint8_t qb = (b.x < 0) + 2 * (b.y < 0);
 
-	if (gb != 0.0) {
+	if (ga != 0.0)
+		a.x /= ga;
+
+	if (gb != 0.0)
 		b.x /= gb;
-		b.y /= gb;
-	}
 
 	float gr = ga * gb;
 
-	uint8_t qa = (a.x < 0) + 2 * (a.y < 0);
-	uint8_t qb = (b.x < 0) + 2 * (b.y < 0);
-
-	float angle = 0;
+	float angle;
 
 	switch (qa) {
 	case 0:
-		angle += mbin_acospowf_32(fabs(a.x), invpower);
+		angle = mbin_acospowf_32(fabs(a.x), invpower);
 		break;
 	case 1:
-		angle += 0.5f - mbin_acospowf_32(fabs(a.x), invpower);
+		angle = 0.5f - mbin_acospowf_32(fabs(a.x), invpower);
 		break;
 	case 2:
-		angle += 1.0f - mbin_acospowf_32(fabs(a.x), invpower);
+		angle = 1.0f - mbin_acospowf_32(fabs(a.x), invpower);
 		break;
 	case 3:
-		angle += 0.5f + mbin_acospowf_32(fabs(a.x), invpower);
+		angle = 0.5f + mbin_acospowf_32(fabs(a.x), invpower);
 		break;
 	default:
+		angle = 0.0f;
 		break;
 	}
 
