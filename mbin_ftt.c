@@ -194,7 +194,7 @@ mbin_ftt_sub_cf(mbin_cf_t a, mbin_cf_t b)
 	return ((mbin_cf_t){ a.x - b.x, a.y - b.y });
 }
 
-/* Fast Triangular Forward Transform for two dimensional vector data. */
+/* Fast Triangular Transform for two dimensional vector data. */
 
 void
 mbin_ftt_cf(mbin_cf_t *ptr, uint8_t log2_size)
