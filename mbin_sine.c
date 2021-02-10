@@ -244,6 +244,9 @@ mbin_powgainf_3d(float x, float y, float z, float power)
 		     powf(fabs(z), invpower), power));
 }
 
+/*
+ * Multiply two "power" vectors.
+ */
 mbin_cf_t
 mbin_powmul_cf(mbin_cf_t a, mbin_cf_t b, float power)
 {
@@ -255,9 +258,11 @@ mbin_powmul_cf(mbin_cf_t a, mbin_cf_t b, float power)
 	const uint8_t qa = (a.x < 0) + 2 * (a.y < 0);
 	const uint8_t qb = (b.x < 0) + 2 * (b.y < 0);
 
+	/* Normalize "x" axis in vector. */
 	if (ga != 0.0)
 		a.x /= ga;
 
+	/* Normalize "x" axis in vector. */
 	if (gb != 0.0)
 		b.x /= gb;
 
@@ -303,5 +308,44 @@ mbin_powmul_cf(mbin_cf_t a, mbin_cf_t b, float power)
 	return (mbin_cf_t){
 	    mbin_cospowf_32(angle, power) * gr,
 	    mbin_sinpowf_32(angle, power) * gr
+	};
+}
+
+/*
+ * Rotate "power" vector "angle" amount.
+ */
+mbin_cf_t
+mbin_angleadd_cf(mbin_cf_t a, float angle, float power)
+{
+	const float invpower = 1.0f / power;
+
+	float ga = mbin_powgainf_2d(a.x, a.y, power);
+
+	const uint8_t qa = (a.x < 0) + 2 * (a.y < 0);
+
+	/* Normalize "x" axis in vector. */
+	if (ga != 0.0)
+		a.x /= ga;
+
+	switch (qa) {
+	case 0:
+		angle += mbin_acospowf_32(fabs(a.x), invpower);
+		break;
+	case 1:
+		angle += 0.5f - mbin_acospowf_32(fabs(a.x), invpower);
+		break;
+	case 2:
+		angle += 1.0f - mbin_acospowf_32(fabs(a.x), invpower);
+		break;
+	case 3:
+		angle += 0.5f + mbin_acospowf_32(fabs(a.x), invpower);
+		break;
+	default:
+		break;
+	}
+
+	return (mbin_cf_t){
+	    mbin_cospowf_32(angle, power) * ga,
+	    mbin_sinpowf_32(angle, power) * ga
 	};
 }

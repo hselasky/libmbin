@@ -178,6 +178,48 @@ mbin_ftt_multiply_cf(mbin_cf_t a, mbin_cf_t b)
 	});
 }
 
+/*
+ * Special case of "mbin_angleadd_cf(a,b,1.0)"
+ * Two dimensional vector multiplication for triangular wave functions.
+ */
+static inline mbin_cf_t
+mbin_ftt_angleadd_cf(mbin_cf_t a, float angle)
+{
+	/* Compute vector gain */
+	const float ga = fabs(a.x) + fabs(a.y);
+
+	/* Figure out quadrants */
+	const uint8_t qa = (a.x < 0) + 2 * (a.y < 0);
+
+	/* Normalize input vectors, "cosine" argument */
+	if (ga != 0.0f)
+		a.x /= ga;
+
+	/* Add the two angles, that's part of vector multiplication */
+	switch (qa) {
+	case 0:
+		angle += mbin_ftt_acosf(a.x);
+		break;
+	case 1:
+		angle += 0.5f - mbin_ftt_acosf(a.x);
+		break;
+	case 2:
+		angle += 1.0f - mbin_ftt_acosf(a.x);
+		break;
+	case 3:
+		angle += 0.5f + mbin_ftt_acosf(a.x);
+		break;
+	default:
+		break;
+	}
+
+	/* Restore output vector */
+	return ((mbin_cf_t){
+	    mbin_ftt_cosf(angle) * ga,
+	    mbin_ftt_sinf(angle) * ga
+	});
+}
+
 /* Two dimensional vector addition for triangular wave functions. */
 
 static inline mbin_cf_t
@@ -206,16 +248,12 @@ mbin_ftt_cf(mbin_cf_t *ptr, uint8_t log2_size)
 
 	for (size_t step = max; (step /= 2);) {
 		for (y = z = 0; y != max; y += 2 * step) {
-			const float shift = (float)(z & (max - 1)) / (float)max;
-			const mbin_cf_t v = {
-				mbin_ftt_cosf(shift),
-				mbin_ftt_sinf(shift),
-			};
+			const float angle = (float)z / (float)max;
 
 			/* do transform */
 			for (size_t x = 0; x != step; x++) {
 				t[0] = ptr[x + y];
-				t[1] = mbin_ftt_multiply_cf(ptr[x + y + step], v);
+				t[1] = mbin_ftt_angleadd_cf(ptr[x + y + step], angle);
 
 				ptr[x + y] = mbin_ftt_add_cf(t[0], t[1]);
 				ptr[x + y + step] = mbin_ftt_sub_cf(t[0], t[1]);

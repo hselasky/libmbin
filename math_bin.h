@@ -1031,6 +1031,7 @@ float mbin_powgainf_2d(float, float, float);
 float mbin_powgainf_3d(float, float, float, float);
 
 mbin_cf_t mbin_powmul_cf(mbin_cf_t, mbin_cf_t, float);
+mbin_cf_t mbin_angleadd_cf(mbin_cf_t, float, float);
 
 /* Fast Triangular Transform functions */
 

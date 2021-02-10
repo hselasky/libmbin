@@ -82,16 +82,12 @@ mbin_fpt_cf(mbin_cf_t *ptr, uint8_t log2_size, float power)
 
 	for (size_t step = max; (step /= 2);) {
 		for (y = z = 0; y != max; y += 2 * step) {
-			const float shift = (float)(z & (max - 1)) / (float)max;
-			const mbin_cf_t v = {
-				mbin_cospowf_32(shift, power),
-				mbin_sinpowf_32(shift, power),
-			};
+			const float angle = (float)z / (float)max;
 
 			/* do transform */
 			for (size_t x = 0; x != step; x++) {
 				t[0] = ptr[x + y];
-				t[1] = mbin_powmul_cf(ptr[x + y + step], v, power);
+				t[1] = mbin_angleadd_cf(ptr[x + y + step], angle, power);
 
 				ptr[x + y] = mbin_fpt_add_cf(t[0], t[1]);
 				ptr[x + y + step] = mbin_fpt_sub_cf(t[0], t[1]);
