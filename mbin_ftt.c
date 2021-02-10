@@ -331,3 +331,30 @@ mbin_ftt_mul_cf(const mbin_cf_t *pa, const mbin_cf_t *pb, mbin_cf_t *pc, uint8_t
 	for (size_t x = 0; x != max; x++)
 		pc[x] = mbin_ftt_multiply_cf(pa[x], pb[x]);
 }
+
+/* The derivative of a triangle function is either -1, 0 or +1 */
+
+void
+mbin_ftt_diff_cf(mbin_cf_t *pc, uint8_t log2_size)
+{
+	const size_t max = 1UL << log2_size;
+	mbin_cf_t prev = pc[max - 1];
+
+	for (size_t x = 0; x != max; x++) {
+		const mbin_cf_t old = pc[x];
+		pc[x] = mbin_ftt_sub_cf(pc[x], prev);
+		prev = old;
+	}
+}
+
+/* The integrate of a square wave function is a triangle function */
+
+void
+mbin_ftt_integ_cf(mbin_cf_t *pc, uint8_t log2_size)
+{
+	const size_t max = 1UL << log2_size;
+	mbin_cf_t sum = {};
+
+	for (size_t x = 0; x != max; x++)
+		pc[x] = sum = mbin_ftt_add_cf(sum, pc[x]);
+}

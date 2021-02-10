@@ -1038,6 +1038,8 @@ mbin_cf_t mbin_angleadd_cf(mbin_cf_t, float, float);
 void mbin_ftt_fwd_cf(mbin_cf_t *, uint8_t);
 void mbin_ftt_inv_cf(mbin_cf_t *, uint8_t);
 void mbin_ftt_mul_cf(const mbin_cf_t *, const mbin_cf_t *, mbin_cf_t *, uint8_t);
+void mbin_ftt_diff_cf(mbin_cf_t *, uint8_t);
+void mbin_ftt_integ_cf(mbin_cf_t *, uint8_t);
 
 /* Fast Power Transform functions */
 
