@@ -236,10 +236,10 @@ mbin_ftt_sub_cf(mbin_cf_t a, mbin_cf_t b)
 	return ((mbin_cf_t){ a.x - b.x, a.y - b.y });
 }
 
-/* Fast Triangular Transform for two dimensional vector data. */
+/* Fast Forward Triangular Transform for two dimensional vector data. */
 
 void
-mbin_ftt_cf(mbin_cf_t *ptr, uint8_t log2_size)
+mbin_ftt_fwd_cf(mbin_cf_t *ptr, uint8_t log2_size)
 {
 	const size_t max = 1UL << log2_size;
 	mbin_cf_t t[2];
@@ -274,6 +274,48 @@ mbin_ftt_cf(mbin_cf_t *ptr, uint8_t log2_size)
 			t[0] = ptr[x];
 			ptr[x] = ptr[y];
 			ptr[y] = t[0];
+		}
+	}
+}
+
+/* Fast Inverse Triangular Transform for two dimensional vector data. */
+
+void
+mbin_ftt_inv_cf(mbin_cf_t *ptr, uint8_t log2_size)
+{
+	const size_t max = 1UL << log2_size;
+	mbin_cf_t t[2];
+	size_t y;
+	size_t z;
+
+	assert(log2_size <= 32);
+
+	/* bitreverse */
+	for (size_t x = 0; x != max; x++) {
+		y = mbin_bitrev32(x << (32 - log2_size));
+		if (y < x) {
+			/* swap */
+			t[0] = ptr[x];
+			ptr[x] = ptr[y];
+			ptr[y] = t[0];
+		}
+	}
+
+	for (size_t step = 1; step != max; step *= 2) {
+		for (y = z = 0; y != max; y += 2 * step) {
+			const float angle = (float)(max - z) / (float)max;
+
+			/* do transform */
+			for (size_t x = 0; x != step; x++) {
+				t[0] = mbin_ftt_add_cf(ptr[x + y], ptr[x + y + step]);
+				t[1] = mbin_ftt_sub_cf(ptr[x + y], ptr[x + y + step]);
+
+				ptr[x + y] = t[0];
+				ptr[x + y + step] = mbin_ftt_angleadd_cf(t[1], angle);
+			}
+
+			/* update index */
+			z = mbin_ftt_add_bitreversed(z, max / 4);
 		}
 	}
 }
