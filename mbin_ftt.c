@@ -264,11 +264,13 @@ mbin_ftt_fwd_cf(mbin_cf_t *ptr, uint8_t log2_size)
 		}
 	}
 
-	assert(log2_size <= 32);
-
 	/* bitreverse */
 	for (size_t x = 0; x != max; x++) {
+#if __LP64__
+		y = mbin_bitrev64(x << (64 - log2_size));
+#else
 		y = mbin_bitrev32(x << (32 - log2_size));
+#endif
 		if (y < x) {
 			/* swap */
 			t[0] = ptr[x];
@@ -288,11 +290,13 @@ mbin_ftt_inv_cf(mbin_cf_t *ptr, uint8_t log2_size)
 	size_t y;
 	size_t z;
 
-	assert(log2_size <= 32);
-
 	/* bitreverse */
 	for (size_t x = 0; x != max; x++) {
+#if __LP64__
+		y = mbin_bitrev64(x << (64 - log2_size));
+#else
 		y = mbin_bitrev32(x << (32 - log2_size));
+#endif
 		if (y < x) {
 			/* swap */
 			t[0] = ptr[x];
