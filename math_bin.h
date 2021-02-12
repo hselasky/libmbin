@@ -1047,6 +1047,18 @@ void mbin_fpt_fwd_cf(mbin_cf_t *, uint8_t, float);
 void mbin_fpt_inv_cf(mbin_cf_t *, uint8_t, float);
 void mbin_fpt_mul_cf(const mbin_cf_t *, const mbin_cf_t *, mbin_cf_t *, uint8_t, float);
 
+/* Fast 3-adic two dimensional Squarewave Transform functions */
+
+extern uint8_t mbin_fst_angle_to_vector[33];
+extern uint8_t mbin_fst_vector_to_angle[9];
+
+void mbin_fst_fwd_2d(uint8_t *, uint8_t);
+void mbin_fst_inv_2d(uint8_t *, uint8_t);
+void mbin_fst_mul_2d(const uint8_t *, const uint8_t *, uint8_t *, uint8_t);
+void mbin_fst_diff_2d(uint8_t *, uint8_t);
+void mbin_fst_integ_2d(uint8_t *, uint8_t);
+void mbin_fst_multiply_3_adic(const uint8_t *, const uint8_t *, uint8_t *, uint8_t);
+
 __END_DECLS
 
 #endif					/* _MATH_BIN_H_ */
