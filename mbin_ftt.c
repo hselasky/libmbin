@@ -58,7 +58,7 @@ mbin_ftt_add_bitreversed(size_t x, size_t mask)
 static inline float
 mbin_ftt_acosf(float x)
 {
-	x = fabs(x);
+	x = fabsf(x);
 
 	/* check for special case */
 	if (x == 1.0f)
@@ -116,8 +116,8 @@ static inline mbin_cf_t
 mbin_ftt_multiply_cf(mbin_cf_t a, mbin_cf_t b)
 {
 	/* Compute vector gain */
-	const float ga = fabs(a.x) + fabs(a.y);
-	const float gb = fabs(b.x) + fabs(b.y);
+	const float ga = fabsf(a.x) + fabsf(a.y);
+	const float gb = fabsf(b.x) + fabsf(b.y);
 
 	/* Figure out quadrants */
 	const uint8_t qa = (a.x < 0) + 2 * (a.y < 0);
@@ -186,7 +186,7 @@ static inline mbin_cf_t
 mbin_ftt_angleadd_cf(mbin_cf_t a, float angle)
 {
 	/* Compute vector gain */
-	const float ga = fabs(a.x) + fabs(a.y);
+	const float ga = fabsf(a.x) + fabsf(a.y);
 
 	/* Figure out quadrants */
 	const uint8_t qa = (a.x < 0) + 2 * (a.y < 0);
