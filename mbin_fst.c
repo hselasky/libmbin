@@ -272,3 +272,139 @@ mbin_fst_multiply_3_adic_2d(const uint8_t *pa, const uint8_t *pb, uint8_t *pc, u
 	for (size_t x = 0; x != (2 * max); x++)
 		pc[x] = ta[x] % 3;
 }
+
+void
+mbin_fst_angleadd_c32(mbin_c32_t *ptr, uint8_t num)
+{
+	if (num & 1) {
+		int nx = ptr->x + ptr->y;
+		int ny = ptr->y - ptr->x;
+
+		if (!(nx % 2))
+			nx /= 2;
+		if (!(ny % 2))
+			ny /= 2;
+
+		ptr->x = nx;
+		ptr->y = ny;
+	}
+	if (num & 2) {
+		int nx = ptr->y;
+		int ny = -ptr->x;
+
+		ptr->x = nx;
+		ptr->y = ny;
+	}
+	if (num & 4) {
+		int nx = -ptr->x;
+		int ny = -ptr->y;
+
+		ptr->x = nx;
+		ptr->y = ny;
+	}
+}
+
+/* Fast Forward Square Transform for two dimensional complex 32-bit vector data. */
+
+void
+mbin_fst_fwd_c32(mbin_c32_t *ptr, uint8_t log2_size)
+{
+	const size_t max = 1UL << log2_size;
+	mbin_c32_t t[2];
+	uint8_t z;
+	size_t y;
+
+	for (size_t step = max; (step /= 2);) {
+		for (y = 0, z = 0; y != max; y += 2 * step) {
+			/* do transform */
+			for (size_t x = 0; x != step; x++) {
+				mbin_c32_t *p[2] = {
+					ptr + x + y,
+					ptr + x + y + step,
+				};
+				t[0] = p[0][0];
+				t[1] = p[1][0];
+
+				mbin_fst_angleadd_c32(t + 1, z);
+
+				p[0][0] = t[0];
+				p[0][0].x += t[1].x;
+				p[0][0].y += t[1].y;
+
+				p[1][0] = t[0];
+				p[1][0].x -= t[1].x;
+				p[1][0].y -= t[1].y;
+			}
+
+			/* update index */
+			z = mbin_fst_add_bitreversed(z, 2);
+		}
+	}
+
+	/* bitreverse */
+	for (size_t x = 0; x != max; x++) {
+#if __LP64__
+		y = mbin_bitrev64(x << (64 - log2_size));
+#else
+		y = mbin_bitrev32(x << (32 - log2_size));
+#endif
+		if (y < x) {
+			/* swap */
+			t[0] = ptr[x];
+			ptr[x] = ptr[y];
+			ptr[y] = t[0];
+		}
+	}
+}
+
+/* Fast Inverse Square Transform for two dimensional complex 32-bit vector data. */
+
+void
+mbin_fst_inv_c32(mbin_c32_t *ptr, uint8_t log2_size)
+{
+	const size_t max = 1UL << log2_size;
+	mbin_c32_t t[2];
+	uint8_t z;
+	size_t y;
+
+	/* bitreverse */
+	for (size_t x = 0; x != max; x++) {
+#if __LP64__
+		y = mbin_bitrev64(x << (64 - log2_size));
+#else
+		y = mbin_bitrev32(x << (32 - log2_size));
+#endif
+		if (y < x) {
+			/* swap */
+			t[0] = ptr[x];
+			ptr[x] = ptr[y];
+			ptr[y] = t[0];
+		}
+	}
+
+	for (size_t step = 1; step != max; step *= 2) {
+		for (y = 0, z = 0; y != max; y += 2 * step) {
+			/* do transform */
+			for (size_t x = 0; x != step; x++) {
+				mbin_c32_t *p[2] = {
+					ptr + x + y,
+					ptr + x + y + step,
+				};
+
+				t[0].x = (p[0][0].x + p[1][0].x) / 2;
+				t[0].y = (p[0][0].y + p[1][0].y) / 2;
+
+				t[1].x = (p[0][0].x - p[1][0].x) / 2;
+				t[1].y = (p[0][0].y - p[1][0].y) / 2;
+
+				mbin_fst_angleadd_c32(t + 1, (-z) & 7);
+
+				p[0][0] = t[0];
+				p[1][0] = t[1];
+			}
+
+			/* update index */
+			z = mbin_fst_add_bitreversed(z, 2);
+		}
+	}
+}

@@ -1059,6 +1059,10 @@ void mbin_fst_diff_2d(uint8_t *, uint8_t);
 void mbin_fst_integ_2d(uint8_t *, uint8_t);
 void mbin_fst_multiply_3_adic(const uint8_t *, const uint8_t *, uint8_t *, uint8_t);
 
+void mbin_fst_angleadd_c32(mbin_c32_t *, uint8_t);
+void mbin_fst_fwd_c32(mbin_c32_t *, uint8_t);
+void mbin_fst_inv_c32(mbin_c32_t *, uint8_t);
+
 __END_DECLS
 
 #endif					/* _MATH_BIN_H_ */
