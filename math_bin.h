@@ -1040,6 +1040,13 @@ void mbin_ftt_inv_cf(mbin_cf_t *, uint8_t);
 void mbin_ftt_mul_cf(const mbin_cf_t *, const mbin_cf_t *, mbin_cf_t *, uint8_t);
 void mbin_ftt_diff_cf(mbin_cf_t *, uint8_t);
 void mbin_ftt_integ_cf(mbin_cf_t *, uint8_t);
+float mbin_ftt_cosf(float);
+float mbin_ftt_sinf(float);
+mbin_cf_t mbin_ftt_multiply_cf(mbin_cf_t, mbin_cf_t);
+void mbin_ftt_get_gain_angle_cf(mbin_cf_t, float *, float *);
+mbin_cf_t mbin_ftt_add_cf(mbin_cf_t, mbin_cf_t);
+mbin_cf_t mbin_ftt_sub_cf(mbin_cf_t, mbin_cf_t);
+mbin_cf_t mbin_ftt_angleadd_cf(mbin_cf_t, float);
 
 /* Fast Power Transform functions */
 

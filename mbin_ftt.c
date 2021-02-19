@@ -41,7 +41,7 @@
 
 /* Helper function to add one bitreversed starting at "mask" */
 
-static inline size_t
+static size_t
 mbin_ftt_add_bitreversed(size_t x, size_t mask)
 {
 	do {
@@ -55,7 +55,7 @@ mbin_ftt_add_bitreversed(size_t x, size_t mask)
  * Special case of "mbin_acospowf_32(x,1.0)"
  * Returns the phase of a triangular function.
  */
-static inline float
+static float
 mbin_ftt_acosf(float x)
 {
 	x = fabsf(x);
@@ -73,7 +73,7 @@ mbin_ftt_acosf(float x)
  * Special case of "mbin_cospowf_32(x,1.0)"
  * Returns a triangular wave function based on phase "x".
  */
-static inline float
+float
 mbin_ftt_cosf(float x)
 {
 	x = x - floorf(x);
@@ -102,7 +102,7 @@ mbin_ftt_cosf(float x)
  * Special case of "mbin_sinpowf_32(x,1.0)"
  * Returns a triangular wave function based on phase "x".
  */
-static inline float
+float
 mbin_ftt_sinf(float x)
 {
 	return (mbin_ftt_cosf(x + 0.75f));
@@ -112,7 +112,7 @@ mbin_ftt_sinf(float x)
  * Special case of "mbin_powmul_cf(a,b,1.0)"
  * Two dimensional vector multiplication for triangular wave functions.
  */
-static inline mbin_cf_t
+mbin_cf_t
 mbin_ftt_multiply_cf(mbin_cf_t a, mbin_cf_t b)
 {
 	/* Compute vector gain */
@@ -146,11 +146,8 @@ mbin_ftt_multiply_cf(mbin_cf_t a, mbin_cf_t b)
 	case 2:
 		angle = 1.0f - mbin_ftt_acosf(a.x);
 		break;
-	case 3:
-		angle = 0.5f + mbin_ftt_acosf(a.x);
-		break;
 	default:
-		angle = 0.0f;
+		angle = 0.5f + mbin_ftt_acosf(a.x);
 		break;
 	}
 
@@ -164,10 +161,8 @@ mbin_ftt_multiply_cf(mbin_cf_t a, mbin_cf_t b)
 	case 2:
 		angle += 1.0f - mbin_ftt_acosf(b.x);
 		break;
-	case 3:
-		angle += 0.5f + mbin_ftt_acosf(b.x);
-		break;
 	default:
+		angle += 0.5f + mbin_ftt_acosf(b.x);
 		break;
 	}
 
@@ -182,7 +177,7 @@ mbin_ftt_multiply_cf(mbin_cf_t a, mbin_cf_t b)
  * Special case of "mbin_angleadd_cf(a,b,1.0)"
  * Two dimensional vector multiplication for triangular wave functions.
  */
-static inline mbin_cf_t
+mbin_cf_t
 mbin_ftt_angleadd_cf(mbin_cf_t a, float angle)
 {
 	/* Compute vector gain */
@@ -206,10 +201,8 @@ mbin_ftt_angleadd_cf(mbin_cf_t a, float angle)
 	case 2:
 		angle += 1.0f - mbin_ftt_acosf(a.x);
 		break;
-	case 3:
-		angle += 0.5f + mbin_ftt_acosf(a.x);
-		break;
 	default:
+		angle += 0.5f + mbin_ftt_acosf(a.x);
 		break;
 	}
 
@@ -220,9 +213,43 @@ mbin_ftt_angleadd_cf(mbin_cf_t a, float angle)
 	});
 }
 
+/*
+ * This function decomposes a FTT vector into its gain and angle.
+ */
+void
+mbin_ftt_get_gain_angle_cf(mbin_cf_t a, float *gain, float *angle)
+{
+	/* Compute vector gain */
+	const float ga = fabsf(a.x) + fabsf(a.y);
+
+	/* Figure out quadrants */
+	const uint8_t qa = (a.x < 0) + 2 * (a.y < 0);
+
+	/* Normalize input vectors, "cosine" argument */
+	if (ga != 0.0f)
+		a.x /= ga;
+
+	/* Add the two angles, that's part of vector multiplication */
+	switch (qa) {
+	case 0:
+		*angle = mbin_ftt_acosf(a.x);
+		break;
+	case 1:
+		*angle = 0.5f - mbin_ftt_acosf(a.x);
+		break;
+	case 2:
+		*angle = 1.0f - mbin_ftt_acosf(a.x);
+		break;
+	default:
+		*angle = 0.5f + mbin_ftt_acosf(a.x);
+		break;
+	}
+	*gain = ga;
+}
+
 /* Two dimensional vector addition for triangular wave functions. */
 
-static inline mbin_cf_t
+mbin_cf_t
 mbin_ftt_add_cf(mbin_cf_t a, mbin_cf_t b)
 {
 	return ((mbin_cf_t){ a.x + b.x, a.y + b.y });
@@ -230,7 +257,7 @@ mbin_ftt_add_cf(mbin_cf_t a, mbin_cf_t b)
 
 /* Two dimensional vector subtraction for triangular wave functions. */
 
-static inline mbin_cf_t
+mbin_cf_t
 mbin_ftt_sub_cf(mbin_cf_t a, mbin_cf_t b)
 {
 	return ((mbin_cf_t){ a.x - b.x, a.y - b.y });
