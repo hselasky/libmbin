@@ -1995,7 +1995,7 @@ struct mbin_xor2v_32 mbin_xor2v_unit_32 = {1, 3};
 struct mbin_xor2v_32 mbin_xor2v_nega_32 = {1, 0};
 
 static uint64_t
-mbin_xor2_ungrey_mod_64(uint64_t x, uint8_t p)
+mbin_xor2_ungray_mod_64(uint64_t x, uint8_t p)
 {
 	uint8_t q;
 
@@ -2082,7 +2082,7 @@ mbin_xor2v_root_mod_64(struct mbin_xor2v_64 x, uint8_t p)
 	struct mbin_xor2v_64 t;
 
 	/* assuming that "x.a0" has even parity */
-	t.a0 = mbin_xor2_ungrey_mod_64(x.a0, p);
+	t.a0 = mbin_xor2_ungray_mod_64(x.a0, p);
 	t.a0 = mbin_xor2_root_mod_64(t.a0, p);
 	t.a1 = t.a0 ^ mbin_xor2_root_mod_64(x.a1, p);
 #if 0

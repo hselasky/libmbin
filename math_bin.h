@@ -103,10 +103,10 @@ uint32_t mbin_msb32(uint32_t val);
 uint16_t mbin_msb16(uint16_t val);
 uint8_t	mbin_msb8(uint8_t val);
 
-uint32_t mbin_greyA_inv32(uint32_t t);
-uint32_t mbin_greyA_fwd32(uint32_t t);
-uint32_t mbin_greyB_inv32(uint32_t t);
-uint32_t mbin_greyB_fwd32(uint32_t t);
+uint32_t mbin_grayA_inv32(uint32_t t);
+uint32_t mbin_grayA_fwd32(uint32_t t);
+uint32_t mbin_grayB_inv32(uint32_t t);
+uint32_t mbin_grayB_fwd32(uint32_t t);
 
 uint32_t mbin_recodeA_fwd32(uint32_t val, const uint8_t *premap);
 uint16_t mbin_recodeA_fwd16(uint16_t val, const uint8_t *premap);
@@ -148,7 +148,7 @@ uint16_t mbin_div_odd16(uint16_t r, uint16_t div);
 uint8_t	mbin_div_odd8(uint8_t r, uint8_t div);
 uint32_t mbin_div_by3_32(uint32_t x);
 uint32_t mbin_div_by3_32_alt1(uint32_t x);
-uint32_t mbin_div3_grey_32(uint32_t r);
+uint32_t mbin_div3_gray_32(uint32_t r);
 
 uint32_t mbin_mul_baseN_32(uint32_t a, uint32_t b, uint32_t n);
 uint32_t mbin_add_baseN_32(uint32_t a, uint32_t b, uint32_t f, uint32_t n);
@@ -741,7 +741,7 @@ void	mbin_find_orthogonal_key_32(const uint32_t *, uint32_t, uint32_t, uint32_t 
 
 /* Multiplication functions */
 
-uint32_t mbin_mul3_grey_32(uint32_t x);
+uint32_t mbin_mul3_gray_32(uint32_t x);
 
 /* Factor functions */
 

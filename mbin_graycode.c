@@ -28,14 +28,16 @@
 #include "math_bin.h"
 
 /*
- * A greycode is a transform where consequtive numbers only differs by
- * a maximum of two bits. A greycode can be inversed by giving sign to
+ * A Graycode is a transform where consequtive numbers only differs by
+ * a maximum of two bits. A Graycode can be inversed by giving sign to
  * the bits. The first set bit is negative. The next set bit is
  * positive, and so on: "++++" -> "-+-+".
+ *
+ * See also: https://en.wikipedia.org/wiki/Gray_code
  */
 
 uint32_t
-mbin_greyA_inv32(uint32_t t)
+mbin_grayA_inv32(uint32_t t)
 {
 	uint32_t m = 0x80000000;
 
@@ -49,7 +51,7 @@ mbin_greyA_inv32(uint32_t t)
 }
 
 uint32_t
-mbin_greyB_inv32(uint32_t t)
+mbin_grayB_inv32(uint32_t t)
 {
 	uint32_t m = 1;
 
@@ -63,13 +65,13 @@ mbin_greyB_inv32(uint32_t t)
 }
 
 uint32_t
-mbin_greyA_fwd32(uint32_t t)
+mbin_grayA_fwd32(uint32_t t)
 {
 	return (t ^ (t / 2));
 }
 
 uint32_t
-mbin_greyB_fwd32(uint32_t t)
+mbin_grayB_fwd32(uint32_t t)
 {
 	return (t ^ (t * 2));
 }

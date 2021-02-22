@@ -335,7 +335,7 @@ mbin_baseHM2_rev32(uint32_t mask, uint32_t xor)
 
 /*
  * If the mask is the binary complement of zero
- * then the following function performs an ungrey
+ * then the following function performs an ungray
  * of the given xor value.
  */
 uint32_t

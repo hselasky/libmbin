@@ -76,7 +76,10 @@ mbin_cosf_32(float _x)
 		return (-1.0f);
 	}
 
-	/* Apply "grey" encoding */
+	/*
+	 * Apply so-called "Gray-coding":
+	 * See also: https://en.wikipedia.org/wiki/Gray_code
+	 */
 	for (uint32_t mask = 1U << 31; mask != 1; mask /= 2) {
 		if (x & mask)
 			x ^= (mask - 1);
@@ -158,7 +161,10 @@ mbin_cospowf_32(float _x, float _power)
 		return (-1.0f);
 	}
 
-	/* Apply "grey" encoding */
+	/*
+	 * Apply so-called "Gray-coding":
+	 * See also: https://en.wikipedia.org/wiki/Gray_code
+	 */
 	for (uint32_t mask = 1U << 31; mask != 1; mask /= 2) {
 		if (x & mask)
 			x ^= (mask - 1);

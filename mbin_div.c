@@ -395,10 +395,10 @@ mbin_div_by3_32_alt1(uint32_t x)
 }
 
 /*
- * The following function divides a grey-coded value by three.
+ * The following function divides a gray-coded value by three.
  */
 uint32_t
-mbin_div3_grey_32(uint32_t r)
+mbin_div3_gray_32(uint32_t r)
 {
 	uint32_t m;
 

@@ -28,10 +28,10 @@
 #include "math_bin.h"
 
 /*
- * The following function multiplies a grey-coded value by three.
+ * The following function multiplies a gray-coded value by three.
  */
 uint32_t
-mbin_mul3_grey_32(uint32_t x)
+mbin_mul3_gray_32(uint32_t x)
 {
 	uint32_t m;
 	uint32_t r = 0;
