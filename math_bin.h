@@ -1070,6 +1070,15 @@ void mbin_fst_angleadd_c32(mbin_c32_t *, uint8_t);
 void mbin_fst_fwd_c32(mbin_c32_t *, uint8_t);
 void mbin_fst_inv_c32(mbin_c32_t *, uint8_t);
 
+/* Helper functions for modular equation sets. */
+
+void mbin_eq_mod_gen_32(int32_t *, size_t, uint64_t *, uint64_t *);
+void mbin_eq_mod_solve_32(void *, int32_t *, size_t);
+void mbin_eq_mod_flip_32(void *, size_t);
+void mbin_eq_mod_print_32(const void *, int32_t *, size_t, bool);
+void mbin_eq_mod_decompose_32(int32_t *, int32_t *, size_t);
+void mbin_eq_mod_compose_32(int32_t *, int32_t *, size_t);
+
 __END_DECLS
 
 #endif					/* _MATH_BIN_H_ */
