@@ -342,11 +342,53 @@ mbin_sqrt_carry_optimised_64(uint64_t z)
 	int8_t k;
 
 	for (k = 62; k != -2; k -= 2) {
-		if (mbin_sub_if_gte_64(&z, &zc, (y | 1) << k))
+		if (mbin_sub_if_gte_64(&z, &zc, (y | 1ULL) << k))
 			y |= 2;
 		y *= 2;
 	}
 	return (y / 4);
+}
+
+/*
+ * Gray-coded version of mbin_sqrt_64() above:
+ */
+uint32_t
+mbin_sqrt_gray_64(uint64_t z)
+{
+	uint64_t y = 0;
+	uint64_t zc = 0;
+	uint32_t r = 0;
+	uint8_t k;
+
+	for (k = 32; k--; ) {
+		if (mbin_sub_if_gte_64(&z, &zc, (y ^ 1ULL) << (2 * k))) {
+			y ^= 3;
+			r |= (1U << k);
+		}
+		y *= 2;
+	}
+	return (r);
+}
+
+/*
+ * Gray-coded squarer, computes the sum of Gray-coded values, where
+ * the argument is the index into a Gray-coded sequence.
+ */
+uint64_t
+mbin_square_gray_64(uint32_t z)
+{
+	uint64_t y = 0;
+	uint64_t s = 0;
+	uint8_t k;
+
+	for (k = 32; k--; ) {
+		if ((z >> k) & 1) {
+			s += (y | 1ULL) << (2 * k);
+			y ^= 3;
+		}
+		y *= 2;
+	}
+	return (s);
 }
 
 uint32_t
