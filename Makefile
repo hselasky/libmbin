@@ -45,7 +45,6 @@ SRCS+=	mbin_filter.c
 SRCS+=	mbin_fp.c
 SRCS+=	mbin_fpt.c
 SRCS+=	mbin_fst.c
-SRCS+=	mbin_fxt.c
 SRCS+=	mbin_hpt.c
 SRCS+=	mbin_inc.c
 SRCS+=	mbin_noise.c
