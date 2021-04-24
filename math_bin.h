@@ -1072,6 +1072,19 @@ void mbin_fst_angleadd_c32(mbin_c32_t *, uint8_t);
 void mbin_fst_fwd_c32(mbin_c32_t *, uint8_t);
 void mbin_fst_inv_c32(mbin_c32_t *, uint8_t);
 
+/* Fast P-adic 32-bit two dimensional wave transform. */
+
+#define	MBIN_FPX_C32_PRIME 65537
+
+extern mbin_c32_t *mbin_fpx_wave_c32;
+
+mbin_c32_t *mbin_fpx_generate_table_c32(uint32_t, uint32_t, uint8_t);
+void mbin_fpx_init_c32();
+void mbin_fpx_xform_c32(mbin_c32_t *, uint8_t);
+void mbin_fpx_bitreverse_c32(mbin_c32_t *, uint8_t);
+void mbin_fpx_mul_c32(const mbin_c32_t *, const mbin_c32_t *, mbin_c32_t *, uint8_t);
+void mbin_fpx_multiply_8(const uint8_t *, const uint8_t *, uint8_t *, uint8_t);
+
 /* Helper functions for modular equation sets. */
 
 void mbin_eq_mod_gen_32(int32_t *, size_t, uint64_t *, uint64_t *);
