@@ -657,7 +657,35 @@ mbin_forward_gte_mask_xform_32(uint32_t *ptr, uint8_t log2_max)
 }
 
 void
-mbin_xor2_gte_xform_32(uint32_t *ptr, uint8_t lmax)
+mbin_xor2_fwd_gte_xform_32(uint32_t *ptr, uint8_t lmax)
+{
+	const size_t max = 1UL << lmax;
+	uint32_t y;
+
+	/* encode a triangle */
+
+	y = ptr[0];
+	for (size_t x = 1; x != max; x++) {
+		y ^= ptr[x];
+		ptr[x] = y;
+	}
+}
+
+void
+mbin_xor2_fwd_gte_mask_xform_32(uint32_t *ptr, uint8_t log2_max)
+{
+	for (uint8_t y = 0; y != log2_max; y++) {
+		const size_t max = 1UL << y;
+
+		mbin_xor2_fwd_gte_xform_32(ptr + max, y);
+
+		for (size_t x = 0; x != max; x++)
+			ptr[x + max] ^= ptr[x];
+	}
+}
+
+void
+mbin_xor2_inv_gte_xform_32(uint32_t *ptr, uint8_t lmax)
 {
 	const size_t max = 1UL << lmax;
 	uint32_t y;
@@ -674,7 +702,7 @@ mbin_xor2_gte_xform_32(uint32_t *ptr, uint8_t lmax)
 }
 
 void
-mbin_xor2_gte_mask_xform_32(uint32_t *ptr, uint8_t log2_max)
+mbin_xor2_inv_gte_mask_xform_32(uint32_t *ptr, uint8_t log2_max)
 {
 	while (log2_max--) {
 		const size_t max = 1UL << log2_max;
@@ -682,7 +710,7 @@ mbin_xor2_gte_mask_xform_32(uint32_t *ptr, uint8_t log2_max)
 		for (size_t x = 0; x != max; x++)
 			ptr[x + max] ^= ptr[x];
 
-		mbin_xor2_gte_xform_32(ptr + max, log2_max);
+		mbin_xor2_inv_gte_xform_32(ptr + max, log2_max);
 	}
 }
 
