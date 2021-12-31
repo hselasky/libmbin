@@ -111,7 +111,7 @@ c32_exp_mod_9(c32_t b, uint64_t exp, int32_t mod)
 	while (exp != 0) {
 		if (exp & 1)
 			r = c32_mul_mod_9(r, b, mod);
-		b = c32_mul_mod_9(b, b);
+		b = c32_mul_mod_9(b, b, mod);
 		exp /= 2;
 	}
 	return (r);
