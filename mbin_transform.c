@@ -581,7 +581,7 @@ mbin_multiply_xform_complex_double(const struct mbin_complex_double *a,
 	uint32_t x;
 
 	for (x = 0; x != max; x++)
-		c[x] = mbin_mul_complex_double(a[x], b[x]);
+		c[x] = cd_mul(a[x], b[x]);
 }
 
 /*
