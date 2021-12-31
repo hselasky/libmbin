@@ -483,9 +483,6 @@ mbin_print_simple_factorise(uint32_t *temp, uint32_t mask,
 	uint32_t z;
 	uint32_t t;
 	uint32_t u;
-	uint32_t hmask;
-
-	hmask = (-(1 << (mbits / 2))) & mask;
 
 	if (val == 0)
 		m = 0;
