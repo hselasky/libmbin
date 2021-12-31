@@ -58,7 +58,7 @@ mbin_lucas_length_mod_32(int32_t g, int32_t mod)
 		a[0] = a[1];
 		a[1] = a[2];
 		r++;
-		if (a[0] == 1)
+		if (a[0] == g)
 			break;
 	}
 	return (r);
