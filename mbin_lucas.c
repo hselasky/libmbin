@@ -49,7 +49,10 @@ mbin_lucas_length_mod_32(int32_t mod)
 	a[1] /= 3;
 
 	while (1) {
-		a[2] = (mod + 2 * a[1] - a[0]) % mod;
+		a[2] = (3 * mod + 2 * a[1] - 3 * a[0]) % mod;
+		while (a[2] % 3)
+			a[2] += mod;
+		a[2] /= 3;
 		a[0] = a[1];
 		a[1] = a[2];
 		r++;
