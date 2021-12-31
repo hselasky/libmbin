@@ -88,25 +88,19 @@ c32_mod(c32_t a, int32_t mod)
 }
 
 static inline c32_t
-c32_mul_9(c32_t a, c32_t b)
+c32_mul_mod_9(c32_t a, c32_t b, int32_t mod)
 {
-	return (c32_t){
-		9 *a.x * b.x - 8 * a.y * b.y, a.x * b.y + b.x * a.y
-	};
-}
+	c32_t r = {9 * a.x * b.x - 8 * a.y * b.y, a.x * b.y + b.x * a.y};
 
-static inline c32_t
-c32_mod_9(c32_t a, int32_t mod)
-{
-	while (a.x % 3)
-		a.x += mod;
-	a.x /= 3;
+	while (a.r % 3)
+		a.r += mod;
+	a.r /= 3;
 
-	while (a.x % 3)
-		a.x += mod;
-	a.x /= 3;
+	while (a.r % 3)
+		a.r += mod;
+	a.r /= 3;
 
-	return (c32_mod(a, mod));
+	return (c32_mod(r, mod));
 }
 
 static inline c32_t
@@ -115,12 +109,9 @@ c32_exp_mod_9(c32_t b, uint64_t exp, int32_t mod)
 	c32_t r = {1, 0};
 
 	while (exp != 0) {
-		if (exp & 1) {
-			r = c32_mul_9(r, b);
-			r = c32_mod_9(r, mod);
-		}
-		b = c32_mul_9(b, b);
-		b = c32_mod_9(b, mod);
+		if (exp & 1)
+			r = c32_mul_mod_9(r, b, mod);
+		b = c32_mul_mod_9(b, b);
 		exp /= 2;
 	}
 	return (r);
