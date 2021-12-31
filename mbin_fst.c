@@ -45,6 +45,8 @@
 
 #include "math_bin.h"
 
+#include "math_bin_complex.h"
+
 /* Helper function to add one bitreversed starting at "mask" */
 
 static inline uint8_t
@@ -274,7 +276,7 @@ mbin_fst_multiply_3_adic_2d(const uint8_t *pa, const uint8_t *pb, uint8_t *pc, u
 }
 
 void
-mbin_fst_angleadd_c32(mbin_c32_t *ptr, uint8_t num)
+mbin_fst_angleadd_c32(c32_t *ptr, uint8_t num)
 {
 	if (num & 1) {
 		int nx = ptr->x + ptr->y;
@@ -307,10 +309,10 @@ mbin_fst_angleadd_c32(mbin_c32_t *ptr, uint8_t num)
 /* Fast Forward Square Transform for two dimensional complex 32-bit vector data. */
 
 void
-mbin_fst_fwd_c32(mbin_c32_t *ptr, uint8_t log2_size)
+mbin_fst_fwd_c32(c32_t *ptr, uint8_t log2_size)
 {
 	const size_t max = 1UL << log2_size;
-	mbin_c32_t t[2];
+	c32_t t[2];
 	uint8_t z;
 	size_t y;
 
@@ -318,7 +320,7 @@ mbin_fst_fwd_c32(mbin_c32_t *ptr, uint8_t log2_size)
 		for (y = 0, z = 0; y != max; y += 2 * step) {
 			/* do transform */
 			for (size_t x = 0; x != step; x++) {
-				mbin_c32_t *p[2] = {
+				c32_t *p[2] = {
 					ptr + x + y,
 					ptr + x + y + step,
 				};
@@ -360,10 +362,10 @@ mbin_fst_fwd_c32(mbin_c32_t *ptr, uint8_t log2_size)
 /* Fast Inverse Square Transform for two dimensional complex 32-bit vector data. */
 
 void
-mbin_fst_inv_c32(mbin_c32_t *ptr, uint8_t log2_size)
+mbin_fst_inv_c32(c32_t *ptr, uint8_t log2_size)
 {
 	const size_t max = 1UL << log2_size;
-	mbin_c32_t t[2];
+	c32_t t[2];
 	uint8_t z;
 	size_t y;
 
@@ -386,7 +388,7 @@ mbin_fst_inv_c32(mbin_c32_t *ptr, uint8_t log2_size)
 		for (y = 0, z = 0; y != max; y += 2 * step) {
 			/* do transform */
 			for (size_t x = 0; x != step; x++) {
-				mbin_c32_t *p[2] = {
+				c32_t *p[2] = {
 					ptr + x + y,
 					ptr + x + y + step,
 				};

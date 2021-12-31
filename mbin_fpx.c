@@ -36,15 +36,17 @@
 
 #include "math_bin.h"
 
-mbin_c32_t *mbin_fpx_wave_c32;
+#include "math_bin_complex.h"
 
-mbin_c32_t *
+c32_t *mbin_fpx_wave_c32;
+
+c32_t *
 mbin_fpx_generate_table_c32(uint32_t _x, uint32_t _y, uint8_t log2_size)
 {
 	const size_t max = 1UL << log2_size;
-	mbin_c32_t *ret = malloc(max * sizeof(ret[0]));
-	mbin_c32_t k = {};
-	mbin_c32_t a = {};
+	c32_t *ret = malloc(max * sizeof(ret[0]));
+	c32_t k = {};
+	c32_t a = {};
 
 	/* find a suitable vector */
 	for (uint64_t x = _x; x != MBIN_FPX_C32_PRIME; x++) {
@@ -103,10 +105,10 @@ mbin_fpx_add_bitreversed(size_t x, size_t mask)
 	return (x);
 }
 
-static inline mbin_c32_t
-mbin_fpx_multiply_c32(mbin_c32_t a, mbin_c32_t b)
+static inline c32_t
+mbin_fpx_multiply_c32(c32_t a, c32_t b)
 {
-	return (mbin_c32_t){
+	return (c32_t){
 		((uint64_t)MBIN_FPX_C32_PRIME * (uint64_t)MBIN_FPX_C32_PRIME +
 		 (uint64_t)a.x * (uint64_t)b.x -
 		 (uint64_t)a.y * (uint64_t)b.y) % MBIN_FPX_C32_PRIME,
@@ -115,26 +117,26 @@ mbin_fpx_multiply_c32(mbin_c32_t a, mbin_c32_t b)
 	};
 }
 
-static inline mbin_c32_t
-mbin_fpx_add_c32(mbin_c32_t a, mbin_c32_t b)
+static inline c32_t
+mbin_fpx_add_c32(c32_t a, c32_t b)
 {
-	return (mbin_c32_t){
+	return (c32_t){
 		(a.x + b.x) % MBIN_FPX_C32_PRIME,
 		(a.y + b.y) % MBIN_FPX_C32_PRIME,
 	};
 }
 
-static inline mbin_c32_t
-mbin_fpx_sub_c32(mbin_c32_t a, mbin_c32_t b)
+static inline c32_t
+mbin_fpx_sub_c32(c32_t a, c32_t b)
 {
-	return (mbin_c32_t){
+	return (c32_t){
 		(MBIN_FPX_C32_PRIME + a.x - b.x) % MBIN_FPX_C32_PRIME,
 		(MBIN_FPX_C32_PRIME + a.y - b.y) % MBIN_FPX_C32_PRIME,
 	};
 }
 
 void
-mbin_fpx_mul_c32(const mbin_c32_t *pa, const mbin_c32_t *pb, mbin_c32_t *pc, uint8_t log2_size)
+mbin_fpx_mul_c32(const c32_t *pa, const c32_t *pb, c32_t *pc, uint8_t log2_size)
 {
 	const size_t max = 1UL << log2_size;
 
@@ -143,10 +145,10 @@ mbin_fpx_mul_c32(const mbin_c32_t *pa, const mbin_c32_t *pb, mbin_c32_t *pc, uin
 }
 
 void
-mbin_fpx_xform_c32(mbin_c32_t *ptr, uint8_t log2_size)
+mbin_fpx_xform_c32(c32_t *ptr, uint8_t log2_size)
 {
 	const size_t max = 1UL << log2_size;
-	mbin_c32_t t[2];
+	c32_t t[2];
 	size_t y;
 	size_t z;
 
@@ -170,10 +172,10 @@ mbin_fpx_xform_c32(mbin_c32_t *ptr, uint8_t log2_size)
 }
 
 void
-mbin_fpx_bitreverse_c32(mbin_c32_t *ptr, uint8_t log2_size)
+mbin_fpx_bitreverse_c32(c32_t *ptr, uint8_t log2_size)
 {
 	const size_t max = 1UL << log2_size;
-	mbin_c32_t t[1];
+	c32_t t[1];
 	size_t y;
 
 	/* bitreverse */
@@ -192,8 +194,8 @@ mbin_fpx_bitreverse_c32(mbin_c32_t *ptr, uint8_t log2_size)
 	}
 }
 
-static mbin_c32_t
-mbin_fpx_div_2(mbin_c32_t z, uint8_t num)
+static c32_t
+mbin_fpx_div_2(c32_t z, uint8_t num)
 {
 	while (num--) {
 		if (z.x & 1)
@@ -212,8 +214,8 @@ mbin_fpx_multiply_8(const uint8_t *pa, const uint8_t *pb, uint8_t *pc, uint8_t l
 {
 	const size_t max = 1UL << log2_size;
 	const size_t mask = (1UL << (log2_size + 4)) - 1UL;
-	mbin_c32_t ta[2 * 8 * max];
-	mbin_c32_t tb[2 * 8 * max];
+	c32_t ta[2 * 8 * max];
+	c32_t tb[2 * 8 * max];
 	uint16_t temp;
 
 	assert(log2_size + 4 <= 16);

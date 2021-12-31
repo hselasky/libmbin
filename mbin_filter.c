@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2014 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2014-2021 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,6 +34,8 @@
 #include <math.h>
 
 #include "math_bin.h"
+
+#include "math_bin_complex.h"
 
 #define	MBIN_FILTER_SIZE(n) ((((n) * (n)) + (n)) / 2)
 
@@ -719,12 +721,12 @@ mbin_xor2_filter_impulse_p_64(uint64_t *ptr, uint64_t n)
 }
 
 int
-mbin_filter_table_cd(uint32_t n, const mbin_cd_t *input, mbin_cd_t *output)
+mbin_filter_table_cd(uint32_t n, const cd_t *input, cd_t *output)
 {
 	const uint32_t s = (n * n);
-	mbin_cd_t bitmap[s][s];
-	mbin_cd_t value[s][n];
-	mbin_cd_t m;
+	cd_t bitmap[s][s];
+	cd_t value[s][n];
+	cd_t m;
 
 	uint32_t x;
 	uint32_t y;
@@ -744,9 +746,8 @@ mbin_filter_table_cd(uint32_t n, const mbin_cd_t *input, mbin_cd_t *output)
 			for (t = 0; t != n; t++) {
 				for (u = 0; u != n; u++) {
 					bitmap[x + (y * n)][t + (u * n)] =
-					    mbin_mul_complex_double(
-					    input[t + (x * n)],
-					    input[u + (y * n)]);
+					    cd_mul(input[t + (x * n)],
+						   input[u + (y * n)]);
 				}
 			}
 		}
@@ -768,11 +769,11 @@ repeat:
 		}
 		for (u = 0; u != s; u++) {
 			bitmap[x][u] =
-			    mbin_div_complex_double(bitmap[x][u], m);
+			    cd_div(bitmap[x][u], m);
 		}
 		for (u = 0; u != n; u++) {
 			value[x][u] =
-			    mbin_div_complex_double(value[x][u], m);
+			    cd_div(value[x][u], m);
 		}
 		bitmap[x][y].x = 1.0;
 		bitmap[x][y].y = 0.0;
@@ -784,14 +785,10 @@ repeat:
 			if (m.x == 0.0 && m.y == 0.0)
 				continue;
 			for (t = 0; t != s; t++) {
-				bitmap[u][t] = mbin_sub_complex_double(
-				    bitmap[u][t],
-				    mbin_mul_complex_double(bitmap[x][t], m));
+				bitmap[u][t] = cd_sub(bitmap[u][t], cd_mul(bitmap[x][t], m));
 			}
 			for (t = 0; t != n; t++) {
-				value[u][t] = mbin_sub_complex_double(
-				    value[u][t],
-				    mbin_mul_complex_double(value[x][t], m));
+				value[u][t] = cd_sub(value[u][t], cd_mul(value[x][t], m));
 			}
 			bitmap[u][y].x = 0.0;
 			bitmap[u][y].y = 0.0;
@@ -838,13 +835,13 @@ repeat:
 }
 
 int
-mbin_filter_table_alloc_cd(uint32_t n, mbin_filter_cd_fn_t *fn, void *arg, mbin_cd_t **ppout)
+mbin_filter_table_alloc_cd(uint32_t n, mbin_filter_cd_fn_t *fn, void *arg, cd_t **ppout)
 {
-	mbin_cd_t input[2 * n][n];
-	mbin_cd_t value[n];
+	cd_t input[2 * n][n];
+	cd_t value[n];
 	uint32_t x;
 
-	*ppout = malloc(sizeof(mbin_cd_t) * (n * n * n + n));
+	*ppout = malloc(sizeof(cd_t) * (n * n * n + n));
 
 	if (*ppout == NULL)
 		return (-1);
@@ -864,14 +861,14 @@ mbin_filter_table_alloc_cd(uint32_t n, mbin_filter_cd_fn_t *fn, void *arg, mbin_
 }
 
 void
-mbin_filter_table_free_cd(mbin_cd_t *pout)
+mbin_filter_table_free_cd(cd_t *pout)
 {
 	free(pout);
 }
 
 void
-mbin_filter_mul_cd(const mbin_cd_t *a, const mbin_cd_t *b, mbin_cd_t *c,
-    const mbin_cd_t *table, uint32_t n)
+mbin_filter_mul_cd(const cd_t *a, const cd_t *b, cd_t *c,
+    const cd_t *table, uint32_t n)
 {
 	uint32_t x;
 	uint32_t y;
@@ -881,7 +878,7 @@ mbin_filter_mul_cd(const mbin_cd_t *a, const mbin_cd_t *b, mbin_cd_t *c,
 
 	for (x = 0; x != n; x++) {
 		for (y = 0; y != n; y++) {
-			mbin_cd_t f = mbin_mul_complex_double(a[x], b[y]);
+			cd_t f = cd_mul(a[x], b[y]);
 
 			if (f.x == 0.0 && f.y == 0)
 				continue;
@@ -889,19 +886,18 @@ mbin_filter_mul_cd(const mbin_cd_t *a, const mbin_cd_t *b, mbin_cd_t *c,
 			uint32_t off = (x * n) + (y * n * n);
 
 			for (z = 0; z != n; z++) {
-				c[z] = mbin_add_complex_double(c[z],
-				    mbin_mul_complex_double(table[off + z], f));
+				c[z] = cd_add(c[z], cd_mul(table[off + z], f));
 			}
 		}
 	}
 }
 
 void
-mbin_filter_exp_cd(const mbin_cd_t *base, uint64_t exp,
-    mbin_cd_t *c, const mbin_cd_t *ptable, uint32_t n)
+mbin_filter_exp_cd(const cd_t *base, uint64_t exp,
+    cd_t *c, const cd_t *ptable, uint32_t n)
 {
-	mbin_cd_t d[n];
-	mbin_cd_t e[n];
+	cd_t d[n];
+	cd_t e[n];
 
 	memcpy(d, base, sizeof(d));
 	memcpy(c, ptable + (n * n * n), sizeof(d));
@@ -922,7 +918,7 @@ mbin_filter_exp_cd(const mbin_cd_t *base, uint64_t exp,
 }
 
 void
-mbin_filter_impulse_cd(mbin_cd_t *ptr, uint32_t n)
+mbin_filter_impulse_cd(cd_t *ptr, uint32_t n)
 {
 	memset(ptr, 0, sizeof(ptr[0]) * n);
 	ptr[0].x = 1.0;

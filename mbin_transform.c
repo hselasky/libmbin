@@ -30,6 +30,8 @@
 
 #include "math_bin.h"
 
+#include "math_bin_complex.h"
+
 /* XOR - transform */
 
 void

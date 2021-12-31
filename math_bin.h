@@ -612,15 +612,8 @@ extern int mbin_eq_solve_d64(uint32_t, mbin_eq_head_d64_t *, double);
 
 uint32_t mbin_coeff_32(int32_t n, int32_t x);
 
-typedef struct mbin_complex_32 {
-	int32_t	x;
-	int32_t	y;
-} mbin_c32_t;
-
-typedef struct mbin_complex_double {
-	double	x;
-	double	y;
-} mbin_cd_t;
+struct mbin_complex_32;
+struct mbin_complex_double;
 
 typedef struct mbin_quad_double {
 	double v[4];
@@ -924,7 +917,7 @@ void	mbin_xor2_moda_power_32(const uint32_t *, uint32_t *, const uint32_t *, con
 
 /* Filter prototypes */
 typedef void (mbin_filter_d_fn_t)(double *, uint32_t, uint32_t, void *);
-typedef void (mbin_filter_cd_fn_t)(mbin_cd_t *, uint32_t, uint32_t, void *);
+typedef void (mbin_filter_cd_fn_t)(struct mbin_complex_double *, uint32_t, uint32_t, void *);
 typedef void (mbin_filter_p_32_fn_t)(uint32_t *, uint32_t, uint32_t, const uint32_t, void *);
 typedef void (mbin_xor2_filter_p_64_fn_t)(uint64_t *, uint64_t, uint64_t, const uint64_t, void *);
 
@@ -949,12 +942,12 @@ void	mbin_xor2_filter_mul_p_64(const uint64_t *, const uint64_t *, uint64_t *, c
 void	mbin_xor2_filter_exp_p_64(const uint64_t *, uint64_t, uint64_t *, const uint64_t *, uint64_t, uint64_t);
 void	mbin_xor2_filter_impulse_p_64(uint64_t *, uint64_t);
 
-int	mbin_filter_table_cd(uint32_t, const mbin_cd_t *, mbin_cd_t *);
-int	mbin_filter_table_alloc_cd(uint32_t, mbin_filter_cd_fn_t *, void *, mbin_cd_t **);
-void	mbin_filter_table_free_cd(mbin_cd_t *);
-void	mbin_filter_mul_cd(const mbin_cd_t *, const mbin_cd_t *, mbin_cd_t *, const mbin_cd_t *, uint32_t);
-void	mbin_filter_exp_cd(const mbin_cd_t *, uint64_t, mbin_cd_t *, const mbin_cd_t *, uint32_t);
-void	mbin_filter_impulse_cd(mbin_cd_t *, uint32_t);
+int	mbin_filter_table_cd(uint32_t, const struct mbin_complex_double *, struct mbin_complex_double *);
+int	mbin_filter_table_alloc_cd(uint32_t, mbin_filter_cd_fn_t *, void *, struct mbin_complex_double **);
+void	mbin_filter_table_free_cd(struct mbin_complex_double *);
+void	mbin_filter_mul_cd(const struct mbin_complex_double *, const struct mbin_complex_double *, struct mbin_complex_double *, const struct mbin_complex_double *, uint32_t);
+void	mbin_filter_exp_cd(const struct mbin_complex_double *, uint64_t, struct mbin_complex_double *, const struct mbin_complex_double *, uint32_t);
+void	mbin_filter_impulse_cd(struct mbin_complex_double *, uint32_t);
 
 /* Sorting prototypes */
 
@@ -1072,21 +1065,21 @@ void mbin_fst_diff_2d(uint8_t *, uint8_t);
 void mbin_fst_integ_2d(uint8_t *, uint8_t);
 void mbin_fst_multiply_3_adic(const uint8_t *, const uint8_t *, uint8_t *, uint8_t);
 
-void mbin_fst_angleadd_c32(mbin_c32_t *, uint8_t);
-void mbin_fst_fwd_c32(mbin_c32_t *, uint8_t);
-void mbin_fst_inv_c32(mbin_c32_t *, uint8_t);
+void mbin_fst_angleadd_c32(struct mbin_complex_32 *, uint8_t);
+void mbin_fst_fwd_c32(struct mbin_complex_32 *, uint8_t);
+void mbin_fst_inv_c32(struct mbin_complex_32 *, uint8_t);
 
 /* Fast P-adic 32-bit two dimensional wave transform. */
 
 #define	MBIN_FPX_C32_PRIME 65537
 
-extern mbin_c32_t *mbin_fpx_wave_c32;
+extern struct mbin_complex_32 *mbin_fpx_wave_c32;
 
-mbin_c32_t *mbin_fpx_generate_table_c32(uint32_t, uint32_t, uint8_t);
+struct mbin_complex_32 *mbin_fpx_generate_table_c32(uint32_t, uint32_t, uint8_t);
 void mbin_fpx_init_c32();
-void mbin_fpx_xform_c32(mbin_c32_t *, uint8_t);
-void mbin_fpx_bitreverse_c32(mbin_c32_t *, uint8_t);
-void mbin_fpx_mul_c32(const mbin_c32_t *, const mbin_c32_t *, mbin_c32_t *, uint8_t);
+void mbin_fpx_xform_c32(struct mbin_complex_32 *, uint8_t);
+void mbin_fpx_bitreverse_c32(struct mbin_complex_32 *, uint8_t);
+void mbin_fpx_mul_c32(const struct mbin_complex_32 *, const struct mbin_complex_32 *, struct mbin_complex_32 *, uint8_t);
 void mbin_fpx_multiply_8(const uint8_t *, const uint8_t *, uint8_t *, uint8_t);
 
 /* Helper functions for modular equation sets. */

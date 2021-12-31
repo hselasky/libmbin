@@ -27,7 +27,6 @@ SRCS+=	mbin_base_m3.c
 SRCS+=	mbin_bits.c
 SRCS+=	mbin_bitreverse.c
 SRCS+=	mbin_coeff.c
-SRCS+=	mbin_complex.c
 SRCS+=	mbin_correlate.c
 SRCS+=	mbin_dec.c
 SRCS+=	mbin_depolarise.c
@@ -77,7 +76,9 @@ SRCS+=  mbin_vector.c
 SRCS+=  mbin_xform_puzzle.c
 SRCS+=  mbin_xor.c
 
-INCS=	math_bin.h math_bin_wrapper.h
+INCS=	math_bin.h \
+	math_bin_complex.h \
+	math_bin_wrapper.h
 
 MKLINT=		no
 
