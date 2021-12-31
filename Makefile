@@ -58,6 +58,7 @@ SRCS+=  mbin_diff.c
 SRCS+=  mbin_graycode.c
 SRCS+=  mbin_logic.c
 SRCS+=  mbin_lsb.c
+SRCS+=  mbin_lucas.c
 SRCS+=  mbin_msb.c
 SRCS+=  mbin_mod_array.c
 SRCS+=  mbin_mul.c

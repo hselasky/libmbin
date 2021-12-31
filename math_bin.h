@@ -1091,6 +1091,10 @@ void mbin_eq_mod_print_32(const void *, int32_t *, size_t, bool);
 void mbin_eq_mod_decompose_32(int32_t *, int32_t *, size_t);
 void mbin_eq_mod_compose_32(int32_t *, int32_t *, size_t);
 
+/* Lucas functions. */
+
+int32_t mbin_lucas_length_mod_32(int32_t);
+
 __END_DECLS
 
 #endif					/* _MATH_BIN_H_ */
