@@ -27,7 +27,7 @@
 
 /*
  * This function computes the length of the following Lucas sequence
- * under modulus, given the first argument is 1:
+ * under modulus:
  *
  * a(n) = (2 / 3) * a(n-1) - a(n-2)
  *
@@ -39,13 +39,13 @@
  * The modular value must not be divisible by 3.
  */
 int32_t
-mbin_lucas_length_mod_32(int32_t a_1, int32_t mod)
+mbin_lucas_length_mod_32(int32_t g, int32_t mod)
 {
 	int32_t a[3];
 	int32_t r = 0;
 
-	a[0] = 1;
-	a[1] = a_1;
+	a[0] = g;
+	a[1] = g;
 	while (a[1] % 3)
 		a[1] += mod;
 	a[1] /= 3;
