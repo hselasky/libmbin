@@ -1093,7 +1093,7 @@ void mbin_eq_mod_compose_32(int32_t *, int32_t *, size_t);
 
 /* Lucas functions. */
 
-int32_t mbin_lucas_length_mod_32(int32_t);
+int32_t mbin_lucas_length_mod_32(int32_t, int32_t);
 
 __END_DECLS
 
