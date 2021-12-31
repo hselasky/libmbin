@@ -92,13 +92,13 @@ c32_mul_mod_9(c32_t a, c32_t b, int32_t mod)
 {
 	c32_t r = {9 * a.x * b.x - 8 * a.y * b.y, a.x * b.y + b.x * a.y};
 
-	while (a.r % 3)
-		a.r += mod;
-	a.r /= 3;
+	while (r.x % 3)
+		r.x += mod;
+	r.x /= 3;
 
-	while (a.r % 3)
-		a.r += mod;
-	a.r /= 3;
+	while (r.x % 3)
+		r.x += mod;
+	r.x /= 3;
 
 	return (c32_mod(r, mod));
 }
