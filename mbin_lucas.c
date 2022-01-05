@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2021 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2021-2022 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,17 +38,24 @@
  *
  * The modular value must not be divisible by 3.
  */
-int32_t
-mbin_lucas_length_mod_32(int32_t g, int32_t mod)
+uint32_t
+mbin_lucas_step_count_mod_32(uint32_t mod)
 {
-	int32_t a[3];
-	int32_t r = 0;
+	uint32_t a[3];
+	uint32_t o[2];
+	uint32_t r = 0;
 
-	a[0] = g;
-	a[1] = g;
+	if ((mod % 3) == 0)
+		return (0);
+
+	a[0] = 1;
+	a[1] = 1;
 	while (a[1] % 3)
 		a[1] += mod;
 	a[1] /= 3;
+
+	o[0] = a[0];
+	o[1] = a[1];
 
 	while (1) {
 		a[2] = (3 * mod + 2 * a[1] - 3 * a[0]) % mod;
@@ -58,8 +65,42 @@ mbin_lucas_length_mod_32(int32_t g, int32_t mod)
 		a[0] = a[1];
 		a[1] = a[2];
 		r++;
-		if (a[0] == g)
+		if (a[0] == o[0] && a[1] == o[1])
 			break;
 	}
 	return (r);
+}
+
+/*
+ * This function computes the length of one circle step.
+ */
+uint32_t
+mbin_lucas_step_length_squared_mod_32(uint32_t mod)
+{
+	uint32_t val = mod;
+
+	if ((mod % 3) == 0)
+		return (0);
+
+	while (val % 3)
+		val++;
+
+	if ((mod % 3) == 1)
+		val = ((2 * val) / 3);
+	else
+		val = (val / 3) + 1;
+
+	return (val);
+}
+
+/*
+ * This function computes PI squared under modulus.
+ */
+uint32_t
+mbin_lucas_pi_squared_mod_32(uint32_t mod)
+{
+	uint32_t steps = mbin_lucas_step_count_mod_32(mod);
+	uint32_t len = mbin_lucas_step_length_squared_mod_32(mod);
+
+	return (len * steps * steps) % mod;
 }
