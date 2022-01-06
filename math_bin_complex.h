@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2021 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2021-2022 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -117,6 +117,28 @@ c32_exp_mod_9(c32_t b, uint64_t exp, int32_t mod)
 	return (r);
 }
 
+static inline c32_t
+c32_mul_mod_8(c32_t a, c32_t b, int32_t mod)
+{
+	c32_t r = {a.x * b.x - 8 * a.y * b.y, a.x * b.y + b.x * a.y};
+
+	return (c32_mod(r, mod));
+}
+
+static inline c32_t
+c32_exp_mod_8(c32_t b, uint64_t exp, int32_t mod)
+{
+	c32_t r = {1, 0};
+
+	while (exp != 0) {
+		if (exp & 1)
+			r = c32_mul_mod_8(r, b, mod);
+		b = c32_mul_mod_8(b, b, mod);
+		exp /= 2;
+	}
+	return (r);
+}
+
 typedef struct mbin_complex_double {
 	double	x;
 	double	y;
@@ -188,6 +210,28 @@ cd_exp_9(cd_t b, uint64_t exp)
 		if (exp & 1)
 			r = cd_mul_9(r, b);
 		b = cd_mul_9(b, b);
+		exp /= 2;
+	}
+	return (r);
+}
+
+static inline cd_t
+cd_mul_8(cd_t a, cd_t b)
+{
+	return (cd_t){
+		a.x * b.x - 8.0 * a.y * b.y, a.x * b.y + b.x * a.y
+	};
+}
+
+static inline cd_t
+cd_exp_8(cd_t b, uint64_t exp)
+{
+	cd_t r = {1, 0};
+
+	while (exp != 0) {
+		if (exp & 1)
+			r = cd_mul_8(r, b);
+		b = cd_mul_8(b, b);
 		exp /= 2;
 	}
 	return (r);
