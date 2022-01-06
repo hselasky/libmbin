@@ -322,6 +322,8 @@ void	mbin_parse32_add(const char *ptr, uint32_t *ptable, uint32_t mask);
 void	mbin_parse32_xor(const char *ptr, uint32_t *ptable, uint32_t mask);
 void	mbin_parse32_factor(const char *ptr, uint32_t *ptable, uint32_t mask, uint32_t var, uint8_t level, uint8_t is_xor);
 
+/* Square root functions. */
+
 uint32_t mbin_sqrt_64(uint64_t a);
 uint32_t mbin_sqrt_carry_optimised_64(uint64_t z);
 uint32_t mbin_sqrt_gray_64(uint64_t);
@@ -330,6 +332,9 @@ uint32_t mbin_sqrt_odd_32(uint32_t x);
 uint64_t mbin_sqrt_odd_64(uint64_t x);
 uint32_t mbin_sqrt_inv_odd32(uint32_t rem, uint32_t div);
 uint64_t mbin_sqrt_inv_64(uint64_t rem, uint64_t div);
+uint64_t mbin_sqrt_add_64(uint64_t, uint64_t);
+uint64_t mbin_sqrt_sub_64(uint64_t, uint64_t);
+uint64_t mbin_sqrt_multi_add_64(uint64_t, uint64_t);
 
 bool mbin_sub_if_gt_64(uint64_t *, uint64_t *, uint64_t);
 bool mbin_sub_if_gte_64(uint64_t *, uint64_t *, uint64_t);

@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2001-2020 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2001-2022 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -539,4 +539,46 @@ mbin_r2_sqrt_inv_double(double *ptr, uint8_t lmax)
 			v = 2.0;
 		ptr[x] = v;
 	}
+}
+
+uint64_t
+mbin_sqrt_add_64(uint64_t a, uint64_t b)
+{
+	uint64_t ar = mbin_sqrt_64(a);
+	uint64_t br = mbin_sqrt_64(b);
+
+	a -= ar * ar;
+	b -= br * br;
+
+	ar += br;
+	a += b;
+
+	return (ar * ar + a);
+}
+
+uint64_t
+mbin_sqrt_sub_64(uint64_t a, uint64_t b)
+{
+	uint64_t ar = mbin_sqrt_64(a);
+	uint64_t br = mbin_sqrt_64(b);
+
+	a -= ar * ar;
+	b -= br * br;
+
+	ar -= br;
+	a -= b;
+
+	return (ar * ar + a);
+}
+
+uint64_t
+mbin_sqrt_multi_add_64(uint64_t base, uint64_t num)
+{
+	uint64_t root = mbin_sqrt_64(base);
+
+	base -= root * root;
+	base *= num;
+	root *= num;
+
+	return (root * root + base);
 }
