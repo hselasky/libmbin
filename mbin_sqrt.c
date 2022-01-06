@@ -559,8 +559,8 @@ mbin_sqrt_add_64(uint64_t a, uint64_t b)
 uint64_t
 mbin_sqrt_sub_64(uint64_t a, uint64_t b)
 {
-	uint64_t ar = mbin_sqrt_64(a);
-	uint64_t br = mbin_sqrt_64(b);
+	int64_t ar = mbin_sqrt_64(a);
+	int64_t br = mbin_sqrt_64(b);
 
 	a -= ar * ar;
 	b -= br * br;
@@ -568,17 +568,55 @@ mbin_sqrt_sub_64(uint64_t a, uint64_t b)
 	ar -= br;
 	a -= b;
 
-	return (ar * ar + a);
+	if (ar < 0)
+		return (- ar * ar + a);
+	else
+		return (ar * ar + a);
 }
 
-uint64_t
-mbin_sqrt_multi_add_64(uint64_t base, uint64_t num)
+int64_t
+mbin_sqrt_sum_64(int64_t a, int64_t b)
 {
-	uint64_t root = mbin_sqrt_64(base);
+	uint8_t combo = 0;
 
-	base -= root * root;
-	base *= num;
-	root *= num;
+	if (a < 0)
+		combo |= 1;
+	if (b < 0)
+		combo |= 2;
 
-	return (root * root + base);
+	switch (combo) {
+	case 0:
+		return (mbin_sqrt_add_64(a,b));
+	case 1:
+		return (-mbin_sqrt_sub_64(-a,b));
+	case 2:
+		return (-mbin_sqrt_sub_64(-b,a));
+	default:
+		return (-mbin_sqrt_add_64(-a,-b));
+	}
+}
+
+int64_t
+mbin_sqrt_multi_sum_64(int64_t base, int64_t num)
+{
+	int64_t root;
+
+	if (base < 0) {
+		root = - mbin_sqrt_64(-base);
+
+		base += root * root;
+		base *= num;
+		root *= num;
+	} else {
+		root = mbin_sqrt_64(base);
+
+		base -= root * root;
+		base *= num;
+		root *= num;
+	}
+
+	if (root < 0)
+		return (- root * root + base);
+	else
+		return (root * root + base);
 }

@@ -334,7 +334,8 @@ uint32_t mbin_sqrt_inv_odd32(uint32_t rem, uint32_t div);
 uint64_t mbin_sqrt_inv_64(uint64_t rem, uint64_t div);
 uint64_t mbin_sqrt_add_64(uint64_t, uint64_t);
 uint64_t mbin_sqrt_sub_64(uint64_t, uint64_t);
-uint64_t mbin_sqrt_multi_add_64(uint64_t, uint64_t);
+int64_t mbin_sqrt_sum_64(int64_t, int64_t);
+int64_t mbin_sqrt_multi_sum_64(int64_t, int64_t);
 
 bool mbin_sub_if_gt_64(uint64_t *, uint64_t *, uint64_t);
 bool mbin_sub_if_gte_64(uint64_t *, uint64_t *, uint64_t);
