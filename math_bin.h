@@ -336,6 +336,11 @@ uint64_t mbin_sqrt_add_64(uint64_t, uint64_t);
 uint64_t mbin_sqrt_sub_64(uint64_t, uint64_t);
 int64_t mbin_sqrt_sum_64(int64_t, int64_t);
 int64_t mbin_sqrt_multi_sum_64(int64_t, int64_t);
+int32_t mbin_sqrt_cos_32(uint32_t);
+int32_t mbin_sqrt_sin_32(uint32_t);
+uint32_t mbin_sqrt_acos_32(uint32_t);
+uint32_t mbin_sqrt_asin_32(uint32_t);
+uint32_t mbin_sqrt_length_32(uint32_t, uint32_t);
 
 bool mbin_sub_if_gt_64(uint64_t *, uint64_t *, uint64_t);
 bool mbin_sub_if_gte_64(uint64_t *, uint64_t *, uint64_t);

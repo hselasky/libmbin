@@ -24,6 +24,7 @@
  */
 
 #include <stdint.h>
+#include <assert.h>
 #include <math.h>
 
 #include "math_bin.h"
@@ -619,4 +620,104 @@ mbin_sqrt_multi_sum_64(int64_t base, int64_t num)
 		return (- root * root + base);
 	else
 		return (root * root + base);
+}
+
+/*
+ * The following set of functions implement a sinus- and cosinus- like
+ * function based on squaring. The acos- like variant uses the sqrt()
+ * to figure out the result.
+ */
+int32_t
+mbin_sqrt_cos_32(uint32_t exp)
+{
+	uint32_t retval = 1;
+	uint8_t x;
+
+	/* Gray coding */
+	for (x = 32; x--; ) {
+		if (exp & (1U << x))
+			exp ^= (1U << x) - 1U;
+	}
+
+	for (x = 0; x != 30; x++) {
+		retval *= retval;
+		if (exp & (1U << x))
+			retval |= 4;
+	}
+
+	if (exp & (1U << x))
+		retval = -retval;
+
+	return (retval);
+}
+
+int32_t
+mbin_sqrt_sin_32(uint32_t exp)
+{
+	return (mbin_sqrt_cos_32(exp + (3U << 30)));
+}
+
+static uint32_t
+mbin_sqrt_acos_step_32(uint32_t p)
+{
+	uint32_t r = 1;
+
+	assert((p & 7) == 1);
+
+	for (uint8_t x = 2; x != 31; x++) {
+		const uint32_t m = (2U << x);
+		if (p & m) {
+			p += p << x;
+			p += p << x;
+			r += r << x;
+		}
+	}
+
+	assert(p == 1);
+
+	r = mbin_div_odd32(p,r);
+
+	return (r & 0x7FFFFFFF);
+}
+
+uint32_t
+mbin_sqrt_acos_32(uint32_t p)
+{
+	uint32_t exp = 0;
+	uint8_t toggle = 0;
+	uint8_t x;
+
+	if (p & 2) {
+		exp ^= (2U << 30) - 1U;
+		toggle ^= 1;
+		p = -p;
+	}
+
+	for (x = 30; x--; ) {
+		if (p & 4) {
+			exp ^= (2U << x) - 1U;
+			toggle ^= 1;
+			p &= ~4;
+		}
+		p = mbin_sqrt_acos_step_32(p);
+	}
+	if (toggle)
+		exp ^= -1U;
+	return (exp);
+}
+
+uint32_t
+mbin_sqrt_asin_32(uint32_t p)
+{
+	return ((1U << 30) - mbin_sqrt_acos_32(p));
+}
+
+uint32_t
+mbin_sqrt_length_32(uint32_t a, uint32_t b)
+{
+	if (a & 2)
+		a = -a;
+	if (b & 2)
+		b = -b;
+	return (a > b) ? (a - b) : (b - a);
 }
