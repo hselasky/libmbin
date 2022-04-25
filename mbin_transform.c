@@ -825,7 +825,7 @@ mbin_forward_r3_add_xform_32(uint32_t *ptr, uint8_t log3_max)
 }
 
 /*
- * Inverse exlusive or transform (r3).
+ * Inverse exclusive or transform (r3).
  */
 void
 mbin_inverse_r3_xor2_xform_32(uint32_t *ptr, uint8_t log3_max)
@@ -853,7 +853,7 @@ mbin_inverse_r3_xor2_xform_32(uint32_t *ptr, uint8_t log3_max)
 }
 
 /*
- * Forward exlusive or transform (r3).
+ * Forward exclusive or transform (r3).
  */
 void
 mbin_forward_r3_xor2_xform_32(uint32_t *ptr, uint8_t log3_max)
