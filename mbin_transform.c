@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008-2021 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008-2022 Hans Petter Selasky.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -763,6 +763,62 @@ mbin_forward_add_xform_32(uint32_t *ptr, uint8_t log2_max)
 				a = ptr[y + z];
 				b = ptr[y + z + (x / 2)];
 				ptr[y + z + (x / 2)] = a + b;
+			}
+		}
+	}
+}
+
+/*
+ * Inverse additive transform (r3).
+ */
+void
+mbin_inverse_r3_add_xform_32(uint32_t *ptr, uint8_t log3_max)
+{
+	const uint32_t max = mbin_power_64(3, log3_max);
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	int32_t a;
+	int32_t b;
+	int32_t c;
+
+	for (x = 3; x <= max; x *= 3) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 3); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 3)];
+				c = ptr[y + z + 2 * (x / 3)];
+
+				ptr[y + z + (x / 3)] = c - b;
+				ptr[y + z + 2 * (x / 3)] = (2 * b) - c - a;
+			}
+		}
+	}
+}
+
+/*
+ * Forward additive transform (r3).
+ */
+void
+mbin_forward_r3_add_xform_32(uint32_t *ptr, uint8_t log3_max)
+{
+	const uint32_t max = mbin_power_64(3, log3_max);
+	uint32_t x;
+	uint32_t y;
+	uint32_t z;
+	int32_t a;
+	int32_t b;
+	int32_t c;
+
+	for (x = 3; x <= max; x *= 3) {
+		for (y = 0; y != max; y += x) {
+			for (z = 0; z != (x / 3); z++) {
+				a = ptr[y + z];
+				b = ptr[y + z + (x / 3)];
+				c = ptr[y + z + 2 * (x / 3)];
+
+				ptr[y + z + (x / 3)] = a + b + c;
+				ptr[y + z + 2 * (x / 3)] = a + (2 * b) + c;
 			}
 		}
 	}

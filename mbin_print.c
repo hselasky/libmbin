@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008-2009 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2008-2022 Hans Petter Selasky.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -609,4 +609,29 @@ mbin_print_multi_analyse_fwd_32x32(uint32_t *ptr, uint32_t *temp,
 		tcount += count;
 	}
 	return (tcount);
+}
+
+void
+mbin_print64_r3_abc(uint64_t x)
+{
+	const char *str = "abcdefghijklmnopqrstuvwxyz???????????????";
+
+	if (x == 0) {
+		putchar('1');
+	} else {
+		while (x != 0) {
+			switch (x % 3) {
+			case 0:
+				break;
+			case 1:
+				putchar(*str);
+				break;
+			case 2:
+				putchar(*str + ('A' - 'a'));
+				break;
+			}
+			str++;
+			x /= 3;
+		}
+	}
 }
