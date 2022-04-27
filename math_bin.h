@@ -1113,6 +1113,12 @@ uint32_t mbin_lucas_step_count_mod_32(uint32_t);
 uint32_t mbin_lucas_step_length_squared_mod_32(uint32_t);
 uint32_t mbin_lucas_pi_squared_mod_32(uint32_t);
 
+/* Modular FFT */
+
+void mbin_mod_fft_fwd_32(int32_t *, const int32_t *table, uint8_t log2_size, bool doBitreverse);
+void mbin_mod_fft_inv_32(int32_t *, const int32_t *table, uint8_t log2_size, bool doBitreverse);
+void mbin_mod_fft_mul_32(const int32_t *, const int32_t *, int32_t *, uint8_t);
+
 __END_DECLS
 
 #endif					/* _MATH_BIN_H_ */

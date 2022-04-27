@@ -47,6 +47,7 @@ SRCS+=	mbin_fpx.c
 SRCS+=	mbin_fst.c
 SRCS+=	mbin_hpt.c
 SRCS+=	mbin_inc.c
+SRCS+=	mbin_modular_fft.c
 SRCS+=	mbin_noise.c
 SRCS+=	mbin_optimise.c
 SRCS+=	mbin_orthogonal.c
