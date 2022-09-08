@@ -177,7 +177,7 @@ mbin_xsort_xform(char *ptr, const size_t n, size_t lim, const size_t es, mbin_cm
 					q[t] = ptr + (w ^ p[t]) * es;
 
 					/* check for arrays which are not power of two */
-					if (q[t] - ptr >= lim)
+					if ((size_t)(q[t] - ptr) >= lim)
 						break;
 
 					for (u = t; u--; ) {
