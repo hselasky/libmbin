@@ -137,16 +137,15 @@ mbin_xsort_complete(void *ptr, const size_t lim, const size_t es, mbin_cmp_t *fn
 }
 
 static __always_inline void
-mbin_xsort_xform(void *ptr, const size_t n, const size_t lim, const size_t es, mbin_cmp_t *fn)
+mbin_xsort_xform(char *ptr, const size_t n, size_t lim, const size_t es, mbin_cmp_t *fn)
 {
 #define	MBIN_XSORT_TABLE_MAX (1 << 4)
 	size_t x, y, z;
 	unsigned t, u, v;
 	size_t p[MBIN_XSORT_TABLE_MAX];
 	char *q[MBIN_XSORT_TABLE_MAX];
-	uintptr_t end;
 
-	end = (uintptr_t)ptr + lim * es;
+	lim *= es;
 	x = n;
 	while (1) {
 		/* optimise */
@@ -171,14 +170,14 @@ mbin_xsort_xform(void *ptr, const size_t n, const size_t lim, const size_t es, m
 			for (z = 0; z != x; z++) {
 				const size_t w = y + z;
 
-				q[0] = (char *)ptr + (w ^ p[0]) * es;
+				q[0] = ptr + (w ^ p[0]) * es;
 
 				/* insertion sort */
 				for (t = 1; t != v; t++) {
-					q[t] = (char *)ptr + (w ^ p[t]) * es;
+					q[t] = ptr + (w ^ p[t]) * es;
 
 					/* check for arrays which are not power of two */
-					if ((uintptr_t)q[t] >= end)
+					if (q[t] - ptr >= lim)
 						break;
 
 					for (u = t; u--; ) {
