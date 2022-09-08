@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2016 Hans Petter Selasky. All rights reserved.
+ * Copyright (c) 2016-2022 Hans Petter Selasky. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -148,8 +148,10 @@ mbin_xsort_xform(void *ptr, const size_t n, const size_t lim, const size_t es, m
 		x /= v;
 
 		/* generate ramp table */
-		for (t = 0; t != v; t++)
-			p[t] = mbin_sort_index(x * (t ^ (t / 2)));
+		for (t = 0; t != v; t += 2) {
+			p[t] = t * x;
+			p[t + 1] = (t + 2) * x - 1;
+		}
 
 		/* bitonic sort */
 		for (y = 0; y != n; y += (v * x)) {
