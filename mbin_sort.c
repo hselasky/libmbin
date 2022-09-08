@@ -143,7 +143,10 @@ mbin_xsort_xform(void *ptr, const size_t n, const size_t lim, const size_t es, m
 	size_t x, y, z;
 	unsigned t, u, v;
 	size_t p[MBIN_XSORT_TABLE_MAX];
+	char *q[MBIN_XSORT_TABLE_MAX];
+	uintptr_t end;
 
+	end = (uintptr_t)ptr + lim * es;
 	x = n;
 	while (1) {
 		/* optimise */
@@ -166,19 +169,21 @@ mbin_xsort_xform(void *ptr, const size_t n, const size_t lim, const size_t es, m
 		/* bitonic sort */
 		for (y = 0; y != n; y += (v * x)) {
 			for (z = 0; z != x; z++) {
-				size_t w = y + z;
+				const size_t w = y + z;
+
+				q[0] = (char *)ptr + (w ^ p[0]) * es;
 
 				/* insertion sort */
 				for (t = 1; t != v; t++) {
-					/* check for arrays which are not power of two */
-					if ((w ^ p[t]) >= lim)
-						break;
-					for (u = t; u != 0; u--) {
-						char *pa = (char *)ptr + ((w ^ p[u - 1]) * es);
-						char *pb = (char *)ptr + ((w ^ p[u]) * es);
+					q[t] = (char *)ptr + (w ^ p[t]) * es;
 
-						if (fn(pa, pb) > 0) {
-							mbin_sort_swap(pa, pb, es);
+					/* check for arrays which are not power of two */
+					if ((uintptr_t)q[t] >= end)
+						break;
+
+					for (u = t; u--; ) {
+						if (fn(q[u], q[u + 1]) > 0) {
+							mbin_sort_swap(q[u], q[u + 1], es);
 						} else {
 							break;
 						}
