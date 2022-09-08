@@ -125,14 +125,24 @@ mbin_osort_xform(void *ptr, size_t n, size_t es, mbin_cmp_t *fn)
 	return (retval);
 }
 
-static __always_inline int
+static __always_inline bool
+mbin_xsort_complete(void *ptr, const size_t lim, const size_t es, mbin_cmp_t *fn)
+{
+	for (size_t x = 1; x != lim; x++) {
+		if (fn(ptr, (char *)ptr + es) > 0)
+			return (false);
+		ptr = (char *)ptr + es;
+	}
+	return (true);
+}
+
+static __always_inline void
 mbin_xsort_xform(void *ptr, const size_t n, const size_t lim, const size_t es, mbin_cmp_t *fn)
 {
 #define	MBIN_XSORT_TABLE_MAX (1 << 4)
 	size_t x, y, z;
 	unsigned t, u, v;
 	size_t p[MBIN_XSORT_TABLE_MAX];
-	int retval = 0;
 
 	x = n;
 	while (1) {
@@ -169,7 +179,6 @@ mbin_xsort_xform(void *ptr, const size_t n, const size_t lim, const size_t es, m
 
 						if (fn(pa, pb) > 0) {
 							mbin_sort_swap(pa, pb, es);
-							retval = 1;
 						} else {
 							break;
 						}
@@ -178,7 +187,6 @@ mbin_xsort_xform(void *ptr, const size_t n, const size_t lim, const size_t es, m
 			}
 		}
 	}
-	return (retval);
 }
 
 __always_inline size_t
@@ -247,19 +255,19 @@ mbin_sort(void *ptr, const size_t n, const size_t es, mbin_cmp_t *fn)
 		;
 
 	if (es == 8) {
-	  	while (mbin_xsort_xform(ptr, max, n, 8, fn))
-			;
+		while (!mbin_xsort_complete(ptr, n, 8, fn))
+			mbin_xsort_xform(ptr, max, n, 8, fn);
 	} else if (es == 4) {
-	  	while (mbin_xsort_xform(ptr, max, n, 4, fn))
-			;
+		while (!mbin_xsort_complete(ptr, n, 4, fn))
+			mbin_xsort_xform(ptr, max, n, 4, fn);
 	} else if (es == 2) {
-	  	while (mbin_xsort_xform(ptr, max, n, 2, fn))
-			;
+		while (!mbin_xsort_complete(ptr, n, 2, fn))
+			mbin_xsort_xform(ptr, max, n, 2, fn);
 	} else if (es == 1) {
-		while (mbin_xsort_xform(ptr, max, n, 1, fn))
-			;
+		while (!mbin_xsort_complete(ptr, n, 1, fn))
+			mbin_xsort_xform(ptr, max, n, 1, fn);
 	} else {
-		while (mbin_xsort_xform(ptr, max, n, es, fn))
-			;
+		while (!mbin_xsort_complete(ptr, n, es, fn))
+			mbin_xsort_xform(ptr, max, n, es, fn);
 	}
 }
