@@ -82,10 +82,6 @@ INCS=	math_bin.h \
 	math_bin_complex.h \
 	math_bin_wrapper.h
 
-MKLINT=		no
-
-NOGCCERROR=
-
 MAN=	# no manual pages at the moment
 
 .include <bsd.lib.mk>
