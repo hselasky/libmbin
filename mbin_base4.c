@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2010 Hans Petter Selasky
+ * Copyright (c) 2010-2022 Hans Petter Selasky
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,6 +30,7 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
 
 #include "math_bin.h"
 
@@ -148,5 +149,42 @@ mbin_join4_32(uint32_t x)
 		if (x & (0x10000 << (n / 2)))
 			r |= (2 << n);
 	}
+	return (r);
+}
+
+uint64_t
+mbin_mul_4_64(uint64_t sa, uint64_t sb)
+{
+	uint64_t retval = 0;
+
+	for (uint8_t a = 0; a != 16; a++) {
+		if (~(sa >> a) & 1)
+			continue;
+		for (uint8_t b = 0; b != 16; b++) {
+			if (~(sb >> b) & 1)
+				continue;
+			retval += 1ULL << (2 * (a + b));
+		}
+	}
+	return (retval);
+}
+
+uint16_t
+mbin_sqrt_4_64(uint64_t z, uint64_t *prem)
+{
+	uint64_t y = 0;
+	uint64_t zc = 0;
+	uint16_t r = 0;
+	int8_t k;
+
+	for (k = 60; k != -4; k -= 4) {
+		if (mbin_sub_if_gte_64(&z, &zc, (y | 1ULL) << k)) {
+			y |= 2;
+			r |= 1U << (k / 4);
+		}
+		y *= 4;
+	}
+	if (prem != NULL)
+		*prem = z - zc;
 	return (r);
 }

@@ -397,6 +397,8 @@ void	mbin_expand_xor4_16x32(uint32_t *ptr, uint32_t set_bits, uint32_t mask, uin
 void	mbin_transform_multi_xor4_fwd_16x32(uint32_t *ptr, uint32_t *temp, uint32_t mask);
 uint32_t mbin_split4_32(uint32_t x);
 uint32_t mbin_join4_32(uint32_t x);
+uint64_t mbin_mul_4_64(uint64_t, uint64_t);
+uint16_t mbin_sqrt_4_64(uint64_t, uint64_t *);
 
 /* Base-5 */
 
